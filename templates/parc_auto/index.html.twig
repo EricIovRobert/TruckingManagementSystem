@@ -1,0 +1,27 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Lista Parc Auto{% endblock %}
+
+{% block body %}
+    <h1>Lista Parc Auto</h1>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                
+                <th>Număr Auto</th>
+                <th>An</th>
+                <th>Categorie Mașină</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in parc_auto %}
+                <tr>
+
+                    <td>{{ item.nrAuto }}</td>
+                    <td>{{ item.an }}</td>
+                    <td>{{ item.categorieMasina }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}
