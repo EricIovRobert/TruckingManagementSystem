@@ -1,0 +1,98 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Detalii Comandă{% endblock %}
+
+{% block body %}
+    <h1>Detalii Comandă #{{ comanda.id }}</h1>
+
+    <p><strong>Mașină:</strong> {{ comanda.parcAuto ? comanda.parcAuto.nrAuto : 'Nicio mașină asociată' }}</p>
+    <p><strong>Șofer:</strong> {{ comanda.sofer }}</p>
+    <p><strong>Data Start:</strong> {{ comanda.dataStart ? comanda.dataStart|date('Y-m-d') : '' }}</p>
+    <p><strong>Data Stop:</strong> {{ comanda.dataStop ? comanda.dataStop|date('Y-m-d') : '' }}</p>
+    <p><strong>Număr Km:</strong> {{ comanda.numarKm }}</p>
+    <p><strong>Profit:</strong> {{ comanda.profit }}</p>
+
+    <h2>Tururi</h2>
+    <a href="{{ path('app_tururi_new', {'comanda_id': comanda.id}) }}" class="btn btn-primary">Adaugă Tur</a>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Firma</th>
+                <th>Ruta Încărcare</th>
+                <th>Ruta Descărcare</th>
+                <th>Kg</th>
+                <th>Preț</th>
+                <th>Liber</th>
+                <th>Facturat</th>
+                <th>Acțiuni</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for tur in comanda.tururis %}
+                <tr>
+                    <td>{{ tur.firma }}</td>
+                    <td>{{ tur.rutaIncarcare }}</td>
+                    <td>{{ tur.rutaDescarcare }}</td>
+                    <td>{{ tur.kg }}</td>
+                    <td>{{ tur.pret }}</td>
+                    <td>{{ tur.liber }}</td>
+                    <td>{{ tur.facturat ? 'Da' : 'Nu' }}</td>
+                    <td>
+                        <a href="{{ path('app_tururi_edit', {'id': tur.id}) }}" class="btn btn-warning">Editează</a>
+                        <form method="post" action="{{ path('app_tururi_delete', {'id': tur.id}) }}" style="display:inline;" onsubmit="return confirm('Ești sigur că vrei să ștergi acest tur?');">
+                            <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ tur.id) }}">
+                            <button class="btn btn-danger">Șterge</button>
+                        </form>
+                    </td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="8">Niciun tur asociat</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <h2>Retururi</h2>
+    <a href="{{ path('app_retururi_new', {'comanda_id': comanda.id}) }}" class="btn btn-primary">Adaugă Retur</a>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Firma</th>
+                <th>Ruta Încărcare</th>
+                <th>Ruta Descărcare</th>
+                <th>Kg</th>
+                <th>Preț</th>
+                <th>Liber</th>
+                <th>Facturat</th>
+                <th>Acțiuni</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for retur in comanda.retururis %}
+                <tr>
+                    <td>{{ retur.firma }}</td>
+                    <td>{{ retur.rutaIncarcare }}</td>
+                    <td>{{ retur.rutaDescarcare }}</td>
+                    <td>{{ retur.kg }}</td>
+                    <td>{{ retur.pret }}</td>
+                    <td>{{ retur.liber }}</td>
+                    <td>{{ retur.facturat ? 'Da' : 'Nu' }}</td>
+                    <td>
+                        <a href="{{ path('app_retururi_edit', {'id': retur.id}) }}" class="btn btn-warning">Editează</a>
+                        <form method="post" action="{{ path('app_retururi_delete', {'id': retur.id}) }}" style="display:inline;" onsubmit="return confirm('Ești sigur că vrei să ștergi acest retur?');">
+                            <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ retur.id) }}">
+                            <button class="btn btn-danger">Șterge</button>
+                        </form>
+                    </td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="8">Niciun retur asociat</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <a href="{{ path('app_comenzi_index') }}" class="btn btn-secondary">Înapoi la listă</a>
+{% endblock %}

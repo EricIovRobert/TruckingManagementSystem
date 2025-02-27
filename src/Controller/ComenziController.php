@@ -78,4 +78,11 @@ class ComenziController extends AbstractController
     
         return $this->redirectToRoute('app_comenzi_index');
     }
+    #[Route('/{id}/show', name: 'app_comenzi_show', methods: ['GET'])]
+    public function show(Comenzi $comanda): Response
+    {
+        return $this->render('comenzi/show.html.twig', [
+            'comanda' => $comanda,
+        ]);
+    }
 }

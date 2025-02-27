@@ -1,0 +1,12 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Editează Retur{% endblock %}
+
+{% block body %}
+    <h1>Editează Retur pentru Comanda #{{ retur.comanda.id }}</h1>
+    {{ form_start(form) }}
+        {{ form_widget(form) }}
+        <button type="submit" class="btn btn-primary">Salvează</button>
+    {{ form_end(form) }}
+    <a href="{{ path('app_comenzi_show', {'id': retur.comanda.id}) }}" class="btn btn-secondary">Înapoi la detalii</a>
+{% endblock %}
