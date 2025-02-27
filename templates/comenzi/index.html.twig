@@ -4,27 +4,35 @@
 
 {% block body %}
     <h1>Lista Comenzi</h1>
+    <a href="{{ path('app_comenzi_new') }}" class="btn btn-primary">Adaugă Comandă</a>
     <table class="table table-striped">
         <thead>
             <tr>
-                
+                <th>Mașină</th>
                 <th>Șofer</th>
                 <th>Data Start</th>
                 <th>Data Stop</th>
                 <th>Număr Km</th>
                 <th>Profit</th>
+                <th>Acțiuni</th>
             </tr>
         </thead>
         <tbody>
             {% for comanda in comenzi %}
                 <tr>
-              
+                    <td>{{ comanda.parcAuto.nrAuto }}
                     <td>{{ comanda.sofer }}</td>
-                    {# Afișează datele cu formatare, dacă sunt DateTime #}
                     <td>{{ comanda.dataStart ? comanda.dataStart|date('Y-m-d') : '' }}</td>
                     <td>{{ comanda.dataStop ? comanda.dataStop|date('Y-m-d') : '' }}</td>
                     <td>{{ comanda.numarKm }}</td>
                     <td>{{ comanda.profit }}</td>
+                    <td>
+                        <a href="{{ path('app_comenzi_edit', {'id': comanda.id}) }}" class="btn btn-warning">Editează</a>
+                        <form method="post" action="{{ path('app_comenzi_delete', {'id': comanda.id}) }}" style="display:inline;" onsubmit="return confirm('Ești sigur că vrei să ștergi această comandă?');">
+                            <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ comanda.id) }}">
+                            <button class="btn btn-danger">Șterge</button>
+                        </form>
+                    </td>
                 </tr>
             {% endfor %}
         </tbody>

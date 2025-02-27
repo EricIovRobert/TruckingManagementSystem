@@ -4,22 +4,29 @@
 
 {% block body %}
     <h1>Lista Parc Auto</h1>
+    <a href="{{ path('app_parc_auto_new') }}" class="btn btn-primary">Adaugă Mașină</a>
     <table class="table table-striped">
         <thead>
             <tr>
-                
-                <th>Număr Auto</th>
+                <th>Nr. Înmatriculare</th>
                 <th>An</th>
                 <th>Categorie Mașină</th>
+                <th>Acțiuni</th>
             </tr>
         </thead>
         <tbody>
-            {% for item in parc_auto %}
+            {% for parc_auto in parc_autos %}
                 <tr>
-
-                    <td>{{ item.nrAuto }}</td>
-                    <td>{{ item.an }}</td>
-                    <td>{{ item.categorieMasina }}</td>
+                    <td>{{ parc_auto.nrAuto }}</td>
+                    <td>{{ parc_auto.an }}</td>
+                    <td>{{ parc_auto.categorieMasina }}</td>
+                    <td>
+                        <a href="{{ path('app_parc_auto_edit', {'id': parc_auto.id}) }}" class="btn btn-warning">Editează</a>
+                        <form method="post" action="{{ path('app_parc_auto_delete', {'id': parc_auto.id}) }}" style="display:inline;" onsubmit="return confirm('Ești sigur că vrei să ștergi această mașină?');">
+                            <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ parc_auto.id) }}">
+                            <button class="btn btn-danger">Șterge</button>
+                        </form>
+                    </td>
                 </tr>
             {% endfor %}
         </tbody>

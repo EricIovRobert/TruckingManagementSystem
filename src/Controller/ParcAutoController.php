@@ -2,22 +2,70 @@
 
 namespace App\Controller;
 
+use App\Entity\ParcAuto;
+use App\Form\ParcAutoType;
 use App\Repository\ParcAutoRepository;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
 #[Route('/parc-auto')]
 class ParcAutoController extends AbstractController
 {
-    #[Route('/', name: 'app_parc_auto_index')]
+    #[Route('/', name: 'app_parc_auto_index', methods: ['GET'])]
     public function index(ParcAutoRepository $parcAutoRepository): Response
     {
-        // Preia toate înregistrările din tabelul "parc_auto"
-        $parcAuto = $parcAutoRepository->findAll();
-
+        $parcAutos = $parcAutoRepository->findAll();
         return $this->render('parc_auto/index.html.twig', [
+            'parc_autos' => $parcAutos,
+        ]);
+    }
+
+    #[Route('/new', name: 'app_parc_auto_new', methods: ['GET', 'POST'])]
+    public function new(Request $request, EntityManagerInterface $entityManager): Response
+    {
+        $parcAuto = new ParcAuto();
+        $form = $this->createForm(ParcAutoType::class, $parcAuto);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $entityManager->persist($parcAuto);
+            $entityManager->flush();
+            return $this->redirectToRoute('app_parc_auto_index');
+        }
+
+        return $this->render('parc_auto/new.html.twig', [
+            'form' => $form->createView(),
+        ]);
+    }
+
+    #[Route('/{id}/edit', name: 'app_parc_auto_edit', methods: ['GET', 'POST'])]
+    public function edit(Request $request, ParcAuto $parcAuto, EntityManagerInterface $entityManager): Response
+    {
+        $form = $this->createForm(ParcAutoType::class, $parcAuto);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $entityManager->flush();
+            return $this->redirectToRoute('app_parc_auto_index');
+        }
+
+        return $this->render('parc_auto/edit.html.twig', [
+            'form' => $form->createView(),
             'parc_auto' => $parcAuto,
         ]);
+    }
+
+    #[Route('/{id}', name: 'app_parc_auto_delete', methods: ['POST'])]
+    public function delete(Request $request, ParcAuto $parcAuto, EntityManagerInterface $entityManager): Response
+    {
+        if ($this->isCsrfTokenValid('delete'.$parcAuto->getId(), $request->request->get('_token'))) {
+            $entityManager->remove($parcAuto);
+            $entityManager->flush();
+        }
+
+        return $this->redirectToRoute('app_parc_auto_index');
     }
 }

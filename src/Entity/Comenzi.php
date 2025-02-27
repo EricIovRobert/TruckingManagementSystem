@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\ComenziRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -32,6 +34,24 @@ class Comenzi
 
     #[ORM\Column(nullable: true)]
     private ?float $profit = null;
+
+    /**
+     * @var Collection<int, Tururi>
+     */
+    #[ORM\OneToMany(targetEntity: Tururi::class, mappedBy: 'comanda')]
+    private Collection $tururis;
+
+    /**
+     * @var Collection<int, Retururi>
+     */
+    #[ORM\OneToMany(targetEntity: Retururi::class, mappedBy: 'comanda')]
+    private Collection $retururis;
+
+    public function __construct()
+    {
+        $this->tururis = new ArrayCollection();
+        $this->retururis = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -106,6 +126,66 @@ class Comenzi
     public function setProfit(?float $profit): static
     {
         $this->profit = $profit;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Tururi>
+     */
+    public function getTururis(): Collection
+    {
+        return $this->tururis;
+    }
+
+    public function addTururi(Tururi $tururi): static
+    {
+        if (!$this->tururis->contains($tururi)) {
+            $this->tururis->add($tururi);
+            $tururi->setComanda($this);
+        }
+
+        return $this;
+    }
+
+    public function removeTururi(Tururi $tururi): static
+    {
+        if ($this->tururis->removeElement($tururi)) {
+            // set the owning side to null (unless already changed)
+            if ($tururi->getComanda() === $this) {
+                $tururi->setComanda(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Retururi>
+     */
+    public function getRetururis(): Collection
+    {
+        return $this->retururis;
+    }
+
+    public function addRetururi(Retururi $retururi): static
+    {
+        if (!$this->retururis->contains($retururi)) {
+            $this->retururis->add($retururi);
+            $retururi->setComanda($this);
+        }
+
+        return $this;
+    }
+
+    public function removeRetururi(Retururi $retururi): static
+    {
+        if ($this->retururis->removeElement($retururi)) {
+            // set the owning side to null (unless already changed)
+            if ($retururi->getComanda() === $this) {
+                $retururi->setComanda(null);
+            }
+        }
 
         return $this;
     }
