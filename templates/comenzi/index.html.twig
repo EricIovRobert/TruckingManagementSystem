@@ -12,8 +12,10 @@
                 <th>Șofer</th>
                 <th>Data Start</th>
                 <th>Data Stop</th>
-                <th>Număr Km</th>
+                <th>Nr. Km</th>
                 <th>Profit</th>
+                <th>Locatie</th> <!-- Coloană nouă -->
+                <th>Liber</th> <!-- Coloană nouă -->
                 <th>Acțiuni</th>
             </tr>
         </thead>
@@ -23,9 +25,31 @@
                     <td><a href="{{ path('app_comenzi_show', {'id': comanda.id}) }}">{{ comanda.parcAuto ? comanda.parcAuto.nrAuto : 'N/A' }}</a></td>
                     <td>{{ comanda.sofer }}</td>
                     <td>{{ comanda.dataStart ? comanda.dataStart|date('Y-m-d') : '' }}</td>
-                    <td>{{ comanda.dataStop ? comanda.dataStop|date('Y-m-d') : '' }}</td>
-                    <td>{{ comanda.numarKm }}</td>
+                    <td>{{ comanda.dataStop ? comanda.dataStop|date('Y-m-d') : 'Nu exista' }}</td>
+                    <td>{{ comanda.numarKm is not null ? comanda.numarKm : 'Nu exista' }}</td>
                     <td>{{ comanda.profit }}</td>
+                    <td>
+                        {% set ultimaRutaDescarcare = null %}
+                        {% if comanda.retururis|length > 0 %}
+                            {% set ultimulRetur = comanda.retururis|last %}
+                            {% set ultimaRutaDescarcare = ultimulRetur.rutaDescarcare %}
+                        {% elseif comanda.tururis|length > 0 %}
+                            {% set ultimulTur = comanda.tururis|last %}
+                            {% set ultimaRutaDescarcare = ultimulTur.rutaDescarcare %}
+                        {% endif %}
+                        {{ ultimaRutaDescarcare ?: 'Nu există tururi/retururi' }}
+                    </td>
+                    <td>
+                        {% set ultimulLiber = null %}
+                        {% if comanda.retururis|length > 0 %}
+                            {% set ultimulRetur = comanda.retururis|last %}
+                            {% set ultimulLiber = ultimulRetur.liber %}
+                        {% elseif comanda.tururis|length > 0 %}
+                            {% set ultimulTur = comanda.tururis|last %}
+                            {% set ultimulLiber = ultimulTur.liber %}
+                        {% endif %}
+                        {{ ultimulLiber ?: 'Nu există tururi/retururi' }}
+                    </td>
                     <td>
                         <a href="{{ path('app_comenzi_edit', {'id': comanda.id}) }}" class="btn btn-warning">Editează</a>
                         <form method="post" action="{{ path('app_comenzi_delete', {'id': comanda.id}) }}" style="display:inline;" onsubmit="return confirm('Ești sigur că vrei să ștergi această comandă?');">

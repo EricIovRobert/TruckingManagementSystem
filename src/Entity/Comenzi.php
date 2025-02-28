@@ -26,10 +26,10 @@ class Comenzi
     #[ORM\Column(type: Types::DATE_MUTABLE)]
     private ?\DateTimeInterface $dataStart = null;
 
-    #[ORM\Column(type: Types::DATE_MUTABLE)]
+    #[ORM\Column(type: Types::DATE_MUTABLE, nullable: true)]
     private ?\DateTimeInterface $dataStop = null;
 
-    #[ORM\Column]
+    #[ORM\Column(nullable: true)]
     private ?float $numarKm = null;
 
     #[ORM\Column(nullable: true)]
@@ -99,7 +99,7 @@ class Comenzi
         return $this->dataStop;
     }
 
-    public function setDataStop(\DateTimeInterface $dataStop): static
+    public function setDataStop(?\DateTimeInterface $dataStop): static
     {
         $this->dataStop = $dataStop;
 
@@ -111,7 +111,7 @@ class Comenzi
         return $this->numarKm;
     }
 
-    public function setNumarKm(float $numarKm): static
+    public function setNumarKm(?float $numarKm): static
     {
         $this->numarKm = $numarKm;
 
