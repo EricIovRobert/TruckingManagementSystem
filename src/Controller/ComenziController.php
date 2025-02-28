@@ -42,7 +42,7 @@ class ComenziController extends AbstractController
 
         return $this->render('comenzi/new.html.twig', [
             'form' => $form->createView(),
-            'app' => ['parc_auto_list' => $parcAutoRepository->findAll()], // Lista pentru datalist
+            'parc_auto_list' => $parcAutoRepository->findAll(), // Lista pentru datalist
         ]);
     }
 
@@ -63,7 +63,7 @@ class ComenziController extends AbstractController
         return $this->render('comenzi/edit.html.twig', [
             'form' => $form->createView(),
             'comanda' => $comanda,
-            'app' => ['parc_auto_list' => $parcAutoRepository->findAll()], // Lista pentru datalist
+            'parc_auto_list' => $parcAutoRepository->findAll(),
         ]);
     }
 
