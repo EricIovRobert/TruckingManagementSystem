@@ -7,6 +7,7 @@ use App\Form\RetururiType;
 use App\Repository\ComenziRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
@@ -59,7 +60,7 @@ class RetururiController extends AbstractController
     #[Route('/{id}/delete', name: 'app_retururi_delete', methods: ['POST'])]
     public function delete(Request $request, Retururi $retur, EntityManagerInterface $entityManager): Response
     {
-        if ($this->isCsrfTokenValid('delete'.$retur->getId(), $request->request->get('_token'))) {
+        if ($this->isCsrfTokenValid('delete' . $retur->getId(), $request->request->get('_token'))) {
             $comandaId = $retur->getComanda()->getId();
             $entityManager->remove($retur);
             $entityManager->flush();
@@ -68,13 +69,23 @@ class RetururiController extends AbstractController
 
         return $this->redirectToRoute('app_comenzi_show', ['id' => $retur->getComanda()->getId()]);
     }
+
     #[Route('/{id}/update-facturat', name: 'app_retururi_update_facturat', methods: ['POST'])]
     public function updateFacturat(Request $request, Retururi $retur, EntityManagerInterface $entityManager): JsonResponse
     {
-        $facturat = $request->request->getBoolean('facturat');
-        $retur->setFacturat($facturat);
-        $entityManager->flush();
+        try {
+            if (!$retur) {
+                throw $this->createNotFoundException('Returul nu a fost găsit');
+            }
 
-        return new JsonResponse(['success' => true]);
+            $facturat = filter_var($request->request->get('facturat', false), FILTER_VALIDATE_BOOLEAN);
+            $retur->setFacturat($facturat);
+            $entityManager->flush();
+
+            return new JsonResponse(['success' => true]);
+        } catch (\Exception $e) {
+            error_log($e->getMessage());
+            return new JsonResponse(['success' => false, 'error' => $e->getMessage()], 500);
+        }
     }
 }

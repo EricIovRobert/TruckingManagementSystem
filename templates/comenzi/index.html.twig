@@ -4,6 +4,20 @@
 
 {% block body %}
     <h1>Lista Comenzi</h1>
+
+    {% for message in app.flashes('success') %}
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    {% endfor %}
+    {% for message in app.flashes('error') %}
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    {% endfor %}
+
     <a href="{{ path('app_comenzi_new') }}" class="btn btn-primary">Adaugă Comandă</a>
     <table class="table table-striped">
         <thead>
@@ -12,21 +26,26 @@
                 <th>Șofer</th>
                 <th>Data Start</th>
                 <th>Data Stop</th>
-                <th>Nr. Km</th>
+                <th>Număr Km</th>
                 <th>Profit</th>
-                <th>Locatie</th> <!-- Coloană nouă -->
-                <th>Liber</th> <!-- Coloană nouă -->
+                <th>Locatie</th>
+                <th>Liber</th>
+                <th>Rezolvat</th>
                 <th>Acțiuni</th>
             </tr>
         </thead>
         <tbody>
             {% for comanda in comenzi %}
                 <tr>
-                    <td><a href="{{ path('app_comenzi_show', {'id': comanda.id}) }}">{{ comanda.parcAutoNrSnapshot ?: 'N/A' }}</a></td>
+                    <td>
+                        <a href="{{ path('app_comenzi_show', {'id': comanda.id}) }}">
+                            {{ comanda.nrAccidentAuto ?: comanda.parcAutoNrSnapshot ?: 'N/A' }}
+                        </a>
+                    </td>
                     <td>{{ comanda.sofer }}</td>
-                    <td>{{ comanda.dataStart ? comanda.dataStart|date('Y-m-d') : '' }}</td>
-                    <td>{{ comanda.dataStop ? comanda.dataStop|date('Y-m-d') : 'Nu exista' }}</td>
-                    <td>{{ comanda.numarKm is not null ? comanda.numarKm : 'Nu exista' }}</td>
+                    <td>{{ comanda.dataStart ? comanda.dataStart|date('Y-m-d') : 'N/A' }}</td>
+                    <td>{{ comanda.dataStop ? comanda.dataStop|date('Y-m-d') : 'N/A' }}</td>
+                    <td>{{ comanda.numarKm is not null ? comanda.numarKm : 'N/A' }}</td>
                     <td>{{ comanda.profit }}</td>
                     <td>
                         {% set ultimaRutaDescarcare = null %}
@@ -37,7 +56,7 @@
                             {% set ultimulTur = comanda.tururis|last %}
                             {% set ultimaRutaDescarcare = ultimulTur.rutaDescarcare %}
                         {% endif %}
-                        {{ ultimaRutaDescarcare ?: 'Nu există tururi/retururi' }}
+                        {{ ultimaRutaDescarcare ?: 'N/A' }}
                     </td>
                     <td>
                         {% set ultimulLiber = null %}
@@ -48,17 +67,79 @@
                             {% set ultimulTur = comanda.tururis|last %}
                             {% set ultimulLiber = ultimulTur.liber %}
                         {% endif %}
-                        {{ ultimulLiber ?: 'Nu există tururi/retururi' }}
+                        {{ ultimulLiber ?: 'N/A' }}
                     </td>
                     <td>
-                        <a href="{{ path('app_comenzi_edit', {'id': comanda.id}) }}" class="btn btn-warning">Editează</a>
-                        <form method="post" action="{{ path('app_comenzi_delete', {'id': comanda.id}) }}" style="display:inline;" onsubmit="return confirm('Ești sigur că vrei să ștergi această comandă?');">
-                            <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ comanda.id) }}">
-                            <button class="btn btn-danger">Șterge</button>
-                        </form>
+                        <input type="checkbox" class="rezolvat-checkbox" data-id="{{ comanda.id }}" {% if comanda.rezolvat %}checked{% endif %}>
+                    </td>
+                    <td>
+                        <div class="dropdown">
+                            <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" id="dropdownMenuButton-{{ comanda.id }}" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-three-dots-vertical"></i>
+                            </button>
+                            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton-{{ comanda.id }}">
+                                <li><a class="dropdown-item text-warning" href="{{ path('app_comenzi_edit', {'id': comanda.id}) }}">Editează</a></li>
+                                <li>
+                                    <form method="post" action="{{ path('app_comenzi_delete', {'id': comanda.id}) }}" onsubmit="return confirm('Ești sigur că vrei să ștergi această comandă?');">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ comanda.id) }}">
+                                        <button type="submit" class="dropdown-item text-danger">Șterge</button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </div>
                     </td>
                 </tr>
             {% endfor %}
         </tbody>
     </table>
+
+    {% block javascripts %}
+        {{ parent() }}
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                let processed = false; // Flag pentru a preveni apelurile multiple
+
+                document.querySelectorAll('.rezolvat-checkbox').forEach(function(checkbox) {
+                    checkbox.addEventListener('change', function(e) {
+                        if (processed) return; // Oprim execuția dacă deja procesăm
+                        processed = true; // Setăm flag-ul
+
+                        var id = this.getAttribute('data-id');
+                        var rezolvat = this.checked;
+                        var url = '{{ path('app_comenzi_update_rezolvat', {'id': 'ID'}) }}'.replace('ID', id);
+
+                        fetch(url, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded',
+                                'X-Requested-With': 'XMLHttpRequest',
+                            },
+                            body: 'rezolvat=' + encodeURIComponent(rezolvat)
+                        })
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error(`Răspuns neașteptat de la server: ${response.status}`);
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            if (data.success === true) {
+                                console.log('Starea rezolvat actualizată cu succes.');
+                            } else {
+                                console.error('Eroare server:', data.error);
+                                alert('A apărut o eroare la actualizarea stării: ' + (data.error || 'Răspuns neașteptat'));
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Eroare AJAX:', error.message);
+                            alert('Eroare la comunicarea cu serverul. Verifică consola pentru detalii.');
+                        })
+                        .finally(() => {
+                            processed = false; // Resetează flag-ul după finalizarea cererii
+                        });
+                    });
+                });
+            });
+        </script>
+    {% endblock %}
 {% endblock %}

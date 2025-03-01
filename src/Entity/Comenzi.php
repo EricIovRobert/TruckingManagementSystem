@@ -23,6 +23,9 @@ class Comenzi
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $parcAutoNrSnapshot = null;
 
+    #[ORM\Column(length: 20, nullable: true)]
+    private ?string $nrAccidentAuto = null;
+
     #[ORM\Column(length: 100)]
     private ?string $sofer = null;
 
@@ -50,10 +53,17 @@ class Comenzi
     #[ORM\OneToMany(targetEntity: Retururi::class, mappedBy: 'comanda', cascade: ['remove'])]
     private Collection $retururis;
 
+    #[ORM\Column]
+    private ?bool $rezolvat = false; // Setăm valoarea implicită la false
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $observatii = null;
+
     public function __construct()
     {
         $this->tururis = new ArrayCollection();
         $this->retururis = new ArrayCollection();
+        $this->rezolvat = false; // Setăm valoarea implicită în constructor
     }
 
     public function getId(): ?int
@@ -85,6 +95,18 @@ class Comenzi
     public function setParcAutoNrSnapshot(?string $parcAutoNrSnapshot): static
     {
         $this->parcAutoNrSnapshot = $parcAutoNrSnapshot;
+
+        return $this;
+    }
+
+    public function getNrAccidentAuto(): ?string
+    {
+        return $this->nrAccidentAuto;
+    }
+
+    public function setNrAccidentAuto(?string $nrAccidentAuto): static
+    {
+        $this->nrAccidentAuto = $nrAccidentAuto;
 
         return $this;
     }
@@ -205,6 +227,30 @@ class Comenzi
                 $retururi->setComanda(null);
             }
         }
+
+        return $this;
+    }
+
+    public function isRezolvat(): ?bool
+    {
+        return $this->rezolvat;
+    }
+
+    public function setRezolvat(bool $rezolvat): static
+    {
+        $this->rezolvat = $rezolvat;
+
+        return $this;
+    }
+
+    public function getObservatii(): ?string
+    {
+        return $this->observatii;
+    }
+
+    public function setObservatii(?string $observatii): static
+    {
+        $this->observatii = $observatii;
 
         return $this;
     }

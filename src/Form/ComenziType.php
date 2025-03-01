@@ -10,6 +10,7 @@ use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
+
 class ComenziType extends AbstractType
 {
     private $parcAutoRepository;
@@ -22,12 +23,20 @@ class ComenziType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
-            ->add('parcAutoNr', TextType::class, [ // Câmp text pentru nrAuto
+            ->add('parcAutoNr', TextType::class, [
                 'label' => 'Mașină (Nr. Înmatriculare)',
-                'mapped' => false, // Nu mapăm direct pe entitate
+                'mapped' => false,
                 'attr' => [
-                    'list' => 'parc_auto_list', // Legăm la datalist
-                    'autocomplete' => 'off', // Dezactivăm autocomplete-ul browserului
+                    'list' => 'parc_auto_list',
+                    'autocomplete' => 'off',
+                ],
+            ])
+            ->add('nrAccidentAuto', TextType::class, [
+                'label' => 'Mașină Accident (Nr. Înmatriculare)',
+                'required' => false,
+                'attr' => [
+                    'list' => 'parc_auto_list',
+                    'autocomplete' => 'off',
                 ],
             ])
             ->add('sofer')
@@ -41,7 +50,6 @@ class ComenziType extends AbstractType
             ->add('profit')
         ;
 
-        // Adăugăm logica pentru a seta parcAuto și parcAutoNrSnapshot pe baza nrAuto
         $builder->addEventListener(
             \Symfony\Component\Form\FormEvents::POST_SUBMIT,
             function (\Symfony\Component\Form\FormEvent $event) {
@@ -52,8 +60,8 @@ class ComenziType extends AbstractType
                 if ($nrAuto) {
                     $parcAuto = $this->parcAutoRepository->findOneBy(['nrAuto' => $nrAuto]);
                     if ($parcAuto) {
-                        $comanda->setParcAuto($parcAuto); // Setează relația
-                        $comanda->setParcAutoNrSnapshot($nrAuto); // Setează snapshot-ul
+                        $comanda->setParcAuto($parcAuto);
+                        $comanda->setParcAutoNrSnapshot($nrAuto);
                     }
                 }
             }

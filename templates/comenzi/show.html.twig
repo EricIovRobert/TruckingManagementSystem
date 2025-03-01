@@ -5,12 +5,22 @@
 {% block body %}
     <h1>Detalii Comandă #{{ comanda.id }}</h1>
 
-    <p><strong>Mașină:</strong> {{ comanda.parcAutoNrSnapshot ?: 'N/A' }}</p>
+    <p><strong>Mașină Principală:</strong> {{ comanda.parcAutoNrSnapshot ?: 'N/A' }}</p>
+    <p><strong>Mașină Accident:</strong> <span id="accident-auto-display">{{ comanda.nrAccidentAuto ?: 'N/A' }}</span></p>
+    <form id="accident-auto-form" method="post" action="{{ path('app_comenzi_update_nr_accident_auto', {'id': comanda.id}) }}">
+        <input type="text" id="nrAccidentAuto" name="nrAccidentAuto" value="{{ comanda.nrAccidentAuto ?: '' }}" list="parc_auto_list" autocomplete="off">
+        <button type="submit" class="btn btn-primary btn-sm">Actualizează Mașină Accident</button>
+    </form>
     <p><strong>Șofer:</strong> {{ comanda.sofer }}</p>
     <p><strong>Data Start:</strong> {{ comanda.dataStart ? comanda.dataStart|date('Y-m-d') : 'Nu sunt încă date disponibile' }}</p>
     <p><strong>Data Stop:</strong> {{ comanda.dataStop ? comanda.dataStop|date('Y-m-d') : 'Nu sunt încă date disponibile' }}</p>
     <p><strong>Număr Km:</strong> {{ comanda.numarKm is not null ? comanda.numarKm : 'Nu sunt încă date disponibile' }}</p>
     <p><strong>Profit:</strong> {{ comanda.profit }}</p>
+    <p><strong>Observații:</strong> <span id="observatii-display">{{ comanda.observatii ?: 'N/A' }}</span></p>
+    <form id="observatii-form" method="post" action="{{ path('app_comenzi_update_observatii', {'id': comanda.id}) }}">
+        <textarea id="observatii" name="observatii">{{ comanda.observatii ?: '' }}</textarea>
+        <button type="submit" class="btn btn-primary btn-sm">Actualizează Observații</button>
+    </form>
 
     <h2>Tururi</h2>
     <a href="{{ path('app_tururi_new', {'comanda_id': comanda.id}) }}" class="btn btn-primary">Adaugă Tur</a>
@@ -106,10 +116,11 @@
             document.addEventListener('DOMContentLoaded', function() {
                 let processed = false; // Flag pentru a preveni apelurile multiple
 
+                // Gestionarea cererii AJAX pentru facturat
                 document.querySelectorAll('.facturat-checkbox').forEach(function(checkbox) {
                     checkbox.addEventListener('change', function(e) {
-                        if (processed) return; // Oprim execuția dacă deja procesăm
-                        processed = true; // Setăm flag-ul
+                        if (processed) return;
+                        processed = true;
 
                         var id = this.getAttribute('data-id');
                         var type = this.getAttribute('data-type');
@@ -145,11 +156,88 @@
                             alert('Eroare la comunicarea cu serverul. Verifică consola pentru detalii.');
                         })
                         .finally(() => {
-                            processed = false; // Resetează flag-ul după finalizarea cererii
+                            processed = false;
                         });
+                    });
+                });
+
+                // Gestionarea formularului pentru observații
+                document.getElementById('observatii-form').addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    let form = this;
+                    let observatii = document.getElementById('observatii').value;
+                    let url = form.getAttribute('action');
+
+                    fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'X-Requested-With': 'XMLHttpRequest',
+                        },
+                        body: 'observatii=' + encodeURIComponent(observatii)
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`Răspuns neașteptat de la server: ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.success === true) {
+                            document.getElementById('observatii-display').textContent = data.observatii || 'N/A';
+                            console.log('Observațiile au fost actualizate cu succes.');
+                        } else {
+                            console.error('Eroare server:', data.error);
+                            alert('A apărut o eroare la actualizarea observațiilor: ' + (data.error || 'Răspuns neașteptat'));
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Eroare AJAX:', error.message);
+                        alert('Eroare la comunicarea cu serverul. Verifică consola pentru detalii.');
+                    });
+                });
+
+                // Gestionarea formularului pentru mașina de accident
+                document.getElementById('accident-auto-form').addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    let form = this;
+                    let nrAccidentAuto = document.getElementById('nrAccidentAuto').value;
+                    let url = form.getAttribute('action');
+
+                    fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'X-Requested-With': 'XMLHttpRequest',
+                        },
+                        body: 'nrAccidentAuto=' + encodeURIComponent(nrAccidentAuto)
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`Răspuns neașteptat de la server: ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.success === true) {
+                            document.getElementById('accident-auto-display').textContent = data.nrAccidentAuto;
+                            console.log('Mașina de accident a fost actualizată cu succes.');
+                        } else {
+                            console.error('Eroare server:', data.error);
+                            alert('A apărut o eroare la actualizarea mașinii de accident: ' + (data.error || 'Răspuns neașteptat'));
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Eroare AJAX:', error.message);
+                        alert('Eroare la comunicarea cu serverul. Verifică consola pentru detalii.');
                     });
                 });
             });
         </script>
+        <datalist id="parc_auto_list">
+            {% for parc_auto in parc_autos %}
+                <option value="{{ parc_auto.nrAuto }}">
+            {% endfor %}
+        </datalist>
     {% endblock %}
 {% endblock %}

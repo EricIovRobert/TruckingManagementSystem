@@ -5,9 +5,9 @@ namespace App\Controller;
 use App\Entity\Tururi;
 use App\Form\TururiType;
 use App\Repository\ComenziRepository;
-use App\Repository\TururiRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
@@ -60,7 +60,7 @@ class TururiController extends AbstractController
     #[Route('/{id}/delete', name: 'app_tururi_delete', methods: ['POST'])]
     public function delete(Request $request, Tururi $tur, EntityManagerInterface $entityManager): Response
     {
-        if ($this->isCsrfTokenValid('delete'.$tur->getId(), $request->request->get('_token'))) {
+        if ($this->isCsrfTokenValid('delete' . $tur->getId(), $request->request->get('_token'))) {
             $comandaId = $tur->getComanda()->getId();
             $entityManager->remove($tur);
             $entityManager->flush();
@@ -69,13 +69,23 @@ class TururiController extends AbstractController
 
         return $this->redirectToRoute('app_comenzi_show', ['id' => $tur->getComanda()->getId()]);
     }
+
     #[Route('/{id}/update-facturat', name: 'app_tururi_update_facturat', methods: ['POST'])]
     public function updateFacturat(Request $request, Tururi $tur, EntityManagerInterface $entityManager): JsonResponse
     {
-        $facturat = $request->request->getBoolean('facturat');
-        $tur->setFacturat($facturat);
-        $entityManager->flush();
+        try {
+            if (!$tur) {
+                throw $this->createNotFoundException('Turul nu a fost găsit');
+            }
 
-        return new JsonResponse(['success' => true]);
+            $facturat = filter_var($request->request->get('facturat', false), FILTER_VALIDATE_BOOLEAN);
+            $tur->setFacturat($facturat);
+            $entityManager->flush();
+
+            return new JsonResponse(['success' => true]);
+        } catch (\Exception $e) {
+            error_log($e->getMessage());
+            return new JsonResponse(['success' => false, 'error' => $e->getMessage()], 500);
+        }
     }
 }
