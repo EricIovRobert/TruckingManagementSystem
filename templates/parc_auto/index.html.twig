@@ -4,6 +4,20 @@
 
 {% block body %}
     <h1>Lista Parc Auto</h1>
+
+    {% for message in app.flashes('success') %}
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    {% endfor %}
+    {% for message in app.flashes('error') %}
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    {% endfor %}
+
     <a href="{{ path('app_parc_auto_new') }}" class="btn btn-primary">Adaugă Mașină</a>
     <table class="table table-striped">
         <thead>

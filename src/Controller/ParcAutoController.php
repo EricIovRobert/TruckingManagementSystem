@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\ParcAuto;
 use App\Form\ParcAutoType;
+use App\Repository\ComenziRepository; // Adăugat pentru a folosi ComenziRepository
 use App\Repository\ParcAutoRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -59,11 +60,23 @@ class ParcAutoController extends AbstractController
     }
 
     #[Route('/{id}', name: 'app_parc_auto_delete', methods: ['POST'])]
-    public function delete(Request $request, ParcAuto $parcAuto, EntityManagerInterface $entityManager): Response
+    public function delete(Request $request, ParcAuto $parcAuto, ComenziRepository $comenziRepository, EntityManagerInterface $entityManager): Response
     {
-        if ($this->isCsrfTokenValid('delete'.$parcAuto->getId(), $request->request->get('_token'))) {
+        if ($this->isCsrfTokenValid('delete' . $parcAuto->getId(), $request->request->get('_token'))) {
+            // Verifică dacă mașina este utilizată în comenzi
+            $comenziAsociate = $comenziRepository->findBy(['parcAuto' => $parcAuto]);
+
+            if (!empty($comenziAsociate)) {
+                // Dacă există comenzi asociate, afișează un mesaj de eroare
+                $this->addFlash('error', 'Nu se poate șterge, mașina este în folosință.');
+                return $this->redirectToRoute('app_parc_auto_index');
+            }
+
+            // Dacă nu există comenzi asociate, șterge mașina
             $entityManager->remove($parcAuto);
             $entityManager->flush();
+
+            $this->addFlash('success', 'Mașina a fost ștearsă cu succes.');
         }
 
         return $this->redirectToRoute('app_parc_auto_index');

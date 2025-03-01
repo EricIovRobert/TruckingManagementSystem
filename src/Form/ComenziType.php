@@ -32,12 +32,16 @@ class ComenziType extends AbstractType
             ])
             ->add('sofer')
             ->add('dataStart')
-            ->add('dataStop')
-            ->add('numarKm')
+            ->add('dataStop', null, [
+                'required' => false,
+            ])
+            ->add('numarKm', null, [
+                'required' => false,
+            ])
             ->add('profit')
         ;
 
-        // Adăugăm logica pentru a seta parcAuto pe baza nrAuto
+        // Adăugăm logica pentru a seta parcAuto și parcAutoNrSnapshot pe baza nrAuto
         $builder->addEventListener(
             \Symfony\Component\Form\FormEvents::POST_SUBMIT,
             function (\Symfony\Component\Form\FormEvent $event) {
@@ -48,7 +52,8 @@ class ComenziType extends AbstractType
                 if ($nrAuto) {
                     $parcAuto = $this->parcAutoRepository->findOneBy(['nrAuto' => $nrAuto]);
                     if ($parcAuto) {
-                        $comanda->setParcAuto($parcAuto);
+                        $comanda->setParcAuto($parcAuto); // Setează relația
+                        $comanda->setParcAutoNrSnapshot($nrAuto); // Setează snapshot-ul
                     }
                 }
             }

@@ -5,11 +5,11 @@
 {% block body %}
     <h1>Detalii Comandă #{{ comanda.id }}</h1>
 
-    <p><strong>Mașină:</strong> {{ comanda.parcAuto ? comanda.parcAuto.nrAuto : 'Nicio mașină asociată' }}</p>
+    <p><strong>Mașină:</strong> {{ comanda.parcAutoNrSnapshot ?: 'N/A' }}</p>
     <p><strong>Șofer:</strong> {{ comanda.sofer }}</p>
-    <p><strong>Data Start:</strong> {{ comanda.dataStart ? comanda.dataStart|date('Y-m-d') : '' }}</p>
-    <p><strong>Data Stop:</strong> {{ comanda.dataStop ? comanda.dataStop|date('Y-m-d') : '' }}</p>
-    <p><strong>Număr Km:</strong> {{ comanda.numarKm }}</p>
+    <p><strong>Data Start:</strong> {{ comanda.dataStart ? comanda.dataStart|date('Y-m-d') : 'Nu sunt încă date disponibile' }}</p>
+    <p><strong>Data Stop:</strong> {{ comanda.dataStop ? comanda.dataStop|date('Y-m-d') : 'Nu sunt încă date disponibile' }}</p>
+    <p><strong>Număr Km:</strong> {{ comanda.numarKm is not null ? comanda.numarKm : 'Nu sunt încă date disponibile' }}</p>
     <p><strong>Profit:</strong> {{ comanda.profit }}</p>
 
     <h2>Tururi</h2>
@@ -36,7 +36,9 @@
                     <td>{{ tur.kg }}</td>
                     <td>{{ tur.pret }}</td>
                     <td>{{ tur.liber }}</td>
-                    <td>{{ tur.facturat ? 'Da' : 'Nu' }}</td>
+                    <td>
+                        <input type="checkbox" class="facturat-checkbox" data-id="{{ tur.id }}" data-type="tururi" {% if tur.facturat %}checked{% endif %}>
+                    </td>
                     <td>
                         <a href="{{ path('app_tururi_edit', {'id': tur.id}) }}" class="btn btn-warning">Editează</a>
                         <form method="post" action="{{ path('app_tururi_delete', {'id': tur.id}) }}" style="display:inline;" onsubmit="return confirm('Ești sigur că vrei să ștergi acest tur?');">
@@ -77,7 +79,9 @@
                     <td>{{ retur.kg }}</td>
                     <td>{{ retur.pret }}</td>
                     <td>{{ retur.liber }}</td>
-                    <td>{{ retur.facturat ? 'Da' : 'Nu' }}</td>
+                    <td>
+                        <input type="checkbox" class="facturat-checkbox" data-id="{{ retur.id }}" data-type="retururi" {% if retur.facturat %}checked{% endif %}>
+                    </td>
                     <td>
                         <a href="{{ path('app_retururi_edit', {'id': retur.id}) }}" class="btn btn-warning">Editează</a>
                         <form method="post" action="{{ path('app_retururi_delete', {'id': retur.id}) }}" style="display:inline;" onsubmit="return confirm('Ești sigur că vrei să ștergi acest retur?');">
@@ -95,4 +99,57 @@
     </table>
 
     <a href="{{ path('app_comenzi_index') }}" class="btn btn-secondary">Înapoi la listă</a>
+
+    {% block javascripts %}
+        {{ parent() }}
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                let processed = false; // Flag pentru a preveni apelurile multiple
+
+                document.querySelectorAll('.facturat-checkbox').forEach(function(checkbox) {
+                    checkbox.addEventListener('change', function(e) {
+                        if (processed) return; // Oprim execuția dacă deja procesăm
+                        processed = true; // Setăm flag-ul
+
+                        var id = this.getAttribute('data-id');
+                        var type = this.getAttribute('data-type');
+                        var facturat = this.checked;
+                        var url = type === 'tururi' ? 
+                            '{{ path('app_tururi_update_facturat', {'id': 'ID'}) }}'.replace('ID', id) : 
+                            '{{ path('app_retururi_update_facturat', {'id': 'ID'}) }}'.replace('ID', id);
+
+                        fetch(url, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded',
+                                'X-Requested-With': 'XMLHttpRequest',
+                            },
+                            body: 'facturat=' + encodeURIComponent(facturat)
+                        })
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error(`Răspuns neașteptat de la server: ${response.status}`);
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            if (data.success === true) {
+                                console.log('Starea facturat actualizată cu succes.');
+                            } else {
+                                console.error('Eroare server:', data.error);
+                                alert('A apărut o eroare la actualizarea stării: ' + (data.error || 'Răspuns neașteptat'));
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Eroare AJAX:', error.message);
+                            alert('Eroare la comunicarea cu serverul. Verifică consola pentru detalii.');
+                        })
+                        .finally(() => {
+                            processed = false; // Resetează flag-ul după finalizarea cererii
+                        });
+                    });
+                });
+            });
+        </script>
+    {% endblock %}
 {% endblock %}

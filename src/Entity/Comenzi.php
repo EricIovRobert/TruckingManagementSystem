@@ -20,6 +20,9 @@ class Comenzi
     #[ORM\JoinColumn(nullable: false)]
     private ?ParcAuto $parcAuto = null;
 
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $parcAutoNrSnapshot = null;
+
     #[ORM\Column(length: 100)]
     private ?string $sofer = null;
 
@@ -38,13 +41,13 @@ class Comenzi
     /**
      * @var Collection<int, Tururi>
      */
-    #[ORM\OneToMany(targetEntity: Tururi::class, mappedBy: 'comanda')]
+    #[ORM\OneToMany(targetEntity: Tururi::class, mappedBy: 'comanda', cascade: ['remove'])]
     private Collection $tururis;
 
     /**
      * @var Collection<int, Retururi>
      */
-    #[ORM\OneToMany(targetEntity: Retururi::class, mappedBy: 'comanda')]
+    #[ORM\OneToMany(targetEntity: Retururi::class, mappedBy: 'comanda', cascade: ['remove'])]
     private Collection $retururis;
 
     public function __construct()
@@ -66,6 +69,22 @@ class Comenzi
     public function setParcAuto(?ParcAuto $parcAuto): static
     {
         $this->parcAuto = $parcAuto;
+
+        if ($parcAuto) {
+            $this->parcAutoNrSnapshot = $parcAuto->getNrAuto();
+        }
+
+        return $this;
+    }
+
+    public function getParcAutoNrSnapshot(): ?string
+    {
+        return $this->parcAutoNrSnapshot;
+    }
+
+    public function setParcAutoNrSnapshot(?string $parcAutoNrSnapshot): static
+    {
+        $this->parcAutoNrSnapshot = $parcAutoNrSnapshot;
 
         return $this;
     }
