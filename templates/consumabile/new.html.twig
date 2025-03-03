@@ -1,0 +1,12 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Adaugă Consumabil{% endblock %}
+
+{% block body %}
+    <h1>Adaugă Consumabil</h1>
+    {{ form_start(form) }}
+        {{ form_widget(form) }}
+        <button type="submit" class="btn btn-primary">Salvează</button>
+    {{ form_end(form) }}
+    <a href="{{ path('app_consumabile_index') }}" class="btn btn-secondary mt-3">Înapoi</a>
+{% endblock %}

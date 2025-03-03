@@ -1,0 +1,49 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Consumabile{% endblock %}
+
+{% block body %}
+    <h1>Consumabile</h1>
+    <a href="{{ path('app_consumabile_new') }}" class="btn btn-primary mb-3">Adaugă Consumabil</a>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Nume</th>
+                <th>Preț Maxim</th>
+                <th>KM Utilizare Max</th>
+                <th>Acțiuni</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for consumabil in consumabile %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>{{ consumabil.nume }}</td>
+                    <td>{{ consumabil.pretMaxim }}</td>
+                    <td>{{ consumabil.kmUtilizareMax|default('N/A') }}</td>
+                    <td>
+                        <div class="dropdown">
+                            <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" id="dropdownMenuButton-{{ consumabil.id }}" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-three-dots-vertical"></i>
+                            </button>
+                            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton-{{ consumabil.id }}">
+                                <li>
+                                    <a class="dropdown-item text-warning" href="{{ path('app_consumabile_edit', {'id': consumabil.id}) }}">Editează</a>
+                                </li>
+                                <li>
+                                    <form method="post" action="{{ path('app_consumabile_delete', {'id': consumabil.id}) }}" onsubmit="return confirm('Ești sigur că vrei să ștergi acest consumabil?');">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ consumabil.id) }}">
+                                        <button type="submit" class="dropdown-item text-danger">Șterge</button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </div>
+                    </td>
+                </tr>
+            {% else %}
+                <tr><td colspan="5">Niciun consumabil găsit.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

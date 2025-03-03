@@ -13,7 +13,7 @@
                 background-color: whitesmoke;
             }
             .navbar-custom {
-                background-color: #1a2530; /* Nuanță similară cu exemplul original */
+                background-color: #1a2530;
             }
             .navbar-custom .navbar-brand,
             .navbar-custom .nav-link {
@@ -25,13 +25,22 @@
             }
             .navbar-custom .nav-link:hover,
             .navbar-custom .navbar-brand:hover {
-                color: #ff6b6b; /* Accent pentru hover */
+                color: #ff6b6b;
+            }
+            .dropdown-menu {
+                background-color: #1a2530;
+            }
+            .dropdown-item {
+                color: #ffffff;
+            }
+            .dropdown-item:hover {
+                background-color: #ff6b6b;
+                color: #ffffff;
             }
         </style>
         {% block stylesheets %}{% endblock %}
     </head>
     <body>
-        {# Navbarul va fi afișat doar dacă utilizatorul este autentificat #}
         {% if app.user %}
             <nav class="navbar navbar-expand-lg navbar-custom">
                 <div class="container">
@@ -43,31 +52,32 @@
                     <div class="collapse navbar-collapse" id="navbarContent">
                         <ul class="navbar-nav ms-auto">
                             <li class="nav-item">
-                                <a class="nav-link" href="{{ path('app_comenzi_index') }}">
+                                <a class="nav-link" href="{{ path('app_parc_auto_index') }}">Parc Auto <i class="fas fa-car"></i></a>
+                            </li>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="comenziDropdown" role="button" 
+                                   data-bs-toggle="dropdown" aria-expanded="false">
                                     Comenzi <i class="fas fa-truck"></i>
                                 </a>
+                                <ul class="dropdown-menu" aria-labelledby="comenziDropdown">
+                                    <li><a class="dropdown-item" href="{{ path('app_comenzi_index') }}">Comenzi</a></li>
+                                    <li><a class="dropdown-item" href="{{ path('app_comenzi_comunitare_index') }}">Comenzi Comunitare</a></li>
+                                </ul>
+                            </li>
+                           
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="cheltuieliDropdown" role="button" 
+                                   data-bs-toggle="dropdown" aria-expanded="false">
+                                    Cheltuieli <i class="fas fa-money-bill-wave"></i>
+                                </a>
+                                <ul class="dropdown-menu" aria-labelledby="cheltuieliDropdown">
+                                    <li><a class="dropdown-item" href="{{ path('app_categorii_cheltuieli_index') }}">Categorii Cheltuieli</a></li>
+                                    <li><a class="dropdown-item" href="{{ path('app_consumabile_index') }}">Consumabile</a></li>
+                                    <li><a class="dropdown-item" href="{{ path('app_comenzi_index') }}">Rapoarte</a></li>
+                                </ul>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="{{ path('app_parc_auto_index') }}">
-                                    Parc Auto <i class="fas fa-car"></i>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="{{ path('app_comenzi_index') }}">
-                                    Rapoarte <i class="fas fa-chart-bar"></i>
-                                </a>
-                            </li>
-
-                            <li class="nav-item">
-                                <a class="nav-link" href="{{ path('app_comenzi_comunitare_index') }}">
-                                    Comenzi Comunitare <i class="fas fa-truck-loading"></i>
-                                </a>
-                            </li>
-
-                            <li class="nav-item">
-                                <a class="nav-link" href="{{ path('app_logout') }}">
-                                    Logout <i class="fas fa-sign-out-alt"></i>
-                                </a>
+                                <a class="nav-link" href="{{ path('app_logout') }}">Logout <i class="fas fa-sign-out-alt"></i></a>
                             </li>
                         </ul>
                     </div>
