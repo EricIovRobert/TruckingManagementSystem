@@ -32,9 +32,16 @@ class ParcAuto
     #[ORM\OneToMany(targetEntity: Comenzi::class, mappedBy: 'parcAuto')]
     private Collection $comenzis;
 
+    /**
+     * @var Collection<int, ComenziComunitare>
+     */
+    #[ORM\OneToMany(targetEntity: ComenziComunitare::class, mappedBy: 'nr_auto')]
+    private Collection $comenziComunitares;
+
     public function __construct()
     {
         $this->comenzis = new ArrayCollection();
+        $this->comenziComunitares = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -102,6 +109,36 @@ class ParcAuto
             // set the owning side to null (unless already changed)
             if ($comenzi->getParcAuto() === $this) {
                 $comenzi->setParcAuto(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, ComenziComunitare>
+     */
+    public function getComenziComunitares(): Collection
+    {
+        return $this->comenziComunitares;
+    }
+
+    public function addComenziComunitare(ComenziComunitare $comenziComunitare): static
+    {
+        if (!$this->comenziComunitares->contains($comenziComunitare)) {
+            $this->comenziComunitares->add($comenziComunitare);
+            $comenziComunitare->setNrAuto($this);
+        }
+
+        return $this;
+    }
+
+    public function removeComenziComunitare(ComenziComunitare $comenziComunitare): static
+    {
+        if ($this->comenziComunitares->removeElement($comenziComunitare)) {
+            // set the owning side to null (unless already changed)
+            if ($comenziComunitare->getNrAuto() === $this) {
+                $comenziComunitare->setNrAuto(null);
             }
         }
 
