@@ -1,0 +1,36 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Detalii Comanda Comunitara{% endblock %}
+
+{% block body %}
+    <div class="card">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h1 class="h3 mb-0">Detalii Comanda Comunitara</h1>
+            <a href="{{ path('app_comenzi_comunitare_index') }}" class="btn btn-light btn-sm"><i class="fas fa-arrow-left"></i> Inapoi</a>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>ID:</strong> {{ comenzi_comunitare.id }}</p>
+                    <p><strong>Nr Auto:</strong> {{ comenzi_comunitare.nrAuto ? comenzi_comunitare.nrAuto.nrAuto : '' }}</p>
+                    <p><strong>Nr Auto Snapshot:</strong> {{ comenzi_comunitare.nrAutoSnapshot }}</p>
+                    <p><strong>Sofer:</strong> {{ comenzi_comunitare.sofer }}</p>
+                    <p><strong>Data Start:</strong> {{ comenzi_comunitare.dataStart ? comenzi_comunitare.dataStart|date('Y-m-d') : '' }}</p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>Data Stop:</strong> {{ comenzi_comunitare.dataStop ? comenzi_comunitare.dataStop|date('Y-m-d') : '' }}</p>
+                    <p><strong>Nr KM:</strong> {{ comenzi_comunitare.nrKm }}</p>
+                    <p><strong>Profit:</strong> {{ comenzi_comunitare.profit }}</p>
+                    <p><strong>Kg:</strong> {{ comenzi_comunitare.kg }}</p>
+                    <p><strong>Pret:</strong> {{ comenzi_comunitare.pret }}</p>
+                    <p><strong>Firma:</strong> {{ comenzi_comunitare.firma }}</p>
+                </div>
+            </div>
+            <a href="{{ path('app_comenzi_comunitare_edit', {'id': comenzi_comunitare.id}) }}" class="btn btn-warning"><i class="fas fa-edit"></i> Editeaza</a>
+            <form method="post" action="{{ path('app_comenzi_comunitare_delete', {'id': comenzi_comunitare.id}) }}" style="display:inline;" onsubmit="return confirm('Sigur vrei să ștergi?');">
+                <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ comenzi_comunitare.id) }}">
+                <button class="btn btn-danger"><i class="fas fa-trash"></i> Sterge</button>
+            </form>
+        </div>
+    </div>
+{% endblock %}

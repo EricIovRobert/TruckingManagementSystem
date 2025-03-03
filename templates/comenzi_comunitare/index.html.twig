@@ -1,0 +1,77 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Lista Comenzi Comunitare{% endblock %}
+
+{% block body %}
+    <h1>Lista Comenzi Comunitare</h1>
+
+    {% for message in app.flashes('success') %}
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    {% endfor %}
+    {% for message in app.flashes('error') %}
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    {% endfor %}
+
+    <a href="{{ path('app_comenzi_comunitare_new') }}" class="btn btn-primary">Adaugă Comandă Comunitară</a>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Mașină</th>
+                <th>Șofer</th>
+                <th>Data Start</th>
+                <th>Data Stop</th>
+                <th>Număr Km</th>
+                <th>Profit</th>
+                <th>Kg</th>
+                <th>Preț</th>
+                <th>Firmă</th>
+                <th>Acțiuni</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for comenzi_comunitare in comenzi_comunitares %}
+                <tr>
+                    <td>
+                        <a href="{{ path('app_comenzi_comunitare_show', {'id': comenzi_comunitare.id}) }}">
+                            {{ comenzi_comunitare.nrAutoSnapshot ?: 'N/A' }}
+                        </a>
+                    </td>
+                    <td>{{ comenzi_comunitare.sofer }}</td>
+                    <td>{{ comenzi_comunitare.dataStart ? comenzi_comunitare.dataStart|date('Y-m-d') : 'N/A' }}</td>
+                    <td>{{ comenzi_comunitare.dataStop ? comenzi_comunitare.dataStop|date('Y-m-d') : 'N/A' }}</td>
+                    <td>{{ comenzi_comunitare.nrKm is not null ? comenzi_comunitare.nrKm : 'N/A' }}</td>
+                    <td>{{ comenzi_comunitare.profit }}</td>
+                    <td>{{ comenzi_comunitare.kg }}</td>
+                    <td>{{ comenzi_comunitare.pret }}</td>
+                    <td>{{ comenzi_comunitare.firma }}</td>
+                    <td>
+                        <div class="dropdown">
+                            <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" id="dropdownMenuButton-{{ comenzi_comunitare.id }}" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-three-dots-vertical"></i>
+                            </button>
+                            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton-{{ comenzi_comunitare.id }}">
+                                <li><a class="dropdown-item text-warning" href="{{ path('app_comenzi_comunitare_edit', {'id': comenzi_comunitare.id}) }}">Editează</a></li>
+                                <li>
+                                    <form method="post" action="{{ path('app_comenzi_comunitare_delete', {'id': comenzi_comunitare.id}) }}" onsubmit="return confirm('Ești sigur că vrei să ștergi această comandă?');">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ comenzi_comunitare.id) }}">
+                                        <button type="submit" class="dropdown-item text-danger">Șterge</button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </div>
+                    </td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="10">Nu există înregistrări.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

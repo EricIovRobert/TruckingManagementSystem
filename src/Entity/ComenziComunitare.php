@@ -45,6 +45,8 @@ class ComenziComunitare
     #[ORM\Column(length: 100)]
     private ?string $firma = null;
 
+  
+
     public function getId(): ?int
     {
         return $this->id;

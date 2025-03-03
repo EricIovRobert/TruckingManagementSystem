@@ -1,0 +1,16 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Editează Comandă Comunitară{% endblock %}
+
+{% block body %}
+    <h1>Editează Comandă Comunitară</h1>
+    {{ form_start(form) }}
+        {{ form_widget(form) }}
+        <datalist id="parc_auto_list">
+            {% for parc_auto in parc_auto_list %}
+                <option value="{{ parc_auto.nrAuto }}">{{ parc_auto.nrAuto }}</option>
+            {% endfor %}
+        </datalist>
+        <button type="submit" class="btn btn-primary">Salvează</button>
+    {{ form_end(form) }}
+{% endblock %}
