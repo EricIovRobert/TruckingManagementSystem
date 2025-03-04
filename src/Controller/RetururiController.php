@@ -31,6 +31,9 @@ class RetururiController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             $entityManager->persist($retur);
             $entityManager->flush();
+            $comanda = $retur->getComanda();
+            $comanda->calculateAndSetProfit();
+            $entityManager->flush();
             return $this->redirectToRoute('app_comenzi_show', ['id' => $comanda->getId()]);
         }
 
@@ -48,6 +51,9 @@ class RetururiController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
             $entityManager->flush();
+            $comanda = $retur->getComanda();
+            $comanda->calculateAndSetProfit();
+            $entityManager->flush();
             return $this->redirectToRoute('app_comenzi_show', ['id' => $retur->getComanda()->getId()]);
         }
 
@@ -63,6 +69,9 @@ class RetururiController extends AbstractController
         if ($this->isCsrfTokenValid('delete' . $retur->getId(), $request->request->get('_token'))) {
             $comandaId = $retur->getComanda()->getId();
             $entityManager->remove($retur);
+            $entityManager->flush();
+            $comanda = $retur->getComanda();
+            $comanda->calculateAndSetProfit();
             $entityManager->flush();
             return $this->redirectToRoute('app_comenzi_show', ['id' => $comandaId]);
         }
