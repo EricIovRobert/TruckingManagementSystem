@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\ComenziComunitareRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -44,6 +46,17 @@ class ComenziComunitare
 
     #[ORM\Column(length: 100)]
     private ?string $firma = null;
+
+    /**
+     * @var Collection<int, Cheltuieli>
+     */
+    #[ORM\OneToMany(targetEntity: Cheltuieli::class, mappedBy: 'comunitar')]
+    private Collection $cheltuielis;
+
+    public function __construct()
+    {
+        $this->cheltuielis = new ArrayCollection();
+    }
 
   
 
@@ -168,6 +181,36 @@ class ComenziComunitare
     public function setFirma(string $firma): static
     {
         $this->firma = $firma;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Cheltuieli>
+     */
+    public function getCheltuielis(): Collection
+    {
+        return $this->cheltuielis;
+    }
+
+    public function addCheltuieli(Cheltuieli $cheltuieli): static
+    {
+        if (!$this->cheltuielis->contains($cheltuieli)) {
+            $this->cheltuielis->add($cheltuieli);
+            $cheltuieli->setComunitar($this);
+        }
+
+        return $this;
+    }
+
+    public function removeCheltuieli(Cheltuieli $cheltuieli): static
+    {
+        if ($this->cheltuielis->removeElement($cheltuieli)) {
+            // set the owning side to null (unless already changed)
+            if ($cheltuieli->getComunitar() === $this) {
+                $cheltuieli->setComunitar(null);
+            }
+        }
 
         return $this;
     }

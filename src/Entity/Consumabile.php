@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\ConsumabileRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: ConsumabileRepository::class)]
@@ -25,6 +27,17 @@ class Consumabile
 
     #[ORM\Column(nullable: true)]
     private ?float $km_utilizare_max = null;
+
+    /**
+     * @var Collection<int, Cheltuieli>
+     */
+    #[ORM\OneToMany(targetEntity: Cheltuieli::class, mappedBy: 'consumabil')]
+    private Collection $cheltuielis;
+
+    public function __construct()
+    {
+        $this->cheltuielis = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -75,6 +88,36 @@ class Consumabile
     public function setKmUtilizareMax(?float $km_utilizare_max): static
     {
         $this->km_utilizare_max = $km_utilizare_max;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Cheltuieli>
+     */
+    public function getCheltuielis(): Collection
+    {
+        return $this->cheltuielis;
+    }
+
+    public function addCheltuieli(Cheltuieli $cheltuieli): static
+    {
+        if (!$this->cheltuielis->contains($cheltuieli)) {
+            $this->cheltuielis->add($cheltuieli);
+            $cheltuieli->setConsumabil($this);
+        }
+
+        return $this;
+    }
+
+    public function removeCheltuieli(Cheltuieli $cheltuieli): static
+    {
+        if ($this->cheltuielis->removeElement($cheltuieli)) {
+            // set the owning side to null (unless already changed)
+            if ($cheltuieli->getConsumabil() === $this) {
+                $cheltuieli->setConsumabil(null);
+            }
+        }
 
         return $this;
     }

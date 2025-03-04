@@ -30,10 +30,17 @@ class CategoriiCheltuieli
     #[ORM\OneToMany(targetEntity: Consumabile::class, mappedBy: 'categorie', cascade: ['remove'])]
     private Collection $consumabiles;
 
+    /**
+     * @var Collection<int, Cheltuieli>
+     */
+    #[ORM\OneToMany(targetEntity: Cheltuieli::class, mappedBy: 'categorie')]
+    private Collection $cheltuielis;
+
     public function __construct()
     {
         $this->subcategoriiCheltuielis = new ArrayCollection();
         $this->consumabiles = new ArrayCollection();
+        $this->cheltuielis = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -103,6 +110,36 @@ class CategoriiCheltuieli
                 $consumabile->setCategorie(null);
             }
         }
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Cheltuieli>
+     */
+    public function getCheltuielis(): Collection
+    {
+        return $this->cheltuielis;
+    }
+
+    public function addCheltuieli(Cheltuieli $cheltuieli): static
+    {
+        if (!$this->cheltuielis->contains($cheltuieli)) {
+            $this->cheltuielis->add($cheltuieli);
+            $cheltuieli->setCategorie($this);
+        }
+
+        return $this;
+    }
+
+    public function removeCheltuieli(Cheltuieli $cheltuieli): static
+    {
+        if ($this->cheltuielis->removeElement($cheltuieli)) {
+            // set the owning side to null (unless already changed)
+            if ($cheltuieli->getCategorie() === $this) {
+                $cheltuieli->setCategorie(null);
+            }
+        }
+
         return $this;
     }
 }

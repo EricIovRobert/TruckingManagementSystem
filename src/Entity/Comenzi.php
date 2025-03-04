@@ -59,11 +59,18 @@ class Comenzi
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $observatii = null;
 
+    /**
+     * @var Collection<int, Cheltuieli>
+     */
+    #[ORM\OneToMany(targetEntity: Cheltuieli::class, mappedBy: 'comanda')]
+    private Collection $cheltuielis;
+
     public function __construct()
     {
         $this->tururis = new ArrayCollection();
         $this->retururis = new ArrayCollection();
         $this->rezolvat = false; // Setăm valoarea implicită în constructor
+        $this->cheltuielis = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -251,6 +258,36 @@ class Comenzi
     public function setObservatii(?string $observatii): static
     {
         $this->observatii = $observatii;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Cheltuieli>
+     */
+    public function getCheltuielis(): Collection
+    {
+        return $this->cheltuielis;
+    }
+
+    public function addCheltuieli(Cheltuieli $cheltuieli): static
+    {
+        if (!$this->cheltuielis->contains($cheltuieli)) {
+            $this->cheltuielis->add($cheltuieli);
+            $cheltuieli->setComanda($this);
+        }
+
+        return $this;
+    }
+
+    public function removeCheltuieli(Cheltuieli $cheltuieli): static
+    {
+        if ($this->cheltuielis->removeElement($cheltuieli)) {
+            // set the owning side to null (unless already changed)
+            if ($cheltuieli->getComanda() === $this) {
+                $cheltuieli->setComanda(null);
+            }
+        }
 
         return $this;
     }
