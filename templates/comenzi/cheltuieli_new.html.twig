@@ -1,0 +1,31 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+    <h1>Adaugă o cheltuială nouă</h1>
+    {{ form_start(form) }}
+        {{ form_widget(form) }}
+        <button type="submit" class="btn btn-primary">Salvează</button>
+    {{ form_end(form) }}
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const subcategorieField = document.querySelector('[name="cheltuieli[subcategorie]"]');
+            const sumaField = document.querySelector('[name="cheltuieli[suma]"]');
+
+            if (subcategorieField && sumaField) {
+                subcategorieField.addEventListener('change', function() {
+                    const selectedOption = this.options[this.selectedIndex];
+                    const pretStandard = selectedOption.getAttribute('data-pret-standard');
+                    if (pretStandard && pretStandard !== 'null') {
+                        sumaField.value = pretStandard;
+                    } else {
+                        sumaField.value = ''; // Resetăm câmpul dacă nu există pret_standard
+                    }
+                });
+            }
+        });
+    </script>
+{% endblock %}

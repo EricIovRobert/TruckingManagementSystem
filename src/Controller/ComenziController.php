@@ -3,6 +3,8 @@
 namespace App\Controller;
 
 use App\Entity\Comenzi;
+use App\Entity\Cheltuieli;
+use App\Form\CheltuieliType;
 use App\Form\ComenziType;
 use App\Repository\ComenziRepository;
 use App\Repository\ParcAutoRepository;
@@ -12,6 +14,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use App\Entity\SubcategoriiCheltuieli;
 
 #[Route('/comenzi')]
 class ComenziController extends AbstractController
@@ -140,4 +143,53 @@ class ComenziController extends AbstractController
             return new JsonResponse(['success' => false, 'error' => $e->getMessage()], 500);
         }
     }
+    #[Route('/{id}/cheltuieli/new', name: 'app_comenzi_cheltuieli_new', methods: ['GET', 'POST'])]
+    public function newCheltuiala(Request $request, Comenzi $comanda, EntityManagerInterface $entityManager): Response
+    {
+        $cheltuiala = new Cheltuieli();
+        $cheltuiala->setComanda($comanda);
+        $cheltuiala->setDataCheltuiala(new \DateTime()); // Data curentă implicit
+
+        $form = $this->createForm(CheltuieliType::class, $cheltuiala);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            // Gestionăm categoria nouă
+            $categorie = $form->get('categorie')->getData();
+            $categorieNoua = $form->get('categorie_noua')->getData();
+            if (!$categorie && $categorieNoua) {
+                $categorie = new CategoriiCheltuieli();
+                $categorie->setNume($categorieNoua);
+                $entityManager->persist($categorie);
+            }
+            $cheltuiala->setCategorie($categorie);
+
+            // Gestionăm subcategoria nouă
+            $subcategorie = $form->get('subcategorie')->getData();
+            $subcategorieNoua = $form->get('subcategorie_noua')->getData();
+            if (!$subcategorie && $subcategorieNoua) {
+                $subcategorie = new SubcategoriiCheltuieli();
+                $subcategorie->setNume($subcategorieNoua);
+                $subcategorie->setCategorie($categorie);
+                // Setăm pret_standard la suma introdusă
+                $subcategorie->setPretStandard($cheltuiala->getSuma());
+                $entityManager->persist($subcategorie);
+            }
+            $cheltuiala->setSubcategorie($subcategorie);
+
+            $entityManager->persist($cheltuiala);
+            $entityManager->flush();
+
+            // Actualizăm profitul comenzii
+            $comanda->calculateAndSetProfit();
+            $entityManager->flush();
+
+            return $this->redirectToRoute('app_comenzi_show', ['id' => $comanda->getId()]);
+        }
+
+        return $this->render('comenzi/cheltuieli_new.html.twig', [
+            'form' => $form->createView(),
+            'comanda' => $comanda,
+    ]);
+}
 }

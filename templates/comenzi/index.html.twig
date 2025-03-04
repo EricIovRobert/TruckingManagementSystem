@@ -46,7 +46,22 @@
                     <td>{{ comanda.dataStart ? comanda.dataStart|date('Y-m-d') : 'N/A' }}</td>
                     <td>{{ comanda.dataStop ? comanda.dataStop|date('Y-m-d') : 'N/A' }}</td>
                     <td>{{ comanda.numarKm is not null ? comanda.numarKm : 'N/A' }}</td>
-                    <td>{{ comanda.profit }}</td>
+                    <td>
+                        {% set totalTururi = 0 %}
+                        {% for tur in comanda.tururis %}
+                            {% set totalTururi = totalTururi + (tur.pret ?: 0) %}
+                        {% endfor %}
+                        {% set totalRetururi = 0 %}
+                        {% for retur in comanda.retururis %}
+                            {% set totalRetururi = totalRetururi + (retur.pret ?: 0) %}
+                        {% endfor %}
+                        {% set totalCheltuieli = 0 %}
+                        {% for cheltuiala in comanda.cheltuielis %}
+                            {% set totalCheltuieli = totalCheltuieli + (cheltuiala.suma ?: 0) %}
+                        {% endfor %}
+                        {% set profit = totalTururi + totalRetururi - totalCheltuieli %}
+                        {{ profit|number_format(2, ',', '.') }}
+                    </td>
                     <td>
                         {% set ultimaRutaDescarcare = null %}
                         {% if comanda.retururis|length > 0 %}

@@ -72,6 +72,25 @@ class Comenzi
         $this->rezolvat = false; // Setăm valoarea implicită în constructor
         $this->cheltuielis = new ArrayCollection();
     }
+    public function calculateAndSetProfit(): void
+{
+    $totalTururi = 0;
+    foreach ($this->tururis as $tur) {
+        $totalTururi += $tur->getPret() ?? 0;
+    }
+
+    $totalRetururi = 0;
+    foreach ($this->retururis as $retur) {
+        $totalRetururi += $retur->getPret() ?? 0;
+    }
+
+    $totalCheltuieli = 0;
+    foreach ($this->cheltuielis as $cheltuiala) {
+        $totalCheltuieli += $cheltuiala->getSuma() ?? 0;
+    }
+
+    $this->profit = $totalTururi + $totalRetururi - $totalCheltuieli;
+}
 
     public function getId(): ?int
     {
