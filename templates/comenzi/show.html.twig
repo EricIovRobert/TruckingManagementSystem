@@ -118,6 +118,7 @@
                 <th>Suma</th>
                 <th>Data</th>
                 <th>Descriere</th>
+                <th>Acțiuni</th>
             </tr>
         </thead>
         <tbody>
@@ -136,10 +137,21 @@
                     <td>{{ cheltuiala.suma }}</td>
                     <td>{{ cheltuiala.dataCheltuiala ? cheltuiala.dataCheltuiala|date('Y-m-d') : 'N/A' }}</td>
                     <td>{{ cheltuiala.descriere ?: 'N/A' }}</td>
+                    <td>
+                        <a href="{{ path('app_comenzi_cheltuieli_edit', {'comandaId': comanda.id, 'cheltuialaId': cheltuiala.id}) }}"
+                           class="btn btn-warning">Editează</a>
+                        <form method="post"
+                              action="{{ path('app_comenzi_cheltuieli_delete', {'comandaId': comanda.id, 'cheltuialaId': cheltuiala.id}) }}"
+                              style="display:inline;"
+                              onsubmit="return confirm('Ești sigur că vrei să ștergi această cheltuială?');">
+                            <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ cheltuiala.id) }}">
+                            <button class="btn btn-danger">Șterge</button>
+                        </form>
+                    </td>
                 </tr>
-                {% else %}
+            {% else %}
                 <tr>
-                    <td colspan="5">Nicio cheltuială asociată</td>
+                    <td colspan="6">Nicio cheltuială asociată</td>
                 </tr>
             {% endfor %}
         </tbody>
@@ -153,7 +165,7 @@
             document.addEventListener('DOMContentLoaded', function() {
                 let processed = false; // Flag pentru a preveni apelurile multiple
 
-                // Gestionarea cererii AJAX pentru facturat
+                // Gestionarea cererii AJAX pentru facturat (tururi/retururi)
                 document.querySelectorAll('.facturat-checkbox').forEach(function(checkbox) {
                     checkbox.addEventListener('change', function(e) {
                         if (processed) return;
@@ -162,9 +174,9 @@
                         var id = this.getAttribute('data-id');
                         var type = this.getAttribute('data-type');
                         var facturat = this.checked;
-                        var url = type === 'tururi' ? 
-                            '{{ path('app_tururi_update_facturat', {'id': 'ID'}) }}'.replace('ID', id) : 
-                            '{{ path('app_retururi_update_facturat', {'id': 'ID'}) }}'.replace('ID', id);
+                        var url = type === 'tururi' 
+                            ? '{{ path('app_tururi_update_facturat', {'id': 'ID'}) }}'.replace('ID', id)
+                            : '{{ path('app_retururi_update_facturat', {'id': 'ID'}) }}'.replace('ID', id);
 
                         fetch(url, {
                             method: 'POST',

@@ -1,10 +1,10 @@
 {% extends 'base.html.twig' %}
 
 {% block body %}
-    <h1>Adaugă o cheltuială nouă</h1>
+    <h1>Editează Cheltuiala #{{ cheltuiala.id }} (Comanda #{{ comanda.id }})</h1>
     {{ form_start(form) }}
         {{ form_widget(form) }}
-        <button type="submit" class="btn btn-primary">Salvează</button>
+        <button type="submit" class="btn btn-primary">Salvează modificările</button>
     {{ form_end(form) }}
 {% endblock %}
 
@@ -17,69 +17,47 @@
             const sumaField = document.querySelector('[name="cheltuieli[suma]"]');
             const litriMotorinaField = document.querySelector('[name="cheltuieli[litri_motorina]"]');
 
-            // Ascundem câmpul litri motorină inițial (prin JS, dar poți și direct prin CSS)
+            // Ascundem câmpul litri motorină inițial
             if (litriMotorinaField) {
                 litriMotorinaField.closest('.form-group, .form-row, div').style.display = 'none';
             }
 
-            // Numărul de kilometri al comenzii (poate fi null)
             const numarKm = {{ comanda.numarKm is not null ? comanda.numarKm : 'null' }};
-
             let subcategorieSelect = null;
 
-            /**
-             * Funcție care recalculează suma pentru motorină:
-             *  - Nu mai forțăm valoarea "1"
-             *  - Dacă user-ul șterge tot, litri devine 0 => sumă 0
-             */
             function recalcPretPerL(pretPerL) {
                 if (!litriMotorinaField) return;
-                
-                const rawLitri = litriMotorinaField.value.trim(); 
-                // dacă e gol, considerăm 0
+                const rawLitri = litriMotorinaField.value.trim();
                 const litri = rawLitri === '' ? 0 : parseFloat(rawLitri);
-
                 if (isNaN(litri) || litri < 0) {
-                    // Dacă user-ul pune un input invalid, consideră 0
                     sumaField.value = '';
                     return;
                 }
-
                 const total = pretPerL * litri;
                 sumaField.value = total.toFixed(2);
             }
 
-            /**
-             * Când se schimbă subcategoria, vedem ce fel e (pret_per_l, pret_standard, consumabile etc.)
-             */
             function onSubcategorieChange() {
-                if (!subcategorieSelect) return;
-
                 const selectedOption = subcategorieSelect.options[subcategorieSelect.selectedIndex];
                 if (!selectedOption) return;
 
-                // Luăm atributele din <option>
                 const pretStandard = parseFloat(selectedOption.getAttribute('data-pret-standard') || '0');
                 const kmUtilizareMax = parseFloat(selectedOption.getAttribute('data-km-utilizare-max') || '0');
                 const pretPerL = parseFloat(selectedOption.getAttribute('data-pret-per-l') || '0');
 
-                // Salvăm ID-ul subcategoriei în hidden field
                 subcategorieField.value = subcategorieSelect.value;
 
-                // Dacă e motorină (pret_per_l > 0), afișăm câmpul de litri
                 if (pretPerL > 0) {
                     if (litriMotorinaField) {
                         litriMotorinaField.closest('.form-group, .form-row, div').style.display = '';
                         recalcPretPerL(pretPerL);
                     }
                 } else {
-                    // Ascundem câmpul de litri
                     if (litriMotorinaField) {
                         litriMotorinaField.closest('.form-group, .form-row, div').style.display = 'none';
-                        litriMotorinaField.value = ''; // Resetăm la gol
+                        litriMotorinaField.value = '';
                     }
 
-                    // Dacă e consumabil (cu km), calculăm proporțional
                     const categorieNume = categorieField.options[categorieField.selectedIndex].text;
                     if (categorieNume === 'Consumabile' && pretStandard > 0 && kmUtilizareMax > 0) {
                         if (numarKm !== null && numarKm > 0) {
@@ -89,7 +67,6 @@
                             sumaField.value = pretStandard.toFixed(2);
                         }
                     } else {
-                        // subcategorie cu pret_standard
                         if (pretStandard && pretStandard !== 'null') {
                             sumaField.value = pretStandard.toFixed(2);
                         } else {
@@ -99,9 +76,6 @@
                 }
             }
 
-            /**
-             * Funcție pentru a încărca subcategoriile via AJAX, pe baza categoriei
-             */
             function updateSubcategories() {
                 const categorieId = categorieField.value;
                 if (!categorieId) {
@@ -134,25 +108,27 @@
                         option.setAttribute('data-pret-per-l', sub.pret_per_l || '0');
                         subcategorieSelect.appendChild(option);
                     });
+
+                    // Setăm subcategoria "selectată" actuală
+                    const currentSubcatId = '{{ cheltuiala.subcategorie ? cheltuiala.subcategorie.id : (cheltuiala.consumabil ? cheltuiala.consumabil.id : "") }}';
+                    if (currentSubcatId) {
+                        subcategorieSelect.value = currentSubcatId;
+                        onSubcategorieChange(); // forțăm calculul / afișarea
+                    }
                 })
                 .catch(error => console.error('Eroare la încărcarea subcategoriilor:', error));
             }
 
-            // --- MAIN: inițializare ---
             if (categorieField && subcategorieField && sumaField) {
-                // Creăm un <select> programatic
                 subcategorieSelect = document.createElement('select');
                 subcategorieSelect.name = 'cheltuieli[subcategorie_select]';
                 subcategorieSelect.innerHTML = '<option value="">Selectează o subcategorie (opțional)</option>';
 
-                // Inserăm înaintea câmpului ascuns
                 subcategorieField.parentNode.insertBefore(subcategorieSelect, subcategorieField);
 
-                // Evenimente
                 categorieField.addEventListener('change', updateSubcategories);
                 subcategorieSelect.addEventListener('change', onSubcategorieChange);
 
-                // Dacă avem litriMotorinaField, când se modifică, recalculează
                 if (litriMotorinaField) {
                     litriMotorinaField.addEventListener('input', function() {
                         const selectedOption = subcategorieSelect.options[subcategorieSelect.selectedIndex];
@@ -164,7 +140,6 @@
                     });
                 }
 
-                // Încărcăm subcategoriile inițial
                 updateSubcategories();
             }
         });

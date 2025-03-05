@@ -2,14 +2,13 @@
 
 namespace App\Form;
 
-use App\Entity\CategoriiCheltuieli;
-use App\Entity\SubcategoriiCheltuieli;
 use App\Entity\Cheltuieli;
+use App\Entity\CategoriiCheltuieli;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
-use Symfony\Component\Form\Extension\Core\Type\DateType;
 use Symfony\Component\Form\Extension\Core\Type\NumberType;
+use Symfony\Component\Form\Extension\Core\Type\DateType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
@@ -27,10 +26,9 @@ class CheltuieliType extends AbstractType
             ->add('subcategorie', TextType::class, [
                 'label' => 'Subcategorie',
                 'required' => false,
-                'mapped' => false, // Gestionăm manual maparea
+                'mapped' => false, 
                 'attr' => [
-                    'style' => 'display: none;', // Ascundem câmpul text, vom folosi un select în JavaScript
-                    'data-pret-standard' => '',
+                    'style' => 'display: none;', // Ascundem câmpul, îl populăm via JS
                 ],
             ])
             ->add('suma', NumberType::class, [
@@ -38,7 +36,7 @@ class CheltuieliType extends AbstractType
                 'required' => true,
             ])
             ->add('litri_motorina', NumberType::class, [
-                'label' => 'Litri Motorină (opțional)',
+                'label' => 'Litri Motorină',
                 'required' => false,
             ])
             ->add('tva', NumberType::class, [
@@ -64,7 +62,7 @@ class CheltuieliType extends AbstractType
     {
         $resolver->setDefaults([
             'data_class' => Cheltuieli::class,
-            'allow_extra_fields' => true, // Permitem câmpuri suplimentare
+            'allow_extra_fields' => true,
         ]);
     }
 }
