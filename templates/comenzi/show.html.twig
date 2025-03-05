@@ -123,13 +123,21 @@
         <tbody>
             {% for cheltuiala in comanda.cheltuielis %}
                 <tr>
-                    <td>{{ cheltuiala.categorie.nume }}</td>
-                    <td>{{ cheltuiala.subcategorie ? cheltuiala.subcategorie.nume : 'N/A' }}</td>
+                    <td>{{ cheltuiala.categorie ? cheltuiala.categorie.nume : 'N/A' }}</td>
+                    <td>
+                        {% if cheltuiala.subcategorie %}
+                            {{ cheltuiala.subcategorie.nume }}
+                        {% elseif cheltuiala.consumabil %}
+                            {{ cheltuiala.consumabil.nume }}
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </td>
                     <td>{{ cheltuiala.suma }}</td>
-                    <td>{{ cheltuiala.getDataCheltuiala()|date('Y-m-d') }}</td>
+                    <td>{{ cheltuiala.dataCheltuiala ? cheltuiala.dataCheltuiala|date('Y-m-d') : 'N/A' }}</td>
                     <td>{{ cheltuiala.descriere ?: 'N/A' }}</td>
                 </tr>
-            {% else %}
+                {% else %}
                 <tr>
                     <td colspan="5">Nicio cheltuială asociată</td>
                 </tr>

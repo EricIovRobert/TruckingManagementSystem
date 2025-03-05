@@ -15,6 +15,8 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use App\Entity\SubcategoriiCheltuieli;
+use App\Entity\Consumabile;
+use App\Entity\CategoriiCheltuieli;
 
 #[Route('/comenzi')]
 class ComenziController extends AbstractController
@@ -143,6 +145,7 @@ class ComenziController extends AbstractController
             return new JsonResponse(['success' => false, 'error' => $e->getMessage()], 500);
         }
     }
+
     #[Route('/{id}/cheltuieli/new', name: 'app_comenzi_cheltuieli_new', methods: ['GET', 'POST'])]
     public function newCheltuiala(Request $request, Comenzi $comanda, EntityManagerInterface $entityManager): Response
     {
@@ -154,28 +157,29 @@ class ComenziController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            // Gestionăm categoria nouă
-            $categorie = $form->get('categorie')->getData();
-            $categorieNoua = $form->get('categorie_noua')->getData();
-            if (!$categorie && $categorieNoua) {
-                $categorie = new CategoriiCheltuieli();
-                $categorie->setNume($categorieNoua);
-                $entityManager->persist($categorie);
-            }
-            $cheltuiala->setCategorie($categorie);
+            // Verificăm dacă categoria este "Consumabile"
+            $categorie = $cheltuiala->getCategorie();
+            $subcategorieId = $form->get('subcategorie')->getData(); // Valoare nemapată din ChoiceType
 
-            // Gestionăm subcategoria nouă
-            $subcategorie = $form->get('subcategorie')->getData();
-            $subcategorieNoua = $form->get('subcategorie_noua')->getData();
-            if (!$subcategorie && $subcategorieNoua) {
-                $subcategorie = new SubcategoriiCheltuieli();
-                $subcategorie->setNume($subcategorieNoua);
-                $subcategorie->setCategorie($categorie);
-                // Setăm pret_standard la suma introdusă
-                $subcategorie->setPretStandard($cheltuiala->getSuma());
-                $entityManager->persist($subcategorie);
+            if ($categorie && $categorie->getNume() === 'Consumabile') {
+                // Dacă este "Consumabile", subcategoria este un Consumabile
+                if ($subcategorieId) {
+                    $consumabil = $entityManager->getRepository(Consumabile::class)->find($subcategorieId);
+                    if ($consumabil) {
+                        $cheltuiala->setConsumabil($consumabil);
+                        $cheltuiala->setSubcategorie(null); // Ne asigurăm că subcategorie este null
+                    }
+                }
+            } else {
+                // Altfel, subcategoria este un SubcategoriiCheltuieli
+                if ($subcategorieId) {
+                    $subcategorie = $entityManager->getRepository(SubcategoriiCheltuieli::class)->find($subcategorieId);
+                    if ($subcategorie) {
+                        $cheltuiala->setSubcategorie($subcategorie);
+                        $cheltuiala->setConsumabil(null); // Ne asigurăm că consumabil este null
+                    }
+                }
             }
-            $cheltuiala->setSubcategorie($subcategorie);
 
             $entityManager->persist($cheltuiala);
             $entityManager->flush();
@@ -190,6 +194,49 @@ class ComenziController extends AbstractController
         return $this->render('comenzi/cheltuieli_new.html.twig', [
             'form' => $form->createView(),
             'comanda' => $comanda,
-    ]);
-}
+        ]);
+    }
+
+    #[Route('/get-subcategories', name: 'app_get_subcategories', methods: ['GET'])]
+    public function getSubcategories(Request $request, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $categorieId = $request->query->get('categorie');
+        if (!$categorieId) {
+            return new JsonResponse([]);
+        }
+
+        // Verificăm dacă categoria selectată este "Consumabile"
+        $categorie = $entityManager->getRepository(CategoriiCheltuieli::class)->find($categorieId);
+        if (!$categorie) {
+            return new JsonResponse([]);
+        }
+
+        if ($categorie->getNume() === 'Consumabile') {
+            // Dacă este categoria "Consumabile", returnăm entitățile Consumabile
+            $consumabile = $entityManager->getRepository(Consumabile::class)
+                ->findBy(['categorie' => $categorieId]);
+
+            $data = array_map(function ($consumabil) {
+                return [
+                    'id' => $consumabil->getId(),
+                    'nume' => $consumabil->getNume(),
+                    'pret_standard' => $consumabil->getPretMaxim(), // Folosim pret_maxim ca pret_standard
+                ];
+            }, $consumabile);
+        } else {
+            // Altfel, returnăm subcategoriile obișnuite
+            $subcategorii = $entityManager->getRepository(SubcategoriiCheltuieli::class)
+                ->findBy(['categorie' => $categorieId]);
+
+            $data = array_map(function ($subcategorie) {
+                return [
+                    'id' => $subcategorie->getId(),
+                    'nume' => $subcategorie->getNume(),
+                    'pret_standard' => $subcategorie->getPretStandard(),
+                ];
+            }, $subcategorii);
+        }
+
+        return new JsonResponse($data);
+    }
 }

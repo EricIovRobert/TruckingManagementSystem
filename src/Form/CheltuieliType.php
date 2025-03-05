@@ -7,9 +7,9 @@ use App\Entity\SubcategoriiCheltuieli;
 use App\Entity\Cheltuieli;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\Extension\Core\Type\DateType;
 use Symfony\Component\Form\Extension\Core\Type\NumberType;
-use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
@@ -24,24 +24,14 @@ class CheltuieliType extends AbstractType
                 'placeholder' => 'Selectează o categorie',
                 'required' => true,
             ])
-            ->add('categorie_noua', TextType::class, [
-                'label' => 'Sau adaugă o categorie nouă',
+            ->add('subcategorie', TextType::class, [
+                'label' => 'Subcategorie',
                 'required' => false,
-                'mapped' => false,
-            ])
-            ->add('subcategorie', EntityType::class, [
-                'class' => SubcategoriiCheltuieli::class,
-                'choice_label' => 'nume',
-                'placeholder' => 'Selectează o subcategorie (opțional)',
-                'required' => false,
-                'choice_attr' => function ($subcategorie) {
-                    return ['data-pret-standard' => $subcategorie->getPretStandard()];
-                },
-            ])
-            ->add('subcategorie_noua', TextType::class, [
-                'label' => 'Sau adaugă o subcategorie nouă',
-                'required' => false,
-                'mapped' => false,
+                'mapped' => false, // Gestionăm manual maparea
+                'attr' => [
+                    'style' => 'display: none;', // Ascundem câmpul text, vom folosi un select în JavaScript
+                    'data-pret-standard' => '',
+                ],
             ])
             ->add('suma', NumberType::class, [
                 'label' => 'Suma',
@@ -74,6 +64,7 @@ class CheltuieliType extends AbstractType
     {
         $resolver->setDefaults([
             'data_class' => Cheltuieli::class,
+            'allow_extra_fields' => true, // Permitem câmpuri suplimentare
         ]);
     }
 }

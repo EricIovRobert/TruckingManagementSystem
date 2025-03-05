@@ -12,17 +12,65 @@
     {{ parent() }}
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            const categorieField = document.querySelector('[name="cheltuieli[categorie]"]');
             const subcategorieField = document.querySelector('[name="cheltuieli[subcategorie]"]');
             const sumaField = document.querySelector('[name="cheltuieli[suma]"]');
 
-            if (subcategorieField && sumaField) {
-                subcategorieField.addEventListener('change', function() {
+            if (categorieField && subcategorieField && sumaField) {
+                // Creăm un element <select> pentru subcategorie
+                const subcategorieSelect = document.createElement('select');
+                subcategorieSelect.name = 'cheltuieli[subcategorie_select]'; // Nume diferit pentru a nu interfera
+                subcategorieSelect.innerHTML = '<option value="">Selectează o subcategorie (opțional)</option>';
+                subcategorieField.parentNode.insertBefore(subcategorieSelect, subcategorieField);
+
+                // Funcție pentru a actualiza subcategoriile
+                function updateSubcategories() {
+                    const categorieId = categorieField.value;
+                    if (!categorieId) {
+                        subcategorieSelect.innerHTML = '<option value="">Selectează o subcategorie (opțional)</option>';
+                        subcategorieField.value = '';
+                        sumaField.value = '';
+                        return;
+                    }
+
+                    fetch(`/comenzi/get-subcategories?categorie=${categorieId}`, {
+                        method: 'GET',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! Status: ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        subcategorieSelect.innerHTML = '<option value="">Selectează o subcategorie (opțional)</option>';
+                        data.forEach(sub => {
+                            const option = document.createElement('option');
+                            option.value = sub.id;
+                            option.text = sub.nume;
+                            option.setAttribute('data-pret-standard', sub.pret_standard || '');
+                            subcategorieSelect.appendChild(option);
+                        });
+                    })
+                    .catch(error => console.error('Eroare la încărcarea subcategoriilor:', error));
+                }
+
+                // Actualizare inițială și la schimbarea categoriei
+                updateSubcategories();
+                categorieField.addEventListener('change', updateSubcategories);
+
+                // Actualizare câmp ascuns și sumă la schimbarea subcategoriei
+                subcategorieSelect.addEventListener('change', function() {
                     const selectedOption = this.options[this.selectedIndex];
                     const pretStandard = selectedOption.getAttribute('data-pret-standard');
-                    if (pretStandard && pretStandard !== 'null') {
+                    subcategorieField.value = this.value; // Setăm valoarea în câmpul ascuns
+                    if (pretStandard && pretStandard !== 'null' && pretStandard !== '') {
                         sumaField.value = pretStandard;
                     } else {
-                        sumaField.value = ''; // Resetăm câmpul dacă nu există pret_standard
+                        sumaField.value = '';
                     }
                 });
             }
