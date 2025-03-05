@@ -62,7 +62,7 @@ class Comenzi
     /**
      * @var Collection<int, Cheltuieli>
      */
-    #[ORM\OneToMany(targetEntity: Cheltuieli::class, mappedBy: 'comanda')]
+    #[ORM\OneToMany(targetEntity: Cheltuieli::class, mappedBy: 'comanda', cascade: ['remove'])]
     private Collection $cheltuielis;
 
     public function __construct()

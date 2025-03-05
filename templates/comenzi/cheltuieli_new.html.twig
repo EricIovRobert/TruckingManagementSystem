@@ -16,10 +16,13 @@
             const subcategorieField = document.querySelector('[name="cheltuieli[subcategorie]"]');
             const sumaField = document.querySelector('[name="cheltuieli[suma]"]');
 
+            // Numărul de kilometri al comenzii (poate fi null)
+            const numarKm = {{ comanda.numarKm is not null ? comanda.numarKm : 'null' }};
+
             if (categorieField && subcategorieField && sumaField) {
                 // Creăm un element <select> pentru subcategorie
                 const subcategorieSelect = document.createElement('select');
-                subcategorieSelect.name = 'cheltuieli[subcategorie_select]'; // Nume diferit pentru a nu interfera
+                subcategorieSelect.name = 'cheltuieli[subcategorie_select]';
                 subcategorieSelect.innerHTML = '<option value="">Selectează o subcategorie (opțional)</option>';
                 subcategorieField.parentNode.insertBefore(subcategorieSelect, subcategorieField);
 
@@ -52,6 +55,7 @@
                             option.value = sub.id;
                             option.text = sub.nume;
                             option.setAttribute('data-pret-standard', sub.pret_standard || '');
+                            option.setAttribute('data-km-utilizare-max', sub.km_utilizare_max || ''); // Adăugăm km_utilizare_max
                             subcategorieSelect.appendChild(option);
                         });
                     })
@@ -65,12 +69,29 @@
                 // Actualizare câmp ascuns și sumă la schimbarea subcategoriei
                 subcategorieSelect.addEventListener('change', function() {
                     const selectedOption = this.options[this.selectedIndex];
-                    const pretStandard = selectedOption.getAttribute('data-pret-standard');
+                    const pretStandard = parseFloat(selectedOption.getAttribute('data-pret-standard')) || 0;
+                    const kmUtilizareMax = parseFloat(selectedOption.getAttribute('data-km-utilizare-max')) || 0;
+
                     subcategorieField.value = this.value; // Setăm valoarea în câmpul ascuns
-                    if (pretStandard && pretStandard !== 'null' && pretStandard !== '') {
-                        sumaField.value = pretStandard;
+
+                    // Calculăm prețul proporțional dacă este un consumabil (categoria "Consumabile")
+                    const categorieNume = categorieField.options[categorieField.selectedIndex].text;
+                    if (categorieNume === 'Consumabile' && pretStandard > 0 && kmUtilizareMax > 0) {
+                        if (numarKm !== null && numarKm > 0) {
+                            // Calcul proporțional: (pret_maxim / km_utilizare_max) * numarKm
+                            const pretProportional = (pretStandard / kmUtilizareMax) * numarKm;
+                            sumaField.value = pretProportional.toFixed(2);
+                        } else {
+                            // Dacă numarKm este null, setăm o valoare implicită (de ex., pret_maxim)
+                            sumaField.value = pretStandard.toFixed(2);
+                        }
                     } else {
-                        sumaField.value = '';
+                        // Pentru alte categorii, folosim pret_standard direct
+                        if (pretStandard && pretStandard !== 'null' && pretStandard !== '') {
+                            sumaField.value = pretStandard.toFixed(2);
+                        } else {
+                            sumaField.value = '';
+                        }
                     }
                 });
             }
