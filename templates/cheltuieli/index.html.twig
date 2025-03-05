@@ -1,0 +1,55 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Rapoarte Cheltuieli{% endblock %}
+
+{% block body %}
+    <h1>Rapoarte - Toate Cheltuielile</h1>
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Comandă</th>
+                <th>Categorie</th>
+                <th>Sub/Consumabil</th>
+                <th>Suma</th>
+                <th>Data</th>
+                <th>Litri Motorină</th>
+                <th>Descriere</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for ch in cheltuieli %}
+                <tr>
+                    <td>{{ ch.id }}</td>
+                    <td>
+                        {% if ch.comanda %}
+                            #{{ ch.comanda.id }} 
+                            <a href="{{ path('app_comenzi_show', {'id': ch.comanda.id}) }}">(vezi)</a>
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td>{{ ch.categorie ? ch.categorie.nume : '-' }}</td>
+                    <td>
+                        {% if ch.subcategorie %}
+                            {{ ch.subcategorie.nume }}
+                        {% elseif ch.consumabil %}
+                            {{ ch.consumabil.nume }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td>{{ ch.suma|number_format(2, ',', '.') }}</td>
+                    <td>{{ ch.dataCheltuiala ? ch.dataCheltuiala|date('Y-m-d') : '' }}</td>
+                    <td>{{ ch.litriMotorina ?: 0 }}</td>
+                    <td>{{ ch.descriere ?: '-' }}</td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="8">Nu există cheltuieli înregistrate</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}
