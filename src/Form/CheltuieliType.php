@@ -31,6 +31,12 @@ class CheltuieliType extends AbstractType
                     'style' => 'display: none;', // Ascundem câmpul, îl populăm via JS
                 ],
             ])
+            ->add('pret_unitate', NumberType::class, [
+                'label' => 'Preț unitate',
+                'required' => false,
+                'mapped' => false, // Nu este legat direct de entitate
+                'attr' => ['step' => '0.01'], // Permite valori zecimale
+            ])
             ->add('suma', NumberType::class, [
                 'label' => 'Suma',
                 'required' => true,
