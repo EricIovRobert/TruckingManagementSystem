@@ -5,6 +5,8 @@
 {% block body %}
     <h1>Rapoarte - Toate Cheltuielile</h1>
 
+    <a href="{{ path('app_cheltuieli_new') }}" class="btn btn-primary mb-3">Adaugă Cheltuială</a>
+
     <table class="table table-striped">
         <thead>
             <tr>
@@ -14,8 +16,9 @@
                 <th>Sub/Consumabil</th>
                 <th>Suma</th>
                 <th>Data</th>
-                <th>Litri Motorină</th>
+                <th>Litri</th>
                 <th>Descriere</th>
+                <th>Acțiuni</th>
             </tr>
         </thead>
         <tbody>
@@ -44,10 +47,17 @@
                     <td>{{ ch.dataCheltuiala ? ch.dataCheltuiala|date('Y-m-d') : '' }}</td>
                     <td>{{ ch.litriMotorina ?: 0 }}</td>
                     <td>{{ ch.descriere ?: '-' }}</td>
+                    <td>
+                        <a href="{{ path('app_cheltuieli_edit', {'id': ch.id}) }}" class="btn btn-sm btn-primary">Editează</a>
+                        <form method="post" action="{{ path('app_cheltuieli_delete', {'id': ch.id}) }}" onsubmit="return confirm('Ești sigur că vrei să ștergi această cheltuială?');" style="display:inline;">
+                            <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ ch.id) }}">
+                            <button type="submit" class="btn btn-sm btn-danger">Șterge</button>
+                        </form>
+                    </td>
                 </tr>
             {% else %}
                 <tr>
-                    <td colspan="8">Nu există cheltuieli înregistrate</td>
+                    <td colspan="9">Nu există cheltuieli înregistrate</td>
                 </tr>
             {% endfor %}
         </tbody>

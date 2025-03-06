@@ -1,0 +1,126 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+    <h1>Adaugă o cheltuială nouă</h1>
+    {{ form_start(form) }}
+        {{ form_widget(form) }}
+        <button type="submit" class="btn btn-primary">Salvează</button>
+    {{ form_end(form) }}
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const categorieField = document.querySelector('[name="cheltuieli[categorie]"]');
+            const subcategorieField = document.querySelector('[name="cheltuieli[subcategorie]"]');
+            const sumaField = document.querySelector('[name="cheltuieli[suma]"]');
+            const litriField = document.querySelector('[name="cheltuieli[litri_motorina]"]');
+
+            // Ascundem câmpul litri inițial
+            if (litriField) {
+                litriField.closest('.form-group, .form-row, div').style.display = 'none';
+            }
+
+            let subcategorieSelect = null;
+
+            function recalcPretPerL(pretPerL) {
+                if (!litriField) return;
+                const rawLitri = litriField.value.trim();
+                const litri = rawLitri === '' ? 0 : parseFloat(rawLitri);
+                if (isNaN(litri) || litri < 0) {
+                    sumaField.value = '';
+                    return;
+                }
+                const total = pretPerL * litri;
+                sumaField.value = total.toFixed(2);
+            }
+
+            function onSubcategorieChange() {
+                if (!subcategorieSelect) return;
+                const selectedOption = subcategorieSelect.options[subcategorieSelect.selectedIndex];
+                if (!selectedOption) return;
+
+                const pretStandard = parseFloat(selectedOption.getAttribute('data-pret-standard') || '0');
+                const pretPerL = parseFloat(selectedOption.getAttribute('data-pret-per-l') || '0');
+
+                subcategorieField.value = subcategorieSelect.value;
+
+                if (pretPerL > 0) {
+                    if (litriField) {
+                        litriField.closest('.form-group, .form-row, div').style.display = '';
+                        recalcPretPerL(pretPerL);
+                    }
+                } else {
+                    if (litriField) {
+                        litriField.closest('.form-group, .form-row, div').style.display = 'none';
+                        litriField.value = '';
+                    }
+                    if (pretStandard && pretStandard !== 'null') {
+                        sumaField.value = pretStandard.toFixed(2);
+                    } else {
+                        sumaField.value = '';
+                    }
+                }
+            }
+
+            function updateSubcategories() {
+                const categorieId = categorieField.value;
+                if (!categorieId) {
+                    subcategorieSelect.innerHTML = '<option value="">Selectează o subcategorie (opțional)</option>';
+                    subcategorieField.value = '';
+                    sumaField.value = '';
+                    return;
+                }
+
+                fetch(`/comenzi/get-subcategories?categorie=${categorieId}`, {
+                    method: 'GET',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    subcategorieSelect.innerHTML = '<option value="">Selectează o subcategorie (opțional)</option>';
+                    data.forEach(sub => {
+                        const option = document.createElement('option');
+                        option.value = sub.id;
+                        option.text = sub.nume;
+                        option.setAttribute('data-pret-standard', sub.pret_standard || '');
+                        option.setAttribute('data-pret-per-l', sub.pret_per_l || '0');
+                        subcategorieSelect.appendChild(option);
+                    });
+                })
+                .catch(error => console.error('Eroare la încărcarea subcategoriilor:', error));
+            }
+
+            if (categorieField && subcategorieField && sumaField) {
+                subcategorieSelect = document.createElement('select');
+                subcategorieSelect.name = 'cheltuieli[subcategorie_select]';
+                subcategorieSelect.innerHTML = '<option value="">Selectează o subcategorie (opțional)</option>';
+                subcategorieField.parentNode.insertBefore(subcategorieSelect, subcategorieField);
+
+                categorieField.addEventListener('change', updateSubcategories);
+                subcategorieSelect.addEventListener('change', onSubcategorieChange);
+
+                if (litriField) {
+                    litriField.addEventListener('input', function() {
+                        const selectedOption = subcategorieSelect.options[subcategorieSelect.selectedIndex];
+                        if (!selectedOption) return;
+                        const pretPerL = parseFloat(selectedOption.getAttribute('data-pret-per-l') || '0');
+                        if (pretPerL > 0) {
+                            recalcPretPerL(pretPerL);
+                        }
+                    });
+                }
+
+                updateSubcategories();
+            }
+        });
+    </script>
+{% endblock %}
