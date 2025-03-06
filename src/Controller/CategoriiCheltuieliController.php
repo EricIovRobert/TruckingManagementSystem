@@ -72,9 +72,14 @@ class CategoriiCheltuieliController extends AbstractController
     }
 
     #[Route('/{id}/delete', name: 'app_categorii_cheltuieli_delete', methods: ['POST'])]
-    public function delete(Request $request, CategoriiCheltuieli $categorie, EntityManagerInterface $entityManager): Response
-    {
-        if ($this->isCsrfTokenValid('delete'.$categorie->getId(), $request->request->get('_token'))) {
+public function delete(Request $request, CategoriiCheltuieli $categorie, EntityManagerInterface $entityManager): Response
+{
+    if ($this->isCsrfTokenValid('delete'.$categorie->getId(), $request->request->get('_token'))) {
+        // Verificăm dacă categoria are cheltuieli asociate
+        if (!$categorie->getCheltuielis()->isEmpty()) {
+            $this->addFlash('danger', 'Categoria "' . $categorie->getNume() . '" nu poate fi ștearsă deoarece este utilizată în cheltuieli existente.');
+        } else {
+            // Dacă nu are cheltuieli, permitem ștergerea
             $hasSubcategorii = !$categorie->getSubcategoriiCheltuielis()->isEmpty();
             $hasConsumabile = !$categorie->getConsumabiles()->isEmpty();
 
@@ -93,10 +98,11 @@ class CategoriiCheltuieliController extends AbstractController
             }
 
             $entityManager->remove($categorie);
-            $entityManager->flush(); // Șterge categoria, subcategoriile și consumabilele datorită cascade: ['remove']
+            $entityManager->flush();
         }
-        return $this->redirectToRoute('app_categorii_cheltuieli_index');
     }
+    return $this->redirectToRoute('app_categorii_cheltuieli_index');
+}
 
     #[Route('/{categorieId}/subcategorie/new', name: 'app_subcategorii_cheltuieli_new', methods: ['GET', 'POST'])]
     public function newSubcategorie(Request $request, int $categorieId, EntityManagerInterface $entityManager, CategoriiCheltuieliRepository $categoriiCheltuieliRepository): Response
@@ -145,18 +151,25 @@ class CategoriiCheltuieliController extends AbstractController
         ]);
     }
 
-    #[Route('/{categorieId}/subcategorie/{id}/delete', name: 'app_subcategorii_cheltuieli_delete', methods: ['POST'])]
-    public function deleteSubcategorie(Request $request, int $categorieId, SubcategoriiCheltuieli $subcategorie, EntityManagerInterface $entityManager, CategoriiCheltuieliRepository $categoriiCheltuieliRepository): Response
-    {
-        $categorie = $categoriiCheltuieliRepository->find($categorieId);
-        if (!$categorie || $subcategorie->getCategorie() !== $categorie) {
-            throw $this->createNotFoundException('Categoria sau subcategoria nu a fost găsită.');
-        }
+   #[Route('/{categorieId}/subcategorie/{id}/delete', name: 'app_subcategorii_cheltuieli_delete', methods: ['POST'])]
+public function deleteSubcategorie(Request $request, int $categorieId, SubcategoriiCheltuieli $subcategorie, EntityManagerInterface $entityManager, CategoriiCheltuieliRepository $categoriiCheltuieliRepository): Response
+{
+    $categorie = $categoriiCheltuieliRepository->find($categorieId);
+    if (!$categorie || $subcategorie->getCategorie() !== $categorie) {
+        throw $this->createNotFoundException('Categoria sau subcategoria nu a fost găsită.');
+    }
 
-        if ($this->isCsrfTokenValid('delete'.$subcategorie->getId(), $request->request->get('_token'))) {
+    if ($this->isCsrfTokenValid('delete'.$subcategorie->getId(), $request->request->get('_token'))) {
+        // Verificăm dacă subcategoria are cheltuieli asociate
+        if (!$subcategorie->getCheltuielis()->isEmpty()) {
+            $this->addFlash('danger', 'Subcategoria "' . $subcategorie->getNume() . '" nu poate fi ștearsă deoarece este utilizată în cheltuieli existente.');
+        } else {
+            // Dacă nu are cheltuieli, permitem ștergerea
             $entityManager->remove($subcategorie);
             $entityManager->flush();
+            $this->addFlash('success', 'Subcategoria "' . $subcategorie->getNume() . '" a fost ștearsă.');
         }
-        return $this->redirectToRoute('app_categorii_cheltuieli_show', ['id' => $categorieId]);
     }
+    return $this->redirectToRoute('app_categorii_cheltuieli_show', ['id' => $categorieId]);
+}
 }

@@ -74,8 +74,15 @@ class ConsumabileController extends AbstractController
     public function delete(Request $request, Consumabile $consumabil, EntityManagerInterface $entityManager): Response
     {
         if ($this->isCsrfTokenValid('delete'.$consumabil->getId(), $request->request->get('_token'))) {
-            $entityManager->remove($consumabil);
-            $entityManager->flush();
+            // Verificăm dacă consumabilul are cheltuieli asociate
+            if (!$consumabil->getCheltuielis()->isEmpty()) {
+                $this->addFlash('danger', 'Consumabilul "' . $consumabil->getNume() . '" nu poate fi șters deoarece este utilizat în cheltuieli existente.');
+            } else {
+                // Dacă nu are cheltuieli, permitem ștergerea
+                $entityManager->remove($consumabil);
+                $entityManager->flush();
+                $this->addFlash('success', 'Consumabilul "' . $consumabil->getNume() . '" a fost șters.');
+            }
         }
         return $this->redirectToRoute('app_consumabile_index');
     }
