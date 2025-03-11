@@ -5,6 +5,7 @@
 {% block body %}
     <h1>Lista Comenzi</h1>
 
+    {# Mesaje flash #}
     {% for message in app.flashes('success') %}
         <div class="alert alert-success alert-dismissible fade show" role="alert">
             {{ message }}
@@ -18,9 +19,34 @@
         </div>
     {% endfor %}
 
-    <a href="{{ path('app_comenzi_new') }}" class="btn btn-primary">Adaugă Comandă</a>
-    <table class="table table-striped">
-        <thead>
+<form method="get" class="mb-3">
+    <div class="input-group">
+        <input type="text" name="search" class="form-control" placeholder="Caută după mașină, șofer, locație..." value="{{ search ?? '' }}">
+        <input type="date" name="start_date" class="form-control" placeholder="Data start" value="{{ start_date ?? '' }}">
+        <select name="sort_by" class="form-select">
+            <option value="" {% if sort_by is null %}selected{% endif %}>-</option> <!-- Opțiune implicită pentru a nu aplica sortare -->
+            <option value="profit_desc" {% if sort_by == 'profit_desc' %}selected{% endif %}>Profit Descrescător</option>
+            <option value="profit_asc" {% if sort_by == 'profit_asc' %}selected{% endif %}>Profit Crescător</option>
+            <option value="consum_desc" {% if sort_by == 'consum_desc' %}selected{% endif %}>Consum Descrescător</option>
+            <option value="consum_asc" {% if sort_by == 'consum_asc' %}selected{% endif %}>Consum Crescător</option>
+            <option value="pret_km_desc" {% if sort_by == 'pret_km_desc' %}selected{% endif %}>Preț per km Descrescător</option>
+            <option value="pret_km_asc" {% if sort_by == 'pret_km_asc' %}selected{% endif %}>Preț per km Crescător</option>
+        </select>
+        <select name="rezolvat" class="form-select">
+            <option value="" {% if rezolvat is null %}selected{% endif %}>Toate</option>
+            <option value="1" {% if rezolvat is same as('1') %}selected{% endif %}>Rezolvate</option>
+            <option value="0" {% if rezolvat is same as('0') %}selected{% endif %}>Nerezolvate</option>
+        </select>
+        <button type="submit" class="btn btn-primary">Caută</button>
+        <a href="{{ path('app_comenzi_index') }}" class="btn btn-secondary">Clear filtre</a>
+    </div>
+</form>
+
+    <a href="{{ path('app_comenzi_new') }}" class="btn btn-primary mb-3">Adaugă Comandă</a>
+
+    {# Tabelul cu comenzi #}
+    <table class="table table-striped table-hover">
+        <thead class="table-dark">
             <tr>
                 <th>Mașină</th>
                 <th>Șofer</th>
@@ -28,21 +54,21 @@
                 <th>Data Stop</th>
                 <th>Zile</th>
                 <th>Număr Km</th>
-                <th>Consum(l/100km)</th>
+                <th>Consum (l/100km)</th>
                 <th>Preț per km</th>
                 <th>Profit</th>
-                <th>Locatie</th>
+                <th>Locație</th>
                 <th>Liber</th>
                 <th>Rezolvat</th>
                 <th>Acțiuni</th>
             </tr>
         </thead>
         <tbody>
-            {% for comanda in comenzi %}
+            {% for comanda in pagination %}
                 <tr>
                     <td>
-                        <a href="{{ path('app_comenzi_show', {'id': comanda.id}) }}">
-                            {{ comanda.nrAccidentAuto ?: comanda.parcAutoNrSnapshot ?: '-' }}
+                        <a href="{{ path('app_comenzi_show', {'id': comanda.id}) }}" class="text-decoration-none">
+                            {{ comanda.parcAutoNrSnapshot ?: comanda.nrAccidentAuto ?: '-' }}
                         </a>
                     </td>
                     <td>{{ comanda.sofer ?: '-' }}</td>
@@ -84,9 +110,7 @@
                             -
                         {% endif %}
                     </td>
-                    <td>
-                        {{ comanda.profit is not null ? comanda.profit|number_format(2, ',', '.') : '-' }}
-                    </td>
+                    <td>{{ comanda.profit is not null ? comanda.profit|number_format(2, ',', '.') : '-' }}</td>
                     <td>
                         {% set ultimaRutaDescarcare = null %}
                         {% if comanda.retururis|length > 0 %}
@@ -133,16 +157,22 @@
         </tbody>
     </table>
 
+    {# Paginare #}
+    <div class="navigation mt-3 d-flex justify-content-center">
+        {{ knp_pagination_render(pagination) }}
+    </div>
+
+    {# JavaScript pentru checkbox-ul "Rezolvat" #}
     {% block javascripts %}
         {{ parent() }}
         <script>
             document.addEventListener('DOMContentLoaded', function() {
-                let processed = false; // Flag pentru a preveni apelurile multiple
+                let processed = false;
 
                 document.querySelectorAll('.rezolvat-checkbox').forEach(function(checkbox) {
                     checkbox.addEventListener('change', function(e) {
-                        if (processed) return; // Oprim execuția dacă deja procesăm
-                        processed = true; // Setăm flag-ul
+                        if (processed) return;
+                        processed = true;
 
                         var id = this.getAttribute('data-id');
                         var rezolvat = this.checked;
@@ -157,25 +187,22 @@
                             body: 'rezolvat=' + encodeURIComponent(rezolvat)
                         })
                         .then(response => {
-                            if (!response.ok) {
-                                throw new Error(`Răspuns neașteptat de la server: ${response.status}`);
-                            }
+                            if (!response.ok) throw new Error('Eroare server');
                             return response.json();
                         })
                         .then(data => {
-                            if (data.success === true) {
-                                console.log('Starea rezolvat actualizată cu succes.');
+                            if (data.success) {
+                                console.log('Stare actualizată');
                             } else {
-                                console.error('Eroare server:', data.error);
-                                alert('A apărut o eroare la actualizarea stării: ' + (data.error || 'Răspuns neașteptat'));
+                                alert('Eroare: ' + (data.error || 'Răspuns neașteptat'));
                             }
                         })
                         .catch(error => {
-                            console.error('Eroare AJAX:', error.message);
-                            alert('Eroare la comunicarea cu serverul. Verifică consola pentru detalii.');
+                            console.error('Eroare:', error);
+                            alert('Eroare la actualizare');
                         })
                         .finally(() => {
-                            processed = false; // Resetează flag-ul după finalizarea cererii
+                            processed = false;
                         });
                     });
                 });

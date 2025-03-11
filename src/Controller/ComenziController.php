@@ -17,18 +17,132 @@ use Symfony\Component\Routing\Annotation\Route;
 use App\Entity\SubcategoriiCheltuieli;
 use App\Entity\Consumabile;
 use App\Entity\CategoriiCheltuieli;
+use Knp\Component\Pager\PaginatorInterface;
 
 #[Route('/comenzi')]
 class ComenziController extends AbstractController
 {
     #[Route('/', name: 'app_comenzi_index')]
-    public function index(ComenziRepository $comenziRepository): Response
-    {
-        $comenzi = $comenziRepository->findAll();
-
+    public function index(
+        Request $request,
+        ComenziRepository $comenziRepository,
+        EntityManagerInterface $entityManager,
+        PaginatorInterface $paginator
+    ): Response {
+        $search = $request->query->get('search');
+        $startDate = $request->query->get('start_date');
+        $sortBy = $request->query->get('sort_by');
+    
+        // Adăugăm parametrul pentru filtrul rezolvat
+        $rezolvat = $request->query->get('rezolvat');
+    
+        $queryBuilder = $comenziRepository->createQueryBuilder('c');
+        if ($search) {
+            $queryBuilder->andWhere(
+                $queryBuilder->expr()->orX(
+                    'c.parcAutoNrSnapshot LIKE :search',
+                    'c.nrAccidentAuto LIKE :search',
+                    'c.sofer LIKE :search',
+                    'c.observatii LIKE :search',
+                    $queryBuilder->expr()->exists(
+                        $entityManager->createQueryBuilder()
+                            ->select('t.id')
+                            ->from('App\Entity\Tururi', 't')
+                            ->where('t.comanda = c.id')
+                            ->andWhere('t.rutaIncarcare LIKE :search OR t.rutaDescarcare LIKE :search')
+                    ),
+                    $queryBuilder->expr()->exists(
+                        $entityManager->createQueryBuilder()
+                            ->select('r.id')
+                            ->from('App\Entity\Retururi', 'r')
+                            ->where('r.comanda = c.id')
+                            ->andWhere('r.rutaIncarcare LIKE :search OR r.rutaDescarcare LIKE :search')
+                    )
+                )
+            )
+            ->setParameter('search', '%' . $search . '%');
+        }
+    
+        if ($startDate) {
+            $queryBuilder->andWhere('c.dataStart >= :startDate')
+                         ->setParameter('startDate', new \DateTime($startDate));
+        }
+    
+        // Aplicăm filtrul pentru rezolvat doar dacă este specificat explicit (1 sau 0)
+        if ($rezolvat !== null && in_array($rezolvat, ['1', '0'])) {
+            $queryBuilder->andWhere('c.rezolvat = :rezolvat')
+                         ->setParameter('rezolvat', filter_var($rezolvat, FILTER_VALIDATE_BOOLEAN));
+        }
+    
+        $comenzi = $queryBuilder->getQuery()->getResult();
+    
+        usort($comenzi, function ($a, $b) use ($sortBy) {
+            // Dacă nu s-a selectat niciun filtru, se sortează descrescător după ID (implicit: ordine inversă adăugării)
+            if (empty($sortBy)) {
+                return $b->getId() <=> $a->getId();
+            } elseif ($sortBy === 'profit_desc') {
+                return ($b->getProfit() ?? 0) <=> ($a->getProfit() ?? 0);
+            } elseif ($sortBy === 'profit_asc') {
+                return ($a->getProfit() ?? 0) <=> ($b->getProfit() ?? 0);
+            } elseif ($sortBy === 'consum_desc') {
+                $consumA = $this->calculateConsum($a);
+                $consumB = $this->calculateConsum($b);
+                return $consumB <=> $consumA;
+            } elseif ($sortBy === 'consum_asc') {
+                $consumA = $this->calculateConsum($a);
+                $consumB = $this->calculateConsum($b);
+                return $consumA <=> $consumB;
+            } elseif ($sortBy === 'pret_km_desc') {
+                $pretKmA = $this->calculatePretPerKm($a);
+                $pretKmB = $this->calculatePretPerKm($b);
+                return $pretKmB <=> $pretKmA;
+            } elseif ($sortBy === 'pret_km_asc') {
+                $pretKmA = $this->calculatePretPerKm($a);
+                $pretKmB = $this->calculatePretPerKm($b);
+                return $pretKmA <=> $pretKmB;
+            }
+            return 0;
+        });
+    
+        $pagination = $paginator->paginate(
+            $comenzi,
+            $request->query->getInt('page', 1),
+            10
+        );
+    
         return $this->render('comenzi/index.html.twig', [
-            'comenzi' => $comenzi,
+            'pagination' => $pagination,
+            'search' => $search,
+            'start_date' => $startDate,
+            'sort_by' => $sortBy,
+            'rezolvat' => $rezolvat,
         ]);
+    }
+    
+    // Restul metodelor rămân neschimbate
+    private function calculateConsum(Comenzi $comanda): float
+    {
+        $consum = 0;
+        foreach ($comanda->getTururis() as $tur) {
+            $consum += $tur->getKg() ?? 0;
+        }
+        foreach ($comanda->getRetururis() as $retur) {
+            $consum += $retur->getKg() ?? 0;
+        }
+        return $consum;
+    }
+    
+    // Funcție auxiliară pentru calculul prețului per km
+    private function calculatePretPerKm(Comenzi $comanda): float
+    {
+        $totalPret = 0;
+        foreach ($comanda->getTururis() as $tur) {
+            $totalPret += $tur->getPret() ?? 0;
+        }
+        foreach ($comanda->getRetururis() as $retur) {
+            $totalPret += $retur->getPret() ?? 0;
+        }
+        return ($comanda->getNumarKm() > 0) ? ($totalPret / $comanda->getNumarKm()) : 0;
     }
 
     #[Route('/new', name: 'app_comenzi_new', methods: ['GET', 'POST'])]
@@ -60,10 +174,8 @@ class ComenziController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            // Salvăm comanda
             $entityManager->flush();
 
-            // Dacă se schimbă număr km, recalculăm cheltuieli de tip consumabil
             $newNumarKm = $comanda->getNumarKm();
             if ($oldNumarKm !== $newNumarKm) {
                 foreach ($comanda->getCheltuielis() as $cheltuiala) {
@@ -80,11 +192,8 @@ class ComenziController extends AbstractController
                         }
                     }
                 }
-                // Recalculăm profitul după schimbare
                 $comanda->calculateAndSetProfit();
                 $entityManager->flush();
-
-                // Reîmprospătăm comanda
                 $entityManager->refresh($comanda);
             }
 
@@ -172,9 +281,6 @@ class ComenziController extends AbstractController
         }
     }
 
-    /**
-     * Adăugarea unei cheltuieli noi
-     */
     #[Route('/{id}/cheltuieli/new', name: 'app_comenzi_cheltuieli_new', methods: ['GET', 'POST'])]
     public function newCheltuiala(Request $request, Comenzi $comanda, EntityManagerInterface $entityManager): Response
     {
@@ -189,7 +295,6 @@ class ComenziController extends AbstractController
             $categorie = $cheltuiala->getCategorie();
             $subcategorieId = $form->get('subcategorie')->getData();
 
-            // Dacă e categorie Consumabile => cautăm "consumabil"
             if ($categorie && $categorie->getNume() === 'Consumabile') {
                 if ($subcategorieId) {
                     $consumabil = $entityManager->getRepository(Consumabile::class)->find($subcategorieId);
@@ -197,7 +302,6 @@ class ComenziController extends AbstractController
                         $cheltuiala->setConsumabil($consumabil);
                         $cheltuiala->setSubcategorie(null);
 
-                        // Calculăm suma proporțional
                         $numarKm = $comanda->getNumarKm();
                         $pretMaxim = $consumabil->getPretMaxim();
                         $kmUtilizareMax = $consumabil->getKmUtilizareMax();
@@ -211,7 +315,6 @@ class ComenziController extends AbstractController
                     }
                 }
             } else {
-                // subcategorie normală
                 if ($subcategorieId) {
                     $subcategorie = $entityManager->getRepository(SubcategoriiCheltuieli::class)->find($subcategorieId);
                     if ($subcategorie) {
@@ -223,8 +326,6 @@ class ComenziController extends AbstractController
 
             $entityManager->persist($cheltuiala);
             $entityManager->flush();
-
-            // Recalculăm profitul
             $comanda->calculateAndSetProfit();
             $entityManager->flush();
 
@@ -237,9 +338,6 @@ class ComenziController extends AbstractController
         ]);
     }
 
-    /**
-     * Editarea unei cheltuieli existente
-     */
     #[Route('/{comandaId}/cheltuieli/{cheltuialaId}/edit', name: 'app_comenzi_cheltuieli_edit', methods: ['GET', 'POST'])]
     public function editCheltuiala(
         Request $request,
@@ -261,7 +359,6 @@ class ComenziController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            // Reasociem consumabil/subcategorie
             $cheltuiala->setConsumabil(null);
             $cheltuiala->setSubcategorie(null);
 
@@ -273,7 +370,6 @@ class ComenziController extends AbstractController
                     $consumabil = $entityManager->getRepository(Consumabile::class)->find($subcategorieId);
                     if ($consumabil) {
                         $cheltuiala->setConsumabil($consumabil);
-                        // Recalcul (dacă vrei) – aici e pentru un consumabil
                         $numarKm = $comanda->getNumarKm();
                         $pretMaxim = $consumabil->getPretMaxim();
                         $kmUtilizareMax = $consumabil->getKmUtilizareMax();
@@ -296,7 +392,6 @@ class ComenziController extends AbstractController
             }
 
             $entityManager->flush();
-            // Recalculăm profitul
             $comanda->calculateAndSetProfit();
             $entityManager->flush();
 
@@ -310,9 +405,6 @@ class ComenziController extends AbstractController
         ]);
     }
 
-    /**
-     * Ștergerea unei cheltuieli
-     */
     #[Route('/{comandaId}/cheltuieli/{cheltuialaId}/delete', name: 'app_comenzi_cheltuieli_delete', methods: ['POST'])]
     public function deleteCheltuiala(
         Request $request,
@@ -333,8 +425,6 @@ class ComenziController extends AbstractController
         if ($this->isCsrfTokenValid('delete'.$cheltuiala->getId(), $request->request->get('_token'))) {
             $entityManager->remove($cheltuiala);
             $entityManager->flush();
-
-            // Recalculăm profitul
             $comanda->calculateAndSetProfit();
             $entityManager->flush();
         }
@@ -342,9 +432,6 @@ class ComenziController extends AbstractController
         return $this->redirectToRoute('app_comenzi_show', ['id' => $comandaId]);
     }
 
-    /**
-     * Returnează subcategoriile (inclusiv pret_per_l) prin AJAX
-     */
     #[Route('/get-subcategories', name: 'app_get_subcategories', methods: ['GET'])]
     public function getSubcategories(Request $request, EntityManagerInterface $entityManager): JsonResponse
     {
@@ -358,7 +445,6 @@ class ComenziController extends AbstractController
             return new JsonResponse([]);
         }
 
-        // Dacă e "Consumabile", listăm obiectele din tabelul Consumabile
         if ($categorie->getNume() === 'Consumabile') {
             $consumabile = $entityManager->getRepository(Consumabile::class)
                 ->findBy(['categorie' => $categorieId]);
@@ -369,12 +455,10 @@ class ComenziController extends AbstractController
                     'nume' => $consumabil->getNume(),
                     'pret_standard' => $consumabil->getPretMaxim(),
                     'km_utilizare_max' => $consumabil->getKmUtilizareMax(),
-                    // consumabile nu au pret_per_l => setăm null
                     'pret_per_l' => null,
                 ];
             }, $consumabile);
         } else {
-            // Altfel, subcategorii clasice
             $subcategorii = $entityManager->getRepository(SubcategoriiCheltuieli::class)
                 ->findBy(['categorie' => $categorieId]);
 
@@ -383,8 +467,8 @@ class ComenziController extends AbstractController
                     'id' => $subcategorie->getId(),
                     'nume' => $subcategorie->getNume(),
                     'pret_standard' => $subcategorie->getPretStandard(),
-                    'km_utilizare_max' => null, // Folosit la consumabile
-                    'pret_per_l' => $subcategorie->getPretPerL(), // IATĂ, pentru "motorină"
+                    'km_utilizare_max' => null,
+                    'pret_per_l' => $subcategorie->getPretPerL(),
                 ];
             }, $subcategorii);
         }
