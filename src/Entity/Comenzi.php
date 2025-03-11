@@ -86,7 +86,22 @@ class Comenzi
 
     $totalCheltuieli = 0;
     foreach ($this->cheltuielis as $cheltuiala) {
-        $totalCheltuieli += $cheltuiala->getSuma() ?? 0;
+        $sumaBruta = $cheltuiala->getSuma() ?? 0;
+        $tvaProcent = $cheltuiala->getTva() ?? 0;
+        $comisionTvaProcent = $cheltuiala->getComisionTva() ?? 0;
+
+        if ($tvaProcent > 0) {
+            // Calculăm TVA-ul inclus în suma brută
+            $tvaValue = $sumaBruta * $tvaProcent / (100 + $tvaProcent);
+            // Calculăm comisionul aplicat pe TVA-ul recuperabil
+            $comisionTva = $tvaValue * ($comisionTvaProcent / 100);
+            // Cheltuiala netă ajustată: suma brută - TVA recuperabil + comision
+            $cheltuialaNeta = $sumaBruta - $tvaValue + $comisionTva;
+            $totalCheltuieli += $cheltuialaNeta;
+        } else {
+            // Dacă nu are TVA, folosim suma brută
+            $totalCheltuieli += $sumaBruta;
+        }
     }
 
     $this->profit = $totalTururi + $totalRetururi - $totalCheltuieli;

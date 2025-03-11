@@ -42,7 +42,7 @@ class CheltuieliType extends AbstractType
                 'required' => true,
             ])
             ->add('litri_motorina', NumberType::class, [
-                'label' => 'Litri Motorină',
+                'label' => 'Litri',
                 'required' => false,
             ])
             ->add('tva', NumberType::class, [

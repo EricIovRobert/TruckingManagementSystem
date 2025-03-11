@@ -108,54 +108,138 @@
         </tbody>
     </table>
 
-    <h2>Cheltuieli</h2>
-    <a href="{{ path('app_comenzi_cheltuieli_new', {'id': comanda.id}) }}" class="btn btn-primary">Adaugă Cheltuială</a>
-    <table class="table table-striped">
-        <thead>
+   <h2>Cheltuieli</h2>
+<a href="{{ path('app_comenzi_cheltuieli_new', {'id': comanda.id}) }}" class="btn btn-primary">Adaugă Cheltuială</a>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Categorie</th>
+            <th>Subcategorie</th>
+            <th>Suma</th>
+            <th>Data</th>
+            <th>Descriere</th>
+            <th>Acțiuni</th>
+        </tr>
+    </thead>
+    <tbody>
+                {% for cheltuiala in comanda.cheltuielis|filter(cheltuiala => cheltuiala.tva <= 0) %}
             <tr>
-                <th>Categorie</th>
-                <th>Subcategorie</th>
-                <th>Suma</th>
-                <th>Data</th>
-                <th>Descriere</th>
-                <th>Acțiuni</th>
+                <td>{{ cheltuiala.categorie ? cheltuiala.categorie.nume : 'N/A' }}</td>
+                <td>
+                    {% if cheltuiala.subcategorie %}
+                        {{ cheltuiala.subcategorie.nume }}
+                    {% elseif cheltuiala.consumabil %}
+                        {{ cheltuiala.consumabil.nume }}
+                    {% else %}
+                        N/A
+                    {% endif %}
+                </td>
+                <td>{{ cheltuiala.suma|number_format(2, ',', '.') }}</td>
+                <td>{{ cheltuiala.dataCheltuiala ? cheltuiala.dataCheltuiala|date('Y-m-d') : 'N/A' }}</td>
+                <td>{{ cheltuiala.descriere ?: 'N/A' }}</td>
+                <td>
+                    <a href="{{ path('app_comenzi_cheltuieli_edit', {'comandaId': comanda.id, 'cheltuialaId': cheltuiala.id}) }}"
+                       class="btn btn-warning">Editează</a>
+                    <form method="post"
+                          action="{{ path('app_comenzi_cheltuieli_delete', {'comandaId': comanda.id, 'cheltuialaId': cheltuiala.id}) }}"
+                          style="display:inline;"
+                          onsubmit="return confirm('Ești sigur că vrei să ștergi această cheltuială?');">
+                        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ cheltuiala.id) }}">
+                        <button class="btn btn-danger">Șterge</button>
+                    </form>
+                </td>
             </tr>
-        </thead>
-        <tbody>
-            {% for cheltuiala in comanda.cheltuielis %}
-                <tr>
-                    <td>{{ cheltuiala.categorie ? cheltuiala.categorie.nume : 'N/A' }}</td>
-                    <td>
-                        {% if cheltuiala.subcategorie %}
-                            {{ cheltuiala.subcategorie.nume }}
-                        {% elseif cheltuiala.consumabil %}
-                            {{ cheltuiala.consumabil.nume }}
-                        {% else %}
-                            N/A
-                        {% endif %}
-                    </td>
-                    <td>{{ cheltuiala.suma }}</td>
-                    <td>{{ cheltuiala.dataCheltuiala ? cheltuiala.dataCheltuiala|date('Y-m-d') : 'N/A' }}</td>
-                    <td>{{ cheltuiala.descriere ?: 'N/A' }}</td>
-                    <td>
-                        <a href="{{ path('app_comenzi_cheltuieli_edit', {'comandaId': comanda.id, 'cheltuialaId': cheltuiala.id}) }}"
-                           class="btn btn-warning">Editează</a>
-                        <form method="post"
-                              action="{{ path('app_comenzi_cheltuieli_delete', {'comandaId': comanda.id, 'cheltuialaId': cheltuiala.id}) }}"
-                              style="display:inline;"
-                              onsubmit="return confirm('Ești sigur că vrei să ștergi această cheltuială?');">
-                            <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ cheltuiala.id) }}">
-                            <button class="btn btn-danger">Șterge</button>
-                        </form>
-                    </td>
-                </tr>
-            {% else %}
-                <tr>
-                    <td colspan="6">Nicio cheltuială asociată</td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+        {% else %}
+            <tr>
+                <td colspan="6">Nicio cheltuială fără TVA asociată</td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<h2>Cheltuieli cu TVA</h2>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Categorie</th>
+            <th>Subcategorie</th>
+            <th>Suma Brută (€)</th>
+            <th>TVA Recuperat (€)</th>
+            <th>Comision TVA (€)</th>
+            <th>Cheltuială Finală (€)</th>
+            <th>Descriere</th>
+            <th>Acțiuni</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% set totalSumaBruta = 0 %}
+        {% set totalTvaNetRecuperat = 0 %}
+        {% set totalComisionTva = 0 %}
+        {% set totalCheltuialaNeta = 0 %}
+        {% set hasCheltuieli = false %}
+
+        {% for cheltuiala in comanda.cheltuielis|filter(cheltuiala => cheltuiala.tva > 0) %}
+            {% set hasCheltuieli = true %}
+            {% set sumaBruta = cheltuiala.suma %}
+            {% set tvaProcent = cheltuiala.tva %}
+            {% set comisionTvaProcent = cheltuiala.comisionTva ?? 0 %}
+            {% set tvaValue = (sumaBruta * tvaProcent / (100 + tvaProcent))|round(2) %}
+            {% set comisionTva = (tvaValue * (comisionTvaProcent / 100))|round(2) %}
+            {% set tvaNetRecuperat = (tvaValue - comisionTva)|round(2) %}
+            {% set cheltuialaNeta = (sumaBruta - tvaValue + comisionTva)|round(2) %}
+
+            {% set totalSumaBruta = totalSumaBruta + sumaBruta %}
+            {% set totalTvaNetRecuperat = totalTvaNetRecuperat + tvaNetRecuperat %}
+            {% set totalComisionTva = totalComisionTva + comisionTva %}
+            {% set totalCheltuialaNeta = totalCheltuialaNeta + cheltuialaNeta %}
+
+            <tr>
+                <td>{{ cheltuiala.categorie ? cheltuiala.categorie.nume : 'N/A' }}</td>
+                <td>
+                    {% if cheltuiala.subcategorie %}
+                        {{ cheltuiala.subcategorie.nume }}
+                    {% elseif cheltuiala.consumabil %}
+                        {{ cheltuiala.consumabil.nume }}
+                    {% else %}
+                        N/A
+                    {% endif %}
+                </td>
+                <td>{{ sumaBruta|number_format(2, ',', '.') }}</td>
+                <td>{{ tvaNetRecuperat|number_format(2, ',', '.') }}</td>
+                <td>{{ comisionTva|number_format(2, ',', '.') }}</td>
+                <td>{{ cheltuialaNeta|number_format(2, ',', '.') }}</td>
+                <td>{{ cheltuiala.descriere ?: 'N/A' }}</td>
+                <td>
+                    <a href="{{ path('app_comenzi_cheltuieli_edit', {'comandaId': comanda.id, 'cheltuialaId': cheltuiala.id}) }}"
+                       class="btn btn-warning btn-sm">Editează</a>
+                    <form method="post"
+                          action="{{ path('app_comenzi_cheltuieli_delete', {'comandaId': comanda.id, 'cheltuialaId': cheltuiala.id}) }}"
+                          style="display:inline;"
+                          onsubmit="return confirm('Ești sigur că vrei să ștergi această cheltuială?');">
+                        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ cheltuiala.id) }}">
+                        <button class="btn btn-danger btn-sm">Șterge</button>
+                    </form>
+                </td>
+            </tr>
+        {% endfor %}
+
+        {% if hasCheltuieli %}
+            <tr style="font-weight: bold;">
+                <td colspan="2">Total</td>
+                <td>{{ totalSumaBruta|number_format(2, ',', '.') }}</td>
+                <td>{{ totalTvaNetRecuperat|number_format(2, ',', '.') }}</td>
+                <td>{{ totalComisionTva|number_format(2, ',', '.') }}</td>
+                <td>{{ totalCheltuialaNeta|number_format(2, ',', '.') }}</td>
+                <td></td>
+                <td></td>
+            </tr>
+        {% else %}
+            <tr>
+                <td colspan="8">Nicio cheltuială cu TVA asociată</td>
+            </tr>
+        {% endif %}
+    </tbody>
+</table>
 
     <a href="{{ path('app_comenzi_index') }}" class="btn btn-secondary">Înapoi la listă</a>
 

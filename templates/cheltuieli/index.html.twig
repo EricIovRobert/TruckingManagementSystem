@@ -14,7 +14,7 @@
                 <th>Comandă</th>
                 <th>Categorie</th>
                 <th>Sub/Consumabil</th>
-                <th>Suma</th>
+                <th>Suma Ajustată</th>
                 <th>Data</th>
                 <th>Litri</th>
                 <th>Descriere</th>
@@ -23,6 +23,12 @@
         </thead>
         <tbody>
             {% for ch in cheltuieli %}
+                {% set sumaAjustata = ch.suma %}
+                {% if ch.tva > 0 %}
+                    {% set tvaValue = (ch.suma * ch.tva / (100 + ch.tva))|round(2) %}
+                    {% set comisionTva = (tvaValue * (ch.comisionTva ?? 0) / 100)|round(2) %}
+                    {% set sumaAjustata = (ch.suma - tvaValue + comisionTva)|round(2) %}
+                {% endif %}
                 <tr>
                     <td>{{ ch.id }}</td>
                     <td>
@@ -43,7 +49,7 @@
                             -
                         {% endif %}
                     </td>
-                    <td>{{ ch.suma|number_format(2, ',', '.') }}</td>
+                    <td>{{ sumaAjustata|number_format(2, ',', '.') }}</td>
                     <td>{{ ch.dataCheltuiala ? ch.dataCheltuiala|date('Y-m-d') : '' }}</td>
                     <td>{{ ch.litriMotorina ?: 0 }}</td>
                     <td>{{ ch.descriere ?: '-' }}</td>
