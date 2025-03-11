@@ -1,0 +1,154 @@
+{# templates/rapoarte/cheltuieli.html.twig #}
+{% extends 'base.html.twig' %}
+
+{% block title %}Rapoarte Cheltuieli{% endblock %}
+
+{% block body %}
+<h1>Rapoarte - Cheltuieli</h1>
+
+<p>
+    Aici avem <strong>pagină separată</strong> pentru rapoarte, folosind aceleași
+    criterii de filtrare și <em>un total</em> calculat din bază de date: <br>
+    <strong>Total SUM(ch.suma) = {{ totalSuma|number_format(2, ',', '.') }} RON</strong>
+</p>
+
+<form method="get" class="mb-3">
+    <div class="input-group">
+        <input type="text" name="an" class="form-control" placeholder="An (ex. 2025)" value="{{ an ?? '' }}">
+        <select name="luna" class="form-select">
+            <option value="" {% if luna is null %}selected{% endif %}>Alege Luna</option>
+            <option value="1"  {% if luna == '1'  %}selected{% endif %}>Ianuarie</option>
+            <option value="2"  {% if luna == '2'  %}selected{% endif %}>Februarie</option>
+            <option value="3"  {% if luna == '3'  %}selected{% endif %}>Martie</option>
+            <option value="4"  {% if luna == '4'  %}selected{% endif %}>Aprilie</option>
+            <option value="5"  {% if luna == '5'  %}selected{% endif %}>Mai</option>
+            <option value="6"  {% if luna == '6'  %}selected{% endif %}>Iunie</option>
+            <option value="7"  {% if luna == '7'  %}selected{% endif %}>Iulie</option>
+            <option value="8"  {% if luna == '8'  %}selected{% endif %}>August</option>
+            <option value="9"  {% if luna == '9'  %}selected{% endif %}>Septembrie</option>
+            <option value="10" {% if luna == '10' %}selected{% endif %}>Octombrie</option>
+            <option value="11" {% if luna == '11' %}selected{% endif %}>Noiembrie</option>
+            <option value="12" {% if luna == '12' %}selected{% endif %}>Decembrie</option>
+        </select>
+
+        <select name="type" class="form-select">
+            <option value="" {% if type is null %}selected{% endif %}>Toate</option>
+            <option value="comenzi"     {% if type == 'comenzi'     %}selected{% endif %}>Comenzi</option>
+            <option value="comunitare"  {% if type == 'comunitare'  %}selected{% endif %}>Comunitare</option>
+            <option value="fara_comanda"{% if type == 'fara_comanda'%}selected{% endif %}>Fără comandă</option>
+        </select>
+
+        <select name="categorie" class="form-select">
+            <option value="" {% if categorie is null %}selected{% endif %}>Toate Categoriile</option>
+            {% for cat in categorii %}
+                <option value="{{ cat.id }}" {% if categorie == cat.id %}selected{% endif %}>
+                    {{ cat.nume }}
+                </option>
+            {% endfor %}
+        </select>
+
+        <button type="submit" class="btn btn-primary">Filtrează</button>
+        <a href="{{ path('app_cheltuieli_raport') }}" class="btn btn-secondary">Resetează</a>
+    </div>
+</form>
+
+{% if an or luna or type or categorie %}
+    <p>
+        Filtre aplicate:
+        {% if an %}An: {{ an }}{% endif %}
+        {% if luna %}
+            {% set lunaNume = {
+                '1': 'Ianuarie','2': 'Februarie','3': 'Martie','4': 'Aprilie','5': 'Mai','6': 'Iunie',
+                '7': 'Iulie','8': 'August','9': 'Septembrie','10': 'Octombrie','11': 'Noiembrie','12': 'Decembrie'
+            } %}
+            / Luna: {{ lunaNume[luna] ?? luna }}
+        {% endif %}
+        {% if type %}
+            / Tip: {{ type == 'comenzi' ? 'Comenzi' : (type == 'comunitare' ? 'Comunitare' : 'Fără comandă') }}
+        {% endif %}
+        {% if categorie %}
+            / Categorie: {{ categorii|filter(cat => cat.id == categorie)|first.nume ?? 'Necunoscut' }}
+        {% endif %}
+    </p>
+{% endif %}
+
+{# Afișăm un tabel cu calculul “sumei ajustate” la fiecare rând (exemplu).
+   Dacă nu ai nevoie de asta, poți pune direct {{ ch.suma }} #}
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Comandă/Tip</th>
+            <th>Categorie</th>
+            <th>Sub/Consumabil</th>
+            <th>Suma Ajustată</th>
+            <th>Data</th>
+            <th>Litri</th>
+            <th>Descriere</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% set totalAjustat = 0 %}
+        {% for ch in pagination %}
+            {% set sumaAjustata = ch.suma %}
+            {% if ch.tva > 0 %}
+                {# Calcul TVA scos din sumă, + comision #}
+                {% set tvaValue   = (ch.suma * ch.tva / (100 + ch.tva))|round(2, 'common') %}
+                {% set comisionTva = (tvaValue * (ch.comisionTva ?: 0) / 100)|round(2, 'common') %}
+                {% set sumaAjustata = (ch.suma - tvaValue + comisionTva)|round(2, 'common') %}
+            {% endif %}
+
+            {% set totalAjustat = totalAjustat + sumaAjustata %}
+
+            <tr>
+                <td>{{ ch.id }}</td>
+                <td>
+                    {% if ch.comanda %}
+                        #{{ ch.comanda.id }} (Comandă)
+                    {% elseif ch.comunitar %}
+                        #{{ ch.comunitar.id }} (Comunitar)
+                    {% else %}
+                        Fără comandă
+                    {% endif %}
+                </td>
+                <td>{{ ch.categorie ? ch.categorie.nume : '-' }}</td>
+                <td>
+                    {% if ch.subcategorie %}
+                        {{ ch.subcategorie.nume }}
+                    {% elseif ch.consumabil %}
+                        {{ ch.consumabil.nume }}
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+                <td>{{ sumaAjustata|number_format(2, ',', '.') }}</td>
+                <td>{{ ch.dataCheltuiala ? ch.dataCheltuiala|date('Y-m-d') : '' }}</td>
+                <td>{{ ch.litriMotorina ?: 0 }}</td>
+                <td>{{ ch.descriere ?: '-' }}</td>
+            </tr>
+        {% else %}
+            <tr>
+                <td colspan="8">Nu există cheltuieli pentru criteriile selectate.</td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{# Afișăm sub tabel: total ajustat (calculat în twig) #}
+{% if pagination|length > 0 %}
+    <div class="alert alert-info">
+        Total ajustat (TVA scos, comision adăugat) pentru toate rândurile din această pagină:
+        <strong>{{ totalAjustat|number_format(2, ',', '.') }}</strong>
+    </div>
+
+    <div class="alert alert-warning">
+        Total simplu (SUM(ch.suma) din DB, pentru toate paginile filtrate):
+        <strong>{{ totalSuma|number_format(2, ',', '.') }}</strong>
+    </div>
+{% endif %}
+
+<div class="navigation mt-3 d-flex justify-content-center">
+    {{ knp_pagination_render(pagination) }}
+</div>
+{% endblock %}

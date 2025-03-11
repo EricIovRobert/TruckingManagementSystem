@@ -1,3 +1,5 @@
+{# templates/cheltuieli/index.html.twig #}
+
 {% extends 'base.html.twig' %}
 
 {% block title %}Rapoarte Cheltuieli{% endblock %}
@@ -5,8 +7,81 @@
 {% block body %}
     <h1>Rapoarte - Toate Cheltuielile</h1>
 
+    {# 1) Buton "Vezi Rapoarte" (placeholder) #}
+    <a href="{{ path('app_cheltuieli_raport') }}" class="btn btn-success mb-3">Vezi Rapoarte</a>
+
+    {# 2) Buton "Adaugă Cheltuială" (deja exista la tine) #}
     <a href="{{ path('app_cheltuieli_new') }}" class="btn btn-primary mb-3">Adaugă Cheltuială</a>
 
+    {# 3) Formular de filtrare #}
+    <form method="get" class="mb-3">
+        <div class="input-group">
+            <input type="text" name="an" class="form-control" placeholder="An (ex. 2025)" value="{{ an ?? '' }}">
+            <select name="luna" class="form-select">
+                <option value="" {% if luna is null %}selected{% endif %}>Alege Luna</option>
+                <option value="1"  {% if luna == '1'  %}selected{% endif %}>Ianuarie</option>
+                <option value="2"  {% if luna == '2'  %}selected{% endif %}>Februarie</option>
+                <option value="3"  {% if luna == '3'  %}selected{% endif %}>Martie</option>
+                <option value="4"  {% if luna == '4'  %}selected{% endif %}>Aprilie</option>
+                <option value="5"  {% if luna == '5'  %}selected{% endif %}>Mai</option>
+                <option value="6"  {% if luna == '6'  %}selected{% endif %}>Iunie</option>
+                <option value="7"  {% if luna == '7'  %}selected{% endif %}>Iulie</option>
+                <option value="8"  {% if luna == '8'  %}selected{% endif %}>August</option>
+                <option value="9"  {% if luna == '9'  %}selected{% endif %}>Septembrie</option>
+                <option value="10" {% if luna == '10' %}selected{% endif %}>Octombrie</option>
+                <option value="11" {% if luna == '11' %}selected{% endif %}>Noiembrie</option>
+                <option value="12" {% if luna == '12' %}selected{% endif %}>Decembrie</option>
+            </select>
+
+            <select name="type" class="form-select">
+                <option value="" {% if type is null %}selected{% endif %}>Toate</option>
+                <option value="comenzi"     {% if type == 'comenzi'     %}selected{% endif %}>Comenzi</option>
+                <option value="comunitare"  {% if type == 'comunitare'  %}selected{% endif %}>Comenzi Comunitare</option>
+                <option value="fara_comanda"{% if type == 'fara_comanda'%}selected{% endif %}>Fără comandă</option>
+            </select>
+
+            <select name="categorie" class="form-select">
+                <option value="" {% if categorie is null %}selected{% endif %}>Toate Categoriile</option>
+                {% if categorii is defined %}
+                    {% for cat in categorii %}
+                        <option value="{{ cat.id }}" {% if categorie == cat.id %}selected{% endif %}>
+                            {{ cat.nume }}
+                        </option>
+                    {% endfor %}
+                {% endif %}
+            </select>
+
+            <button type="submit" class="btn btn-primary">Filtrează</button>
+            <a href="{{ path('app_cheltuieli_list') }}" class="btn btn-secondary">Resetează</a>
+        </div>
+    </form>
+
+    {# 4) - Afișăm eventualele filtre curente #}
+    {% if an or luna or type or categorie %}
+        <p>Filtre aplicate:
+            {% if an %}An: {{ an }}{% endif %}
+            {% if luna %}
+                {% set lunaNume = {
+                    '1': 'Ianuarie','2': 'Februarie','3': 'Martie','4': 'Aprilie','5': 'Mai','6': 'Iunie',
+                    '7': 'Iulie','8': 'August','9': 'Septembrie','10': 'Octombrie','11': 'Noiembrie','12': 'Decembrie'
+                } %}
+                / Luna: {{ lunaNume[luna] ?? luna }}
+            {% endif %}
+            {% if type %}
+                / Tip: {{ type == 'comenzi' ? 'Comenzi' : (type == 'comunitare' ? 'Comunitare' : 'Fără comandă') }}
+            {% endif %}
+            {% if categorie %}
+                / Categorie: 
+                  {% if categorii is defined %}
+                      {{ categorii|filter(cat => cat.id == categorie)|first.nume ?? 'Necunoscut' }}
+                  {% else %}
+                      ID {{ categorie }}
+                  {% endif %}
+            {% endif %}
+        </p>
+    {% endif %}
+
+    {# De aici în jos e exact masa ta inițială de date #}
     <table class="table table-striped">
         <thead>
             <tr>
@@ -25,7 +100,7 @@
             {% for ch in cheltuieli %}
                 {% set sumaAjustata = ch.suma %}
                 {% if ch.tva > 0 %}
-                    {% set tvaValue = (ch.suma * ch.tva / (100 + ch.tva))|round(2) %}
+                    {% set tvaValue   = (ch.suma * ch.tva / (100 + ch.tva))|round(2) %}
                     {% set comisionTva = (tvaValue * (ch.comisionTva ?? 0) / 100)|round(2) %}
                     {% set sumaAjustata = (ch.suma - tvaValue + comisionTva)|round(2) %}
                 {% endif %}
@@ -55,7 +130,10 @@
                     <td>{{ ch.descriere ?: '-' }}</td>
                     <td>
                         <a href="{{ path('app_cheltuieli_edit', {'id': ch.id}) }}" class="btn btn-sm btn-primary">Editează</a>
-                        <form method="post" action="{{ path('app_cheltuieli_delete', {'id': ch.id}) }}" onsubmit="return confirm('Ești sigur că vrei să ștergi această cheltuială?');" style="display:inline;">
+                        <form method="post"
+                              action="{{ path('app_cheltuieli_delete', {'id': ch.id}) }}"
+                              onsubmit="return confirm('Ești sigur că vrei să ștergi această cheltuială?');"
+                              style="display:inline;">
                             <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ ch.id) }}">
                             <button type="submit" class="btn btn-sm btn-danger">Șterge</button>
                         </form>
@@ -68,4 +146,11 @@
             {% endfor %}
         </tbody>
     </table>
+
+    {# 5) Link-urile de paginare (KnpPaginator) #}
+    {% if pagination is defined %}
+        <div class="navigation mt-3 d-flex justify-content-center">
+            {{ knp_pagination_render(pagination) }}
+        </div>
+    {% endif %}
 {% endblock %}
