@@ -47,7 +47,7 @@ class ComenziType extends AbstractType
             ->add('numarKm', null, [
                 'required' => false,
             ])
-            ->add('profit')
+           
         ;
 
         $builder->addEventListener(

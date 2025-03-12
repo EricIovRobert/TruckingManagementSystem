@@ -1,0 +1,35 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Statistici Cheltuieli{% endblock %}
+
+{% block body %}
+    <h1>Statistici Cheltuieli</h1>
+
+    <!-- Formular de filtrare -->
+    <form method="get" class="mb-3">
+       <div class="input-group">
+    <input type="text" name="an" class="form-control" placeholder="An (ex. 2025)" value="{{ an ?? '' }}">
+    <select name="luna" class="form-select">
+        <option value="" {% if luna is null %}selected{% endif %}>Alege Luna</option>
+        {% for i in 1..12 %}
+            <option value="{{ i }}" {% if luna == i %}selected{% endif %}>{{ lunaNume[i] }}</option>
+        {% endfor %}
+    </select>
+    <button type="submit" class="btn btn-primary">Filtrează</button>
+    <a href="{{ path('app_statistici_cheltuieli') }}" class="btn btn-secondary">Resetează</a>
+</div>
+    </form>
+
+    <!-- Afișare perioadă selectată -->
+    {% if an or luna %}
+        <p>Perioada:
+            {% if an %}An: {{ an }}{% endif %}
+            {% if luna %}/ Luna: {{ lunaNume[luna] }}{% endif %}
+        </p>
+    {% else %}
+        <p>Perioada: Toate</p>
+    {% endif %}
+
+    <!-- Afișare profit total -->
+    <h3>Profit Total: {{ profitTotal|number_format(2, ',', '.') }} RON</h3>
+{% endblock %}
