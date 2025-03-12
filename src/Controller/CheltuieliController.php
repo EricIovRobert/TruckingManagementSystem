@@ -11,13 +11,13 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
-use Knp\Component\Pager\PaginatorInterface; // <- asigură-te că ai acest use
+use Knp\Component\Pager\PaginatorInterface;
 
 #[Route('/rapoarte')]
 class CheltuieliController extends AbstractController
 {
     /**
-     * Afișare listă Cheltuieli + FILTRE și PAGINAȚIE
+     * Afișare listă Cheltuieli cu filtre, paginare și total
      */
     #[Route('/cheltuieli', name: 'app_cheltuieli_list', methods: ['GET'])]
     public function listCheltuieli(
@@ -25,9 +25,6 @@ class CheltuieliController extends AbstractController
         Request $request,
         PaginatorInterface $paginator
     ): Response {
-        // 1) Construim un QueryBuilder pentru a aplica filtrele
-        $qb = $em->getRepository(Cheltuieli::class)->createQueryBuilder('ch');
-
         // Parametrii din GET
         $an         = $request->query->get('an');
         $luna       = $request->query->get('luna');
@@ -44,15 +41,16 @@ class CheltuieliController extends AbstractController
         $lunaValid = false;
         if ($luna && in_array($luna, range(1, 12))) {
             $lunaValid = true;
-            // ex. '3' devine '03' pentru comparare
             $luna = str_pad($luna, 2, '0', STR_PAD_LEFT);
         }
+
+        // Construim QueryBuilder pentru lista de cheltuieli
+        $qb = $em->getRepository(Cheltuieli::class)->createQueryBuilder('ch');
 
         // Filtru an
         if ($anValid) {
             $startDate = new \DateTime("$an-01-01 00:00:00");
             $endDate   = new \DateTime("$an-12-31 23:59:59");
-
             $qb->andWhere('ch.data_cheltuiala >= :startDate')
                ->andWhere('ch.data_cheltuiala <= :endDate')
                ->setParameter('startDate', $startDate)
@@ -62,38 +60,30 @@ class CheltuieliController extends AbstractController
         // Filtru lună
         if ($lunaValid) {
             if ($anValid) {
-                // Dacă avem și an, căutăm luna în anul respectiv
                 $startDate = new \DateTime("$an-$luna-01 00:00:00");
                 $endDate   = (clone $startDate)->modify('last day of this month')->setTime(23, 59, 59);
-
                 $qb->andWhere('ch.data_cheltuiala >= :s2')
                    ->andWhere('ch.data_cheltuiala <= :e2')
                    ->setParameter('s2', $startDate)
                    ->setParameter('e2', $endDate);
             } else {
-                // Dacă nu avem an, căutăm luna X în toți anii din BD
                 $minMax = $em->createQueryBuilder()
                     ->select('MIN(ch.data_cheltuiala) as minDate, MAX(ch.data_cheltuiala) as maxDate')
                     ->from(Cheltuieli::class, 'ch')
                     ->getQuery()
                     ->getSingleResult();
-
                 $minDate = $minMax['minDate'] ? new \DateTime($minMax['minDate']) : new \DateTime();
                 $maxDate = $minMax['maxDate'] ? new \DateTime($minMax['maxDate']) : new \DateTime();
-
                 $minYear = (int) $minDate->format('Y');
                 $maxYear = (int) $maxDate->format('Y');
-
                 $orX = $qb->expr()->orX();
                 for ($year = $minYear; $year <= $maxYear; $year++) {
                     $start = new \DateTime("$year-$luna-01 00:00:00");
                     $end   = (clone $start)->modify('last day of this month')->setTime(23, 59, 59);
-
                     $orX->add($qb->expr()->andX(
                         $qb->expr()->gte('ch.data_cheltuiala', ":start_$year"),
                         $qb->expr()->lte('ch.data_cheltuiala', ":end_$year")
                     ));
-
                     $qb->setParameter("start_$year", $start)
                        ->setParameter("end_$year", $end);
                 }
@@ -103,7 +93,7 @@ class CheltuieliController extends AbstractController
             }
         }
 
-        // Filtru tip (comenzi / comunitare / fara_comanda)
+        // Filtru tip
         if ($type === 'comenzi') {
             $qb->andWhere('ch.comanda IS NOT NULL')
                ->andWhere('ch.comunitar IS NULL');
@@ -121,40 +111,50 @@ class CheltuieliController extends AbstractController
                ->setParameter('cat', $categorieId);
         }
 
-        // Ordonăm descendent după data + ID (ca să apară în ordinea introducerii invers)
+        // Clonăm QueryBuilder-ul pentru a calcula totalul ajustat
+        $qbTotal = clone $qb;
+        $qbTotal->select('SUM(
+            CASE
+                WHEN ch.tva > 0 THEN
+                    ch.suma - (ch.suma * ch.tva / (100 + ch.tva)) + 
+                    ((ch.suma * ch.tva / (100 + ch.tva)) * (COALESCE(ch.comision_tva, 0) / 100))
+                ELSE
+                    ch.suma
+            END
+        ) as total');
+
+        // Obținem totalul
+        $total = $qbTotal->getQuery()->getSingleScalarResult();
+        $total = $total ? round($total, 2) : 0;
+
+        // Continuăm cu QueryBuilder-ul original pentru lista de cheltuieli
         $qb->orderBy('ch.data_cheltuiala', 'DESC')
            ->addOrderBy('ch.id', 'DESC');
 
-        // 2) Aplicăm paginația
         $query      = $qb->getQuery();
         $pagination = $paginator->paginate(
             $query,
-            $request->query->getInt('page', 1), 
-            10 // câte rezultate vrei pe pagină
+            $request->query->getInt('page', 1),
+            10
         );
 
-        // 3) Luăm itemele paginii curente
         $cheltuieli = $pagination->getItems();
-
-        // 4) (Opțional) încărcăm categoriile pentru select (dacă vrei filtru categorie)
         $categorii = $em->getRepository('App\Entity\CategoriiCheltuieli')->findAll();
 
-        // AICI păstrăm EXACT ce era înainte, DOAR că îi trimitem $cheltuieli filtrate
-        // + adăugăm 'pagination', 'an', 'luna', etc. pentru twig (dacă vrei).
         return $this->render('cheltuieli/index.html.twig', [
-            'cheltuieli' => $cheltuieli,        // tabloul filtrat + paginat
-            'pagination' => $pagination,        // obiectul de paginare (ca să-l poți afișa)
-            // Filtre curente (dacă le vrei în twig):
+            'cheltuieli' => $cheltuieli,
+            'pagination' => $pagination,
             'an'         => $an,
             'luna'       => $luna,
             'type'       => $type,
             'categorie'  => $categorieId,
             'categorii'  => $categorii,
+            'total'      => $total, // Adăugăm totalul în context
         ]);
     }
 
     /**
-     * Creare Cheltuială (păstrat exact cum era).
+     * Creare Cheltuială
      */
     #[Route('/cheltuieli/new', name: 'app_cheltuieli_new', methods: ['GET', 'POST'])]
     public function new(Request $request, EntityManagerInterface $entityManager): Response
@@ -199,7 +199,7 @@ class CheltuieliController extends AbstractController
     }
 
     /**
-     * Editare Cheltuială (păstrat exact cum era).
+     * Editare Cheltuială
      */
     #[Route('/cheltuieli/{id}/edit', name: 'app_cheltuieli_edit', methods: ['GET', 'POST'])]
     public function edit(Request $request, Cheltuieli $cheltuiala, EntityManagerInterface $entityManager): Response
@@ -241,7 +241,7 @@ class CheltuieliController extends AbstractController
     }
 
     /**
-     * Ștergere Cheltuială (păstrat exact cum era).
+     * Ștergere Cheltuială
      */
     #[Route('/cheltuieli/{id}/delete', name: 'app_cheltuieli_delete', methods: ['POST'])]
     public function delete(Request $request, Cheltuieli $cheltuiala, EntityManagerInterface $entityManager): Response
@@ -254,14 +254,5 @@ class CheltuieliController extends AbstractController
         return $this->redirectToRoute('app_cheltuieli_list');
     }
 
-    /**
-     * Exemplu: buton "Vezi Rapoarte" (placeholder).
-     * Poți face ce vrei aici mai târziu.
-     */
-    #[Route('/cheltuieli/raport', name: 'app_cheltuieli_raport', methods: ['GET'])]
-    public function raportPlaceholder(): Response
-    {
-        // Deocamdată doar un text simplu.
-        return new Response('<h1>Pagina de Rapoarte (viitor).</h1>');
-    }
+ 
 }
