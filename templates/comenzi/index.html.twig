@@ -53,13 +53,11 @@
                 <th>Șofer</th>
                 <th>Data Start</th>
                 <th>Data Stop</th>
-                <th>Zile</th>
-                <th>Nr. Km</th>
-                <th>Consum (l/100km)</th>
-                <th>Preț per km</th>
-                <th>Profit</th>
                 <th>Locație</th>
                 <th>Liber</th>
+                <th>Nr. Km</th>
+                <th>Consum (l/100km)</th>
+                <th>Profit</th>
                 <th>Rezolvat</th>
                 <th>Acțiuni</th>
             </tr>
@@ -75,43 +73,7 @@
                     <td>{{ comanda.sofer ?: '-' }}</td>
                     <td>{{ comanda.dataStart ? comanda.dataStart|date('d/m/Y') : '-' }}</td>
                     <td>{{ comanda.dataStop ? comanda.dataStop|date('d/m/Y') : '-' }}</td>
-                    <td>
-                        {% if comanda.dataStart and comanda.dataStop %}
-                            {{ comanda.dataStart.diff(comanda.dataStop).days + 1 }}
-                        {% else %}
-                            -
-                        {% endif %}
-                    </td>
-                    <td>{{ comanda.numarKm is not null ? comanda.numarKm : '-' }}</td>
-                    <td>
-                        {% set totalLitriMotorina = 0 %}
-                        {% for cheltuiala in comanda.cheltuielis %}
-                            {% set categorieNume = cheltuiala.categorie ? cheltuiala.categorie.nume|lower : '' %}
-                            {% set subcategorieNume = cheltuiala.subcategorie ? cheltuiala.subcategorie.nume|lower : '' %}
-                            {% if 'motorina' in categorieNume or 'motorina' in subcategorieNume %}
-                                {% set totalLitriMotorina = totalLitriMotorina + (cheltuiala.litriMotorina ?: 0) %}
-                            {% endif %}
-                        {% endfor %}
-                        {% if comanda.numarKm is not null and comanda.numarKm > 0 and totalLitriMotorina > 0 %}
-                            {% set consumPer100Km = (totalLitriMotorina / comanda.numarKm * 100)|round(2) %}
-                            {{ consumPer100Km|number_format(2, ',', '.') }}
-                        {% else %}
-                            -
-                        {% endif %}
-                    </td>
-                    <td>
-                        {% set totalCheltuieli = 0 %}
-                        {% for cheltuiala in comanda.cheltuielis %}
-                            {% set totalCheltuieli = totalCheltuieli + (cheltuiala.suma ?: 0) %}
-                        {% endfor %}
-                        {% if comanda.numarKm is not null and comanda.numarKm > 0 and totalCheltuieli > 0 %}
-                            {% set pretPerKm = (totalCheltuieli / comanda.numarKm)|round(2) %}
-                            {{ pretPerKm|number_format(2, ',', '.') }}
-                        {% else %}
-                            -
-                        {% endif %}
-                    </td>
-                    <td>{{ comanda.profit is not null ? comanda.profit|number_format(2, ',', '.') : '-' }}</td>
+                    
                     <td>
                         {% set ultimaRutaDescarcare = null %}
                         {% if comanda.retururis|length > 0 %}
@@ -134,6 +96,26 @@
                         {% endif %}
                         {{ ultimulLiber ?: '-' }}
                     </td>
+                    <td>{{ comanda.numarKm is not null ? comanda.numarKm : '-' }}</td>
+                    <td>
+                        {% set totalLitriMotorina = 0 %}
+                        {% for cheltuiala in comanda.cheltuielis %}
+                            {% set categorieNume = cheltuiala.categorie ? cheltuiala.categorie.nume|lower : '' %}
+                            {% set subcategorieNume = cheltuiala.subcategorie ? cheltuiala.subcategorie.nume|lower : '' %}
+                            {% if 'motorina' in categorieNume or 'motorina' in subcategorieNume %}
+                                {% set totalLitriMotorina = totalLitriMotorina + (cheltuiala.litriMotorina ?: 0) %}
+                            {% endif %}
+                        {% endfor %}
+                        {% if comanda.numarKm is not null and comanda.numarKm > 0 and totalLitriMotorina > 0 %}
+                            {% set consumPer100Km = (totalLitriMotorina / comanda.numarKm * 100)|round(2) %}
+                            {{ consumPer100Km|number_format(2, ',', '.') }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    
+                    <td>{{ comanda.profit is not null ? comanda.profit|number_format(2, ',', '.') : '-' }}</td>
+                    
                     <td>
                         <input type="checkbox" class="rezolvat-checkbox" data-id="{{ comanda.id }}" {% if comanda.rezolvat %}checked{% endif %}>
                     </td>
