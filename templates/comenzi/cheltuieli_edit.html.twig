@@ -17,6 +17,8 @@
             const sumaField = document.querySelector('[name="cheltuieli[suma]"]');
             const litriMotorinaField = document.querySelector('[name="cheltuieli[litri_motorina]"]');
             const pretUnitateField = document.querySelector('[name="cheltuieli[pret_unitate]"]');
+            const monedaField = document.querySelector('[name="cheltuieli[moneda]"]');
+            let cursEurRon = 0;
 
             // Ascundem inițial câmpurile care nu sunt necesare
             if (litriMotorinaField) {
@@ -29,15 +31,63 @@
             const numarKm = {{ comanda.numarKm is not null ? comanda.numarKm : 'null' }};
             let subcategorieSelect = null;
 
+            // Preluăm cursul valutar din API
+            fetch('/api/curs-valutar', {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                cursEurRon = data.conversion_rates.RON;
+                recalcSuma(); // Recalculăm suma după ce avem cursul
+            })
+            .catch(error => {
+                console.error('Eroare la preluarea cursului valutar:', error);
+                cursEurRon = 5;
+                recalcSuma();
+            });
+
+            // Filtrăm categoria "Fixe" din dropdown
+            function filterCategorii() {
+                for (let i = 0; i < categorieField.options.length; i++) {
+                    if (categorieField.options[i].text === 'Fixe') {
+                        categorieField.remove(i);
+                        break;
+                    }
+                }
+            }
+
+            // Funcție pentru gestionarea vizibilității câmpului moneda
+            function toggleMonedaField() {
+                const categorieNume = categorieField.options[categorieField.selectedIndex].text;
+                const monedaContainer = monedaField.closest('.form-group, .form-row, div');
+                if (categorieNume === 'Consumabile') {
+                    monedaContainer.style.display = 'none';
+                    monedaField.value = 'RON'; // Setăm implicit RON pentru Consumabile
+                } else {
+                    monedaContainer.style.display = '';
+                }
+                recalcSuma(); // Recalculăm suma după schimbarea categoriei
+            }
+
             // Funcție pentru recalcularea sumei
             function recalcSuma() {
                 const pretUnitate = parseFloat(pretUnitateField.value) || 0;
                 const litri = parseFloat(litriMotorinaField.value) || 0;
+                let suma = 0;
                 if (litriMotorinaField && litriMotorinaField.closest('.form-group, .form-row, div').style.display !== 'none') {
-                    sumaField.value = (pretUnitate * litri).toFixed(2);
+                    suma = pretUnitate * litri;
                 } else {
-                    sumaField.value = pretUnitate.toFixed(2);
+                    suma = pretUnitate;
                 }
+                // Aplicăm cursul valutar doar dacă moneda este EUR și categoria nu este Consumabile
+                const categorieNume = categorieField.options[categorieField.selectedIndex].text;
+                if (monedaField.value === 'EUR' && categorieNume !== 'Consumabile') {
+                    suma = suma * cursEurRon;
+                }
+                sumaField.value = suma.toFixed(2);
             }
 
             // Funcție apelată la schimbarea subcategoriei
@@ -78,10 +128,10 @@
                     if (numarKm !== null && numarKm > 0) {
                         const pretProportional = (pretStandard / kmUtilizareMax) * numarKm;
                         pretUnitateField.value = pretStandard.toFixed(2); // Afișăm prețul standard
-                        sumaField.value = pretProportional.toFixed(2); // Suma e proporțională
+                        sumaField.value = pretProportional.toFixed(2); // Suma e proporțională, fără curs valutar
                     } else {
                         pretUnitateField.value = pretStandard.toFixed(2);
-                        sumaField.value = pretStandard.toFixed(2);
+                        sumaField.value = pretStandard.toFixed(2); // Fără curs valutar
                     }
                 } else {
                     recalcSuma(); // Recalculăm suma în alte cazuri
@@ -136,13 +186,23 @@
                 subcategorieSelect.innerHTML = '<option value="">Selectează o subcategorie (opțional)</option>';
                 subcategorieField.parentNode.insertBefore(subcategorieSelect, subcategorieField);
 
-                categorieField.addEventListener('change', updateSubcategories);
+                // Filtrăm categoria "Fixe" la inițializare
+                filterCategorii();
+
+                // Setăm vizibilitatea inițială a câmpului moneda
+                toggleMonedaField();
+
+                categorieField.addEventListener('change', function() {
+                    updateSubcategories();
+                    toggleMonedaField(); // Verificăm moneda la schimbarea categoriei
+                });
                 subcategorieSelect.addEventListener('change', onSubcategorieChange);
 
                 if (litriMotorinaField) {
                     litriMotorinaField.addEventListener('input', recalcSuma);
                 }
                 pretUnitateField.addEventListener('input', recalcSuma);
+                monedaField.addEventListener('change', recalcSuma);
 
                 updateSubcategories();
             }

@@ -6,6 +6,7 @@ use App\Entity\Cheltuieli;
 use App\Entity\CategoriiCheltuieli;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\Extension\Core\Type\NumberType;
 use Symfony\Component\Form\Extension\Core\Type\DateType;
@@ -38,7 +39,7 @@ class CheltuieliType extends AbstractType
                 'attr' => ['step' => '0.01'], // Permite valori zecimale
             ])
             ->add('suma', NumberType::class, [
-                'label' => 'Suma',
+                'label' => 'Suma (RON)',
                 'required' => true,
             ])
             ->add('litri_motorina', NumberType::class, [
@@ -61,6 +62,16 @@ class CheltuieliType extends AbstractType
             ->add('descriere', TextType::class, [
                 'label' => 'Descriere',
                 'required' => false,
+            ])
+            ->add('moneda', ChoiceType::class, [
+                'choices' => [
+                    'RON' => 'RON',
+                    'EUR' => 'EUR',
+                ],
+                'label' => 'Moneda',
+                'required' => true,
+                'data' => 'RON', // Implicit RON
+                'mapped' => false, // Nu se leagă de entitate, doar pentru formular
             ]);
     }
 

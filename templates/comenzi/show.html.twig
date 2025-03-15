@@ -31,7 +31,7 @@
                 <strong>Număr Km:</strong> {{ comanda.numarKm is not null ? comanda.numarKm : 'Nu sunt încă date disponibile' }}
             </div>
             <div class="mb-3">
-                <strong>Profit:</strong> {{ comanda.profit }}
+                <strong>Profit:</strong> {{ comanda.profit is not null ? comanda.profit: 'Nu sunt încă date disponibile' }}
             </div>
             <div class="mb-3">
                 <strong>Observații:</strong> <span id="observatii-display">{{ comanda.observatii ?: 'N/A' }}</span>

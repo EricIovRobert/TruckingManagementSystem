@@ -10,3 +10,42 @@
     {{ form_end(form) }}
     <a href="{{ path('app_comenzi_show', {'id': comanda.id}) }}" class="btn btn-secondary">Înapoi la detalii</a>
 {% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const pretField = document.querySelector('[name="retururi[pret]"]');
+            const monedaField = document.querySelector('[name="retururi[moneda]"]');
+            let cursEurRon = 0;
+
+            // Preluăm cursul valutar din API
+            fetch('/api/curs-valutar', {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                cursEurRon = data.conversion_rates.RON;
+            })
+            .catch(error => {
+                console.error('Eroare la preluarea cursului valutar:', error);
+                cursEurRon = 5; // Valoare fallback
+            });
+
+            // Funcție pentru recalcularea prețului
+            function recalcPret() {
+                let pret = parseFloat(pretField.value) || 0;
+                if (monedaField.value === 'EUR') {
+                    pret = pret * cursEurRon;
+                }
+                pretField.value = pret.toFixed(2);
+            }
+
+            // Adăugăm listener doar pe schimbarea monedei
+            monedaField.addEventListener('change', recalcPret);
+        });
+    </script>
+{% endblock %}
