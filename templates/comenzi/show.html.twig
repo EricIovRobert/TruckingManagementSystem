@@ -3,245 +3,263 @@
 {% block title %}Detalii Comandă{% endblock %}
 
 {% block body %}
-    <h1>Detalii Comandă #{{ comanda.id }}</h1>
+    <div class="container mt-4">
+        <h1>Detalii Comandă #{{ comanda.id }}</h1>
 
-    <p><strong>Mașină Principală:</strong> {{ comanda.parcAutoNrSnapshot ?: 'N/A' }}</p>
-    <p><strong>Mașină Accident:</strong> <span id="accident-auto-display">{{ comanda.nrAccidentAuto ?: 'N/A' }}</span></p>
-    <form id="accident-auto-form" method="post" action="{{ path('app_comenzi_update_nr_accident_auto', {'id': comanda.id}) }}">
-        <input type="text" id="nrAccidentAuto" name="nrAccidentAuto" value="{{ comanda.nrAccidentAuto ?: '' }}" list="parc_auto_list" autocomplete="off">
-        <button type="submit" class="btn btn-primary btn-sm">Actualizează Mașină Accident</button>
-    </form>
-    <p><strong>Șofer:</strong> {{ comanda.sofer }}</p>
-    <p><strong>Data Start:</strong> {{ comanda.dataStart ? comanda.dataStart|date('Y-m-d') : 'Nu sunt încă date disponibile' }}</p>
-    <p><strong>Data Stop:</strong> {{ comanda.dataStop ? comanda.dataStop|date('Y-m-d') : 'Nu sunt încă date disponibile' }}</p>
-    <p><strong>Număr Km:</strong> {{ comanda.numarKm is not null ? comanda.numarKm : 'Nu sunt încă date disponibile' }}</p>
-    <p><strong>Profit:</strong> {{ comanda.profit }}</p>
-    <p><strong>Observații:</strong> <span id="observatii-display">{{ comanda.observatii ?: 'N/A' }}</span></p>
-    <form id="observatii-form" method="post" action="{{ path('app_comenzi_update_observatii', {'id': comanda.id}) }}">
-        <textarea id="observatii" name="observatii">{{ comanda.observatii ?: '' }}</textarea>
-        <button type="submit" class="btn btn-primary btn-sm">Actualizează Observații</button>
-    </form>
+        <!-- Secțiunea Detalii -->
+        <div class="mb-4">
+            <div class="mb-3">
+                <strong>Mașină Principală:</strong> {{ comanda.parcAutoNrSnapshot ?: 'N/A' }}
+            </div>
+            <div class="mb-3">
+                <strong>Mașină Secundara:</strong> <span id="accident-auto-display">{{ comanda.nrAccidentAuto ?: 'N/A' }}</span>
+                <form id="accident-auto-form" method="post" action="{{ path('app_comenzi_update_nr_accident_auto', {'id': comanda.id}) }}" class="d-flex mt-1">
+                    <input type="text" id="nrAccidentAuto" name="nrAccidentAuto" value="{{ comanda.nrAccidentAuto ?: '' }}" list="parc_auto_list" autocomplete="off" class="form-control me-2" style="max-width: 200px;">
+                    <button type="submit" class="btn btn-primary btn-sm">Actualizează</button>
+                </form>
+            </div>
+            <div class="mb-3">
+                <strong>Șofer:</strong> {{ comanda.sofer }}
+            </div>
+            <div class="mb-3">
+                <strong>Data Start:</strong> {{ comanda.dataStart ? comanda.dataStart|date('Y-m-d') : 'Nu sunt încă date disponibile' }}
+            </div>
+            <div class="mb-3">
+                <strong>Data Stop:</strong> {{ comanda.dataStop ? comanda.dataStop|date('Y-m-d') : 'Nu sunt încă date disponibile' }}
+            </div>
+            <div class="mb-3">
+                <strong>Număr Km:</strong> {{ comanda.numarKm is not null ? comanda.numarKm : 'Nu sunt încă date disponibile' }}
+            </div>
+            <div class="mb-3">
+                <strong>Profit:</strong> {{ comanda.profit }}
+            </div>
+            <div class="mb-3">
+                <strong>Observații:</strong> <span id="observatii-display">{{ comanda.observatii ?: 'N/A' }}</span>
+                <form id="observatii-form" method="post" action="{{ path('app_comenzi_update_observatii', {'id': comanda.id}) }}" class="d-flex mt-1">
+                    <textarea id="observatii" name="observatii" class="form-control me-2" style="max-width: 300px;">{{ comanda.observatii ?: '' }}</textarea>
+                    <button type="submit" class="btn btn-primary btn-sm">Actualizează</button>
+                </form>
+            </div>
+        </div>
 
-    <h2>Tururi</h2>
-    <a href="{{ path('app_tururi_new', {'comanda_id': comanda.id}) }}" class="btn btn-primary">Adaugă Tur</a>
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>Firma</th>
-                <th>Ruta Încărcare</th>
-                <th>Ruta Descărcare</th>
-                <th>Kg</th>
-                <th>Preț</th>
-                <th>Liber</th>
-                <th>Facturat</th>
-                <th>Acțiuni</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for tur in comanda.tururis %}
+        <!-- Secțiunea Tururi -->
+        <h2 class="mt-4">Tururi</h2>
+        <a href="{{ path('app_tururi_new', {'comanda_id': comanda.id}) }}" class="btn btn-primary mb-3">Adaugă Tur</a>
+        <table class="table table-striped">
+            <thead>
                 <tr>
-                    <td>{{ tur.firma }}</td>
-                    <td>{{ tur.rutaIncarcare }}</td>
-                    <td>{{ tur.rutaDescarcare }}</td>
-                    <td>{{ tur.kg }}</td>
-                    <td>{{ tur.pret }}</td>
-                    <td>{{ tur.liber }}</td>
-                    <td>
-                        <input type="checkbox" class="facturat-checkbox" data-id="{{ tur.id }}" data-type="tururi" {% if tur.facturat %}checked{% endif %}>
-                    </td>
-                    <td>
-                        <a href="{{ path('app_tururi_edit', {'id': tur.id}) }}" class="btn btn-warning">Editează</a>
-                        <form method="post" action="{{ path('app_tururi_delete', {'id': tur.id}) }}" style="display:inline;" onsubmit="return confirm('Ești sigur că vrei să ștergi acest tur?');">
-                            <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ tur.id) }}">
-                            <button class="btn btn-danger">Șterge</button>
-                        </form>
-                    </td>
+                    <th>Firma</th>
+                    <th>Ruta Încărcare</th>
+                    <th>Ruta Descărcare</th>
+                    <th>Kg</th>
+                    <th>Preț</th>
+                    <th>Liber</th>
+                    <th>Facturat</th>
+                    <th class="text-end">Acțiuni</th>
                 </tr>
-            {% else %}
-                <tr>
-                    <td colspan="8">Niciun tur asociat</td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                {% for tur in comanda.tururis %}
+                    <tr>
+                        <td>{{ tur.firma }}</td>
+                        <td>{{ tur.rutaIncarcare }}</td>
+                        <td>{{ tur.rutaDescarcare }}</td>
+                        <td>{{ tur.kg }}</td>
+                        <td>{{ tur.pret }}</td>
+                        <td>{{ tur.liber }}</td>
+                        <td>
+                            <input type="checkbox" class="facturat-checkbox" data-id="{{ tur.id }}" data-type="tururi" {% if tur.facturat %}checked{% endif %}>
+                        </td>
+                        <td class="text-end">
+                            <a href="{{ path('app_tururi_edit', {'id': tur.id}) }}" class="btn btn-warning btn-sm me-1">Editează</a>
+                            <form method="post" action="{{ path('app_tururi_delete', {'id': tur.id}) }}" style="display:inline;" onsubmit="return confirm('Ești sigur că vrei să ștergi acest tur?');">
+                                <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ tur.id) }}">
+                                <button class="btn btn-danger btn-sm">Șterge</button>
+                            </form>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="8" class="text-center">Niciun tur asociat</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
 
-    <h2>Retururi</h2>
-    <a href="{{ path('app_retururi_new', {'comanda_id': comanda.id}) }}" class="btn btn-primary">Adaugă Retur</a>
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>Firma</th>
-                <th>Ruta Încărcare</th>
-                <th>Ruta Descărcare</th>
-                <th>Kg</th>
-                <th>Preț</th>
-                <th>Liber</th>
-                <th>Facturat</th>
-                <th>Acțiuni</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for retur in comanda.retururis %}
+        <!-- Secțiunea Retururi -->
+        <h2 class="mt-4">Retururi</h2>
+        <a href="{{ path('app_retururi_new', {'comanda_id': comanda.id}) }}" class="btn btn-primary mb-3">Adaugă Retur</a>
+        <table class="table table-striped">
+            <thead>
                 <tr>
-                    <td>{{ retur.firma }}</td>
-                    <td>{{ retur.rutaIncarcare }}</td>
-                    <td>{{ retur.rutaDescarcare }}</td>
-                    <td>{{ retur.kg }}</td>
-                    <td>{{ retur.pret }}</td>
-                    <td>{{ retur.liber }}</td>
-                    <td>
-                        <input type="checkbox" class="facturat-checkbox" data-id="{{ retur.id }}" data-type="retururi" {% if retur.facturat %}checked{% endif %}>
-                    </td>
-                    <td>
-                        <a href="{{ path('app_retururi_edit', {'id': retur.id}) }}" class="btn btn-warning">Editează</a>
-                        <form method="post" action="{{ path('app_retururi_delete', {'id': retur.id}) }}" style="display:inline;" onsubmit="return confirm('Ești sigur că vrei să ștergi acest retur?');">
-                            <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ retur.id) }}">
-                            <button class="btn btn-danger">Șterge</button>
-                        </form>
-                    </td>
+                    <th>Firma</th>
+                    <th>Ruta Încărcare</th>
+                    <th>Ruta Descărcare</th>
+                    <th>Kg</th>
+                    <th>Preț</th>
+                    <th>Liber</th>
+                    <th>Facturat</th>
+                    <th class="text-end">Acțiuni</th>
                 </tr>
-            {% else %}
-                <tr>
-                    <td colspan="8">Niciun retur asociat</td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                {% for retur in comanda.retururis %}
+                    <tr>
+                        <td>{{ retur.firma }}</td>
+                        <td>{{ retur.rutaIncarcare }}</td>
+                        <td>{{ retur.rutaDescarcare }}</td>
+                        <td>{{ retur.kg }}</td>
+                        <td>{{ retur.pret }}</td>
+                        <td>{{ retur.liber }}</td>
+                        <td>
+                            <input type="checkbox" class="facturat-checkbox" data-id="{{ retur.id }}" data-type="retururi" {% if retur.facturat %}checked{% endif %}>
+                        </td>
+                        <td class="text-end">
+                            <a href="{{ path('app_retururi_edit', {'id': retur.id}) }}" class="btn btn-warning btn-sm me-1">Editează</a>
+                            <form method="post" action="{{ path('app_retururi_delete', {'id': retur.id}) }}" style="display:inline;" onsubmit="return confirm('Ești sigur că vrei să ștergi acest retur?');">
+                                <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ retur.id) }}">
+                                <button class="btn btn-danger btn-sm">Șterge</button>
+                            </form>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="8" class="text-center">Niciun retur asociat</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
 
-   <h2>Cheltuieli</h2>
-<a href="{{ path('app_comenzi_cheltuieli_new', {'id': comanda.id}) }}" class="btn btn-primary">Adaugă Cheltuială</a>
-<table class="table table-striped">
-    <thead>
-        <tr>
-            <th>Categorie</th>
-            <th>Subcategorie</th>
-            <th>Suma</th>
-            <th>Data</th>
-            <th>Descriere</th>
-            <th>Acțiuni</th>
-        </tr>
-    </thead>
-    <tbody>
+        <!-- Secțiunea Cheltuieli -->
+        <h2 class="mt-4">Cheltuieli</h2>
+        <a href="{{ path('app_comenzi_cheltuieli_new', {'id': comanda.id}) }}" class="btn btn-primary mb-3">Adaugă Cheltuială</a>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Categorie</th>
+                    <th>Subcategorie</th>
+                    <th>Suma</th>
+                    <th>Data</th>
+                    <th>Descriere</th>
+                    <th class="text-end">Acțiuni</th>
+                </tr>
+            </thead>
+            <tbody>
                 {% for cheltuiala in comanda.cheltuielis|filter(cheltuiala => cheltuiala.tva <= 0) %}
-            <tr>
-                <td>{{ cheltuiala.categorie ? cheltuiala.categorie.nume : 'N/A' }}</td>
-                <td>
-                    {% if cheltuiala.subcategorie %}
-                        {{ cheltuiala.subcategorie.nume }}
-                    {% elseif cheltuiala.consumabil %}
-                        {{ cheltuiala.consumabil.nume }}
-                    {% else %}
-                        N/A
-                    {% endif %}
-                </td>
-                <td>{{ cheltuiala.suma|number_format(2, ',', '.') }}</td>
-                <td>{{ cheltuiala.dataCheltuiala ? cheltuiala.dataCheltuiala|date('Y-m-d') : 'N/A' }}</td>
-                <td>{{ cheltuiala.descriere ?: 'N/A' }}</td>
-                <td>
-                    <a href="{{ path('app_comenzi_cheltuieli_edit', {'comandaId': comanda.id, 'cheltuialaId': cheltuiala.id}) }}"
-                       class="btn btn-warning">Editează</a>
-                    <form method="post"
-                          action="{{ path('app_comenzi_cheltuieli_delete', {'comandaId': comanda.id, 'cheltuialaId': cheltuiala.id}) }}"
-                          style="display:inline;"
-                          onsubmit="return confirm('Ești sigur că vrei să ștergi această cheltuială?');">
-                        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ cheltuiala.id) }}">
-                        <button class="btn btn-danger">Șterge</button>
-                    </form>
-                </td>
-            </tr>
-        {% else %}
-            <tr>
-                <td colspan="6">Nicio cheltuială fără TVA asociată</td>
-            </tr>
-        {% endfor %}
-    </tbody>
-</table>
+                    <tr>
+                        <td>{{ cheltuiala.categorie ? cheltuiala.categorie.nume : 'N/A' }}</td>
+                        <td>
+                            {% if cheltuiala.subcategorie %}
+                                {{ cheltuiala.subcategorie.nume }}
+                            {% elseif cheltuiala.consumabil %}
+                                {{ cheltuiala.consumabil.nume }}
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </td>
+                        <td>{{ cheltuiala.suma|number_format(2, ',', '.') }}</td>
+                        <td>{{ cheltuiala.dataCheltuiala ? cheltuiala.dataCheltuiala|date('Y-m-d') : 'N/A' }}</td>
+                        <td>{{ cheltuiala.descriere ?: 'N/A' }}</td>
+                        <td class="text-end">
+                            <a href="{{ path('app_comenzi_cheltuieli_edit', {'comandaId': comanda.id, 'cheltuialaId': cheltuiala.id}) }}" class="btn btn-warning btn-sm me-1">Editează</a>
+                            <form method="post" action="{{ path('app_comenzi_cheltuieli_delete', {'comandaId': comanda.id, 'cheltuialaId': cheltuiala.id}) }}" style="display:inline;" onsubmit="return confirm('Ești sigur că vrei să ștergi această cheltuială?');">
+                                <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ cheltuiala.id) }}">
+                                <button class="btn btn-danger btn-sm">Șterge</button>
+                            </form>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center">Nicio cheltuială fără TVA asociată</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
 
-<h2>Cheltuieli cu TVA</h2>
-<table class="table table-striped">
-    <thead>
-        <tr>
-            <th>Categorie</th>
-            <th>Subcategorie</th>
-            <th>Suma Brută (€)</th>
-            <th>TVA Recuperat (€)</th>
-            <th>Comision TVA (€)</th>
-            <th>Cheltuială Finală (€)</th>
-            <th>Descriere</th>
-            <th>Acțiuni</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% set totalSumaBruta = 0 %}
-        {% set totalTvaNetRecuperat = 0 %}
-        {% set totalComisionTva = 0 %}
-        {% set totalCheltuialaNeta = 0 %}
-        {% set hasCheltuieli = false %}
+        <!-- Secțiunea Cheltuieli cu TVA -->
+        <h2 class="mt-4">Cheltuieli cu TVA</h2>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Categorie</th>
+                    <th>Subcategorie</th>
+                    <th>Suma Brută (€)</th>
+                    <th>TVA Recuperat (€)</th>
+                    <th>Comision TVA (€)</th>
+                    <th>Cheltuială Finală (€)</th>
+                    <th>Descriere</th>
+                    <th class="text-end">Acțiuni</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% set totalSumaBruta = 0 %}
+                {% set totalTvaNetRecuperat = 0 %}
+                {% set totalComisionTva = 0 %}
+                {% set totalCheltuialaNeta = 0 %}
+                {% set hasCheltuieli = false %}
 
-        {% for cheltuiala in comanda.cheltuielis|filter(cheltuiala => cheltuiala.tva > 0) %}
-            {% set hasCheltuieli = true %}
-            {% set sumaBruta = cheltuiala.suma %}
-            {% set tvaProcent = cheltuiala.tva %}
-            {% set comisionTvaProcent = cheltuiala.comisionTva ?? 0 %}
-            {% set tvaValue = (sumaBruta * tvaProcent / (100 + tvaProcent))|round(2) %}
-            {% set comisionTva = (tvaValue * (comisionTvaProcent / 100))|round(2) %}
-            {% set tvaNetRecuperat = (tvaValue - comisionTva)|round(2) %}
-            {% set cheltuialaNeta = (sumaBruta - tvaValue + comisionTva)|round(2) %}
+                {% for cheltuiala in comanda.cheltuielis|filter(cheltuiala => cheltuiala.tva > 0) %}
+                    {% set hasCheltuieli = true %}
+                    {% set sumaBruta = cheltuiala.suma %}
+                    {% set tvaProcent = cheltuiala.tva %}
+                    {% set comisionTvaProcent = cheltuiala.comisionTva ?? 0 %}
+                    {% set tvaValue = (sumaBruta * tvaProcent / (100 + tvaProcent))|round(2) %}
+                    {% set comisionTva = (tvaValue * (comisionTvaProcent / 100))|round(2) %}
+                    {% set tvaNetRecuperat = (tvaValue - comisionTva)|round(2) %}
+                    {% set cheltuialaNeta = (sumaBruta - tvaValue + comisionTva)|round(2) %}
 
-            {% set totalSumaBruta = totalSumaBruta + sumaBruta %}
-            {% set totalTvaNetRecuperat = totalTvaNetRecuperat + tvaNetRecuperat %}
-            {% set totalComisionTva = totalComisionTva + comisionTva %}
-            {% set totalCheltuialaNeta = totalCheltuialaNeta + cheltuialaNeta %}
+                    {% set totalSumaBruta = totalSumaBruta + sumaBruta %}
+                    {% set totalTvaNetRecuperat = totalTvaNetRecuperat + tvaNetRecuperat %}
+                    {% set totalComisionTva = totalComisionTva + comisionTva %}
+                    {% set totalCheltuialaNeta = totalCheltuialaNeta + cheltuialaNeta %}
 
-            <tr>
-                <td>{{ cheltuiala.categorie ? cheltuiala.categorie.nume : 'N/A' }}</td>
-                <td>
-                    {% if cheltuiala.subcategorie %}
-                        {{ cheltuiala.subcategorie.nume }}
-                    {% elseif cheltuiala.consumabil %}
-                        {{ cheltuiala.consumabil.nume }}
-                    {% else %}
-                        N/A
-                    {% endif %}
-                </td>
-                <td>{{ sumaBruta|number_format(2, ',', '.') }}</td>
-                <td>{{ tvaNetRecuperat|number_format(2, ',', '.') }}</td>
-                <td>{{ comisionTva|number_format(2, ',', '.') }}</td>
-                <td>{{ cheltuialaNeta|number_format(2, ',', '.') }}</td>
-                <td>{{ cheltuiala.descriere ?: 'N/A' }}</td>
-                <td>
-                    <a href="{{ path('app_comenzi_cheltuieli_edit', {'comandaId': comanda.id, 'cheltuialaId': cheltuiala.id}) }}"
-                       class="btn btn-warning btn-sm">Editează</a>
-                    <form method="post"
-                          action="{{ path('app_comenzi_cheltuieli_delete', {'comandaId': comanda.id, 'cheltuialaId': cheltuiala.id}) }}"
-                          style="display:inline;"
-                          onsubmit="return confirm('Ești sigur că vrei să ștergi această cheltuială?');">
-                        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ cheltuiala.id) }}">
-                        <button class="btn btn-danger btn-sm">Șterge</button>
-                    </form>
-                </td>
-            </tr>
-        {% endfor %}
+                    <tr>
+                        <td>{{ cheltuiala.categorie ? cheltuiala.categorie.nume : 'N/A' }}</td>
+                        <td>
+                            {% if cheltuiala.subcategorie %}
+                                {{ cheltuiala.subcategorie.nume }}
+                            {% elseif cheltuiala.consumabil %}
+                                {{ cheltuiala.consumabil.nume }}
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </td>
+                        <td>{{ sumaBruta|number_format(2, ',', '.') }}</td>
+                        <td>{{ tvaNetRecuperat|number_format(2, ',', '.') }}</td>
+                        <td>{{ comisionTva|number_format(2, ',', '.') }}</td>
+                        <td>{{ cheltuialaNeta|number_format(2, ',', '.') }}</td>
+                        <td>{{ cheltuiala.descriere ?: 'N/A' }}</td>
+                        <td class="text-end">
+                            <a href="{{ path('app_comenzi_cheltuieli_edit', {'comandaId': comanda.id, 'cheltuialaId': cheltuiala.id}) }}" class="btn btn-warning btn-sm me-1">Editează</a>
+                            <form method="post" action="{{ path('app_comenzi_cheltuieli_delete', {'comandaId': comanda.id, 'cheltuialaId': cheltuiala.id}) }}" style="display:inline;" onsubmit="return confirm('Ești sigur că vrei să ștergi această cheltuială?');">
+                                <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ cheltuiala.id) }}">
+                                <button class="btn btn-danger btn-sm">Șterge</button>
+                            </form>
+                        </td>
+                    </tr>
+                {% endfor %}
 
-        {% if hasCheltuieli %}
-            <tr style="font-weight: bold;">
-                <td colspan="2">Total</td>
-                <td>{{ totalSumaBruta|number_format(2, ',', '.') }}</td>
-                <td>{{ totalTvaNetRecuperat|number_format(2, ',', '.') }}</td>
-                <td>{{ totalComisionTva|number_format(2, ',', '.') }}</td>
-                <td>{{ totalCheltuialaNeta|number_format(2, ',', '.') }}</td>
-                <td></td>
-                <td></td>
-            </tr>
-        {% else %}
-            <tr>
-                <td colspan="8">Nicio cheltuială cu TVA asociată</td>
-            </tr>
-        {% endif %}
-    </tbody>
-</table>
+                {% if hasCheltuieli %}
+                    <tr class="fw-bold">
+                        <td colspan="2">Total</td>
+                        <td>{{ totalSumaBruta|number_format(2, ',', '.') }}</td>
+                        <td>{{ totalTvaNetRecuperat|number_format(2, ',', '.') }}</td>
+                        <td>{{ totalComisionTva|number_format(2, ',', '.') }}</td>
+                        <td>{{ totalCheltuialaNeta|number_format(2, ',', '.') }}</td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="8" class="text-center">Nicio cheltuială cu TVA asociată</td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
 
-    <a href="{{ path('app_comenzi_index') }}" class="btn btn-secondary">Înapoi la listă</a>
+        <!-- Buton Înapoi -->
+        <a href="{{ path('app_comenzi_index') }}" class="btn btn-secondary mt-4">Înapoi la listă</a>
+    </div>
 
     {% block javascripts %}
         {{ parent() }}

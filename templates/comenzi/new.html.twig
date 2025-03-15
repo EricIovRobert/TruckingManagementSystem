@@ -3,14 +3,44 @@
 {% block title %}Adaugă Comandă{% endblock %}
 
 {% block body %}
-    <h1>Adaugă Comandă</h1>
-    {{ form_start(form) }}
-        {{ form_widget(form) }}
-        <datalist id="parc_auto_list">
-            {% for parc_auto in parc_auto_list %} 
-                <option value="{{ parc_auto.nrAuto }}">{{ parc_auto.nrAuto }}</option>
-            {% endfor %}
-        </datalist>
-        <button type="submit" class="btn btn-primary">Salvează</button>
-    {{ form_end(form) }}
+    <div class="form-container shadow-sm rounded-3 bg-white p-4" style="max-width: 600px; margin: 0 auto;">
+        <h1 class="text-center mb-4">Adaugă Comandă</h1>
+        {{ form_start(form) }}
+            <div class="row g-3">
+                <div class="col-md-6">
+                    {{ form_label(form.parcAutoNr) }}
+                    {{ form_widget(form.parcAutoNr, {'attr': {'class': 'form-control', 'list': 'parc_auto_list'}}) }}
+                    <datalist id="parc_auto_list">
+                        {% for parc_auto in parc_auto_list %}
+                            <option value="{{ parc_auto.nrAuto }}">{{ parc_auto.nrAuto }}</option>
+                        {% endfor %}
+                    </datalist>
+                </div>
+                <div class="col-md-6">
+                    {{ form_label(form.nrAccidentAuto) }}
+                    {{ form_widget(form.nrAccidentAuto, {'attr': {'class': 'form-control'}}) }}
+                </div>
+                <div class="col-md-6">
+                    {{ form_label(form.sofer) }}
+                    {{ form_widget(form.sofer, {'attr': {'class': 'form-control'}}) }}
+                </div>
+                <div class="col-md-6">
+                    {{ form_label(form.dataStart) }}
+                    {{ form_widget(form.dataStart, {'attr': {'class': 'form-control'}}) }}
+                </div>
+                <div class="col-md-6">
+                    {{ form_label(form.dataStop) }}
+                    {{ form_widget(form.dataStop, {'attr': {'class': 'form-control'}}) }}
+                </div>
+                <div class="col-md-6">
+                    {{ form_label(form.numarKm) }}
+                    {{ form_widget(form.numarKm, {'attr': {'class': 'form-control'}}) }}
+                </div>
+            </div>
+            <div class="button-group mt-4 d-flex justify-content-between">
+                <a href="{{ path('app_comenzi_index') }}" class="btn btn-secondary">Anulează</a>
+                <button type="submit" class="btn btn-primary">Salvează</button>
+            </div>
+        {{ form_end(form) }}
+    </div>
 {% endblock %}
