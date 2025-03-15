@@ -1,0 +1,40 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Revizuiește Cheltuieli Fixe{% endblock %}
+
+{% block body %}
+    <h1>Revizuiește Cheltuieli Fixe pentru {{ lunaNume[luna] }} {{ an }}</h1>
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Subcategorie</th>
+                <th>Suma</th>
+                <th>Data</th>
+                <th>Descriere</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for expense in expenses %}
+                <tr>
+                    <td>{{ expense.subcategorie }}</td>
+                    <td>{{ expense.suma|number_format(2, ',', '.') }}</td>
+                   <td>{{ expense.data|date('d.m.y')|default('') }}</td>
+
+                    <td>{{ expense.descriere }}</td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="4">Nu există cheltuieli fixe de adăugat.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <form method="post" action="{{ path('app_cheltuieli_fixe_add') }}">
+        <input type="hidden" name="an" value="{{ an }}">
+        <input type="hidden" name="luna" value="{{ luna }}">
+        <button type="submit" class="btn btn-success">Confirmă și Adaugă</button>
+        <a href="{{ path('app_cheltuieli_list') }}" class="btn btn-secondary">Anulează</a>
+    </form>
+{% endblock %}

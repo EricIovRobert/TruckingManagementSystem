@@ -6,6 +6,7 @@ use App\Entity\Cheltuieli;
 use App\Entity\Consumabile;
 use App\Entity\SubcategoriiCheltuieli;
 use App\Form\CheltuieliType;
+use App\Entity\CategoriiCheltuieli;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -253,6 +254,104 @@ class CheltuieliController extends AbstractController
 
         return $this->redirectToRoute('app_cheltuieli_list');
     }
+
+
+    #[Route('/cheltuieli/fixe/new', name: 'app_cheltuieli_fixe_new', methods: ['GET', 'POST'])]
+public function newFixe(Request $request, EntityManagerInterface $em): Response
+{
+    $lunaNume = [
+        '1' => 'Ianuarie', '2' => 'Februarie', '3' => 'Martie', '4' => 'Aprilie',
+        '5' => 'Mai', '6' => 'Iunie', '7' => 'Iulie', '8' => 'August',
+        '9' => 'Septembrie', '10' => 'Octombrie', '11' => 'Noiembrie', '12' => 'Decembrie',
+    ];
+
+    if ($request->isMethod('POST')) {
+        $an = $request->request->get('an');
+        $luna = $request->request->get('luna');
+
+        // Validare an și lună
+        if (!preg_match('/^\d{4}$/', $an) || !in_array($luna, range(1, 12))) {
+            $this->addFlash('error', 'An sau lună invalidă.');
+            return $this->redirectToRoute('app_cheltuieli_list');
+        }
+
+        // Găsește categoria "Fixe"
+        $categorieFixe = $em->getRepository(CategoriiCheltuieli::class)->findOneBy(['nume' => 'Fixe']);
+        if (!$categorieFixe) {
+            $this->addFlash('error', 'Categoria "Fixe" nu a fost găsită.');
+            return $this->redirectToRoute('app_cheltuieli_list');
+        }
+
+        // Preia toate subcategoriile din categoria "Fixe"
+        $subcategorii = $em->getRepository(SubcategoriiCheltuieli::class)->findBy(['categorie' => $categorieFixe]);
+
+        // Generează lista de cheltuieli fixe pentru revizuire
+        $expensesToAdd = [];
+        $dataCheltuiala = new \DateTime("$an-" . str_pad($luna, 2, '0', STR_PAD_LEFT) . "-01");
+        foreach ($subcategorii as $subcat) {
+            $expensesToAdd[] = [
+                'subcategorie' => $subcat->getNume(),
+                'suma' => $subcat->getPretStandard() ?? 0,
+                'data' => $dataCheltuiala->format('Y-m-d'),
+                'descriere' => 'Cheltuială fixă pentru ' . 'luna ' . $lunaNume[$luna],
+            ];
+        }
+
+        // Afișează pagina de revizuire
+        return $this->render('cheltuieli/fixe_review.html.twig', [
+            'expenses' => $expensesToAdd,
+            'an' => $an,
+            'luna' => $luna,
+            'lunaNume' => $lunaNume,
+        ]);
+    }
+
+    // Pe GET, afișează formularul de selecție
+    return $this->render('cheltuieli/fixe_new.html.twig', [
+        'lunaNume' => $lunaNume,
+    ]);
+}
+
+#[Route('/cheltuieli/fixe/add', name: 'app_cheltuieli_fixe_add', methods: ['POST'])]
+public function addFixe(Request $request, EntityManagerInterface $em): Response
+{
+    $an = $request->request->get('an');
+    $luna = $request->request->get('luna');
+
+    // Validare an și lună
+    if (!preg_match('/^\d{4}$/', $an) || !in_array($luna, range(1, 12))) {
+        $this->addFlash('error', 'An sau lună invalidă.');
+        return $this->redirectToRoute('app_cheltuieli_list');
+    }
+
+    // Găsește categoria "Fixe"
+    $categorieFixe = $em->getRepository(CategoriiCheltuieli::class)->findOneBy(['nume' => 'Fixe']);
+    if (!$categorieFixe) {
+        $this->addFlash('error', 'Categoria "Fixe" nu a fost găsită.');
+        return $this->redirectToRoute('app_cheltuieli_list');
+    }
+
+    // Preia toate subcategoriile din categoria "Fixe"
+    $subcategorii = $em->getRepository(SubcategoriiCheltuieli::class)->findBy(['categorie' => $categorieFixe]);
+
+    // Creează și salvează cheltuielile
+    $dataCheltuiala = new \DateTime("$an-" . str_pad($luna, 2, '0', STR_PAD_LEFT) . "-01");
+    foreach ($subcategorii as $subcat) {
+        $cheltuiala = new Cheltuieli();
+        $cheltuiala->setCategorie($categorieFixe);
+        $cheltuiala->setSubcategorie($subcat);
+        $cheltuiala->setSuma($subcat->getPretStandard() ?? 0);
+        $cheltuiala->setDataCheltuiala($dataCheltuiala);
+        $cheltuiala->setDescriere('Cheltuială fixă pentru ' . $subcat->getNume());
+        $cheltuiala->setComanda(null); // Fără comandă
+        $em->persist($cheltuiala);
+    }
+
+    $em->flush();
+
+    $this->addFlash('success', 'Cheltuielile fixe au fost adăugate cu succes.');
+    return $this->redirectToRoute('app_cheltuieli_list');
+}
 
  
 }

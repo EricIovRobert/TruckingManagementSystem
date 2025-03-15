@@ -1,0 +1,20 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Adaugă Cheltuieli Fixe{% endblock %}
+
+{% block body %}
+    <h1>Adaugă Cheltuieli Fixe</h1>
+
+    <form method="post" class="mb-3">
+        <div class="input-group">
+            <input type="text" name="an" class="form-control" placeholder="An (ex. 2025)" required>
+            <select name="luna" class="form-select" required>
+                <option value="">Alege Luna</option>
+                {% for i in 1..12 %}
+                    <option value="{{ i }}">{{ lunaNume[i] }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="btn btn-primary">Continuă</button>
+        </div>
+    </form>
+{% endblock %}

@@ -12,6 +12,8 @@
     {# Buton "Adaugă Cheltuială" #}
     <a href="{{ path('app_cheltuieli_new') }}" class="btn btn-primary mb-3">Adaugă Cheltuială</a>
 
+    <a href="{{ path('app_cheltuieli_fixe_new') }}" class="btn btn-primary mb-3">Adaugă Cheltuieli Fixe</a>
+
     {# Formular de filtrare #}
     <form method="get" class="mb-3">
         <div class="input-group">
@@ -84,7 +86,7 @@
                 <th>ID</th>
                 <th>Comandă</th>
                 <th>Categorie</th>
-                <th>Sub/Consumabil</th>
+                <th>Subcategorie</th>
                 <th>Suma Ajustată</th>
                 <th>Data</th>
                 <th>Litri</th>
@@ -121,8 +123,8 @@
                         {% endif %}
                     </td>
                     <td>{{ sumaAjustata|number_format(2, ',', '.') }}</td>
-                    <td>{{ ch.dataCheltuiala ? ch.dataCheltuiala|date('Y-m-d') : '' }}</td>
-                    <td>{{ ch.litriMotorina ?: 0 }}</td>
+                    <td>{{ ch.dataCheltuiala ? ch.dataCheltuiala|date('d.m.y') : '' }}</td>
+                    <td>{{ ch.litriMotorina ?: '-' }}</td>
                     <td>{{ ch.descriere ?: '-' }}</td>
                     <td>
                         <a href="{{ path('app_cheltuieli_edit', {'id': ch.id}) }}" class="btn btn-sm btn-primary">Editează</a>
