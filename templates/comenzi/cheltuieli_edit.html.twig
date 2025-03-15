@@ -98,6 +98,7 @@
                 const pretStandard = parseFloat(selectedOption.getAttribute('data-pret-standard') || '0');
                 const kmUtilizareMax = parseFloat(selectedOption.getAttribute('data-km-utilizare-max') || '0');
                 const pretPerL = parseFloat(selectedOption.getAttribute('data-pret-per-l') || '0');
+                const subcategorieNume = selectedOption.text;
 
                 subcategorieField.value = subcategorieSelect.value;
 
@@ -107,6 +108,10 @@
                     pretUnitateField.value = pretPerL.toFixed(2);
                     if (litriMotorinaField) {
                         litriMotorinaField.closest('.form-group, .form-row, div').style.display = '';
+                        // Dacă subcategoria este "AdBlue", setăm automat litriMotorinaField
+                        if (subcategorieNume === 'AdBlue' && numarKm !== null) {
+                            litriMotorinaField.value = (0.02 * numarKm).toFixed(2);
+                        }
                     }
                 } else if (pretStandard > 0) {
                     pretUnitateField.value = pretStandard.toFixed(2);
