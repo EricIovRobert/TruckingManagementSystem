@@ -119,7 +119,6 @@ class ComenziController extends AbstractController
         ]);
     }
     
-    // Restul metodelor rămân neschimbate
     private function calculateConsum(Comenzi $comanda): float
     {
         $consum = 0;
@@ -132,7 +131,6 @@ class ComenziController extends AbstractController
         return $consum;
     }
     
-    // Funcție auxiliară pentru calculul prețului per km
     private function calculatePretPerKm(Comenzi $comanda): float
     {
         $totalPret = 0;
@@ -145,67 +143,101 @@ class ComenziController extends AbstractController
         return ($comanda->getNumarKm() > 0) ? ($totalPret / $comanda->getNumarKm()) : 0;
     }
 
-    #[Route('/new', name: 'app_comenzi_new', methods: ['GET', 'POST'])]
-    public function new(Request $request, EntityManagerInterface $entityManager, ParcAutoRepository $parcAutoRepository): Response
-    {
-        $comanda = new Comenzi();
-        $form = $this->createForm(ComenziType::class, $comanda);
-        $form->handleRequest($request);
-
-        if ($form->isSubmitted() && $form->isValid()) {
-            $entityManager->persist($comanda);
-            $entityManager->flush();
-            return $this->redirectToRoute('app_comenzi_index');
-        }
-
-        return $this->render('comenzi/new.html.twig', [
-            'form' => $form->createView(),
-            'parc_auto_list' => $parcAutoRepository->findAll(),
-        ]);
+    private function addConsumabileCheltuieli(Comenzi $comanda, EntityManagerInterface $entityManager): void
+{
+    $numarKm = $comanda->getNumarKm();
+    if ($numarKm === null) {
+        return;
     }
 
-    #[Route('/{id}/edit', name: 'app_comenzi_edit', methods: ['GET', 'POST'])]
-    public function edit(Request $request, Comenzi $comanda, EntityManagerInterface $entityManager, ParcAutoRepository $parcAutoRepository): Response
-    {
-        $oldNumarKm = $comanda->getNumarKm();
+    $consumabile = $entityManager->getRepository(Consumabile::class)->findAll();
 
-        $form = $this->createForm(ComenziType::class, $comanda);
-        $form->get('parcAutoNr')->setData($comanda->getParcAuto() ? $comanda->getParcAuto()->getNrAuto() : '');
-        $form->handleRequest($request);
+    foreach ($consumabile as $consumabil) {
+        $cheltuiala = new Cheltuieli();
+        $cheltuiala->setComanda($comanda);
+        $cheltuiala->setCategorie($consumabil->getCategorie());
+        $cheltuiala->setConsumabil($consumabil);
+        $cheltuiala->setSubcategorie(null);
+        $cheltuiala->setDataCheltuiala(new \DateTime());
 
-        if ($form->isSubmitted() && $form->isValid()) {
-            $entityManager->flush();
+        $pretMaxim = $consumabil->getPretMaxim();
+        $kmUtilizareMax = $consumabil->getKmUtilizareMax();
 
-            $newNumarKm = $comanda->getNumarKm();
-            if ($oldNumarKm !== $newNumarKm) {
-                foreach ($comanda->getCheltuielis() as $cheltuiala) {
-                    if ($cheltuiala->getConsumabil()) {
-                        $consumabil = $cheltuiala->getConsumabil();
-                        $pretMaxim = $consumabil->getPretMaxim();
-                        $kmUtilizareMax = $consumabil->getKmUtilizareMax();
+        if ($kmUtilizareMax !== null && $kmUtilizareMax > 0) {
+            $sumaProportionala = ($pretMaxim / $kmUtilizareMax) * $numarKm;
+        } else {
+            $sumaProportionala = $pretMaxim;
+        }
 
-                        if ($newNumarKm !== null && $kmUtilizareMax !== null && $kmUtilizareMax > 0) {
-                            $sumaProportionala = ($pretMaxim / $kmUtilizareMax) * $newNumarKm;
-                            $cheltuiala->setSuma($sumaProportionala);
-                        } else {
-                            $cheltuiala->setSuma($pretMaxim);
-                        }
-                    }
+        $cheltuiala->setSuma($sumaProportionala);
+
+        // Persistăm manual entitatea
+        $entityManager->persist($cheltuiala);
+
+        $comanda->addCheltuieli($cheltuiala);
+    }
+
+    $comanda->calculateAndSetProfit();
+    $entityManager->flush();
+}
+
+#[Route('/new', name: 'app_comenzi_new', methods: ['GET', 'POST'])]
+public function new(Request $request, EntityManagerInterface $entityManager, ParcAutoRepository $parcAutoRepository): Response
+{
+    $comanda = new Comenzi();
+    $form = $this->createForm(ComenziType::class, $comanda);
+    $form->handleRequest($request);
+
+    if ($form->isSubmitted() && $form->isValid()) {
+        $entityManager->persist($comanda);
+        $entityManager->flush();
+
+        // Adăugăm cheltuielile pentru consumabile și recalculăm profitul
+        $this->addConsumabileCheltuieli($comanda, $entityManager);
+
+        return $this->redirectToRoute('app_comenzi_index');
+    }
+
+    return $this->render('comenzi/new.html.twig', [
+        'form' => $form->createView(),
+        'parc_auto_list' => $parcAutoRepository->findAll(),
+    ]);
+}
+#[Route('/{id}/edit', name: 'app_comenzi_edit', methods: ['GET', 'POST'])]
+public function edit(Request $request, Comenzi $comanda, EntityManagerInterface $entityManager, ParcAutoRepository $parcAutoRepository): Response
+{
+    $oldNumarKm = $comanda->getNumarKm();
+
+    $form = $this->createForm(ComenziType::class, $comanda);
+    $form->get('parcAutoNr')->setData($comanda->getParcAuto() ? $comanda->getParcAuto()->getNrAuto() : '');
+    $form->handleRequest($request);
+
+    if ($form->isSubmitted() && $form->isValid()) {
+        $entityManager->flush();
+
+        $newNumarKm = $comanda->getNumarKm();
+        if ($oldNumarKm !== $newNumarKm) {
+            // Ștergem cheltuielile existente care au un consumabil setat
+            foreach ($comanda->getCheltuielis() as $cheltuiala) {
+                if ($cheltuiala->getConsumabil() !== null) {
+                    $entityManager->remove($cheltuiala);
                 }
-                $comanda->calculateAndSetProfit();
-                $entityManager->flush();
-                $entityManager->refresh($comanda);
             }
+            $entityManager->flush();
 
-            return $this->redirectToRoute('app_comenzi_show', ['id' => $comanda->getId()]);
+            // Adăugăm noile cheltuieli pentru consumabile și recalculăm profitul
+            $this->addConsumabileCheltuieli($comanda, $entityManager);
         }
 
-        return $this->render('comenzi/edit.html.twig', [
-            'form' => $form->createView(),
-            'comanda' => $comanda,
-            'parc_auto_list' => $parcAutoRepository->findAll(),
-        ]);
+        return $this->redirectToRoute('app_comenzi_show', ['id' => $comanda->getId()]);
     }
+
+    return $this->render('comenzi/edit.html.twig', [
+        'form' => $form->createView(),
+        'comanda' => $comanda,
+        'parc_auto_list' => $parcAutoRepository->findAll(),
+    ]);
+}
 
     #[Route('/{id}', name: 'app_comenzi_delete', methods: ['POST'])]
     public function delete(Request $request, Comenzi $comanda, EntityManagerInterface $entityManager): Response
