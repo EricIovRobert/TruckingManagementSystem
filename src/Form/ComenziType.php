@@ -31,6 +31,14 @@ class ComenziType extends AbstractType
                     'autocomplete' => 'off',
                 ],
             ])
+            ->add('nr_remorca', TextType::class, [
+                'label' => 'Remorcă (Nr. Înmatriculare)',
+                'required' => false,
+                'attr' => [
+                    'list' => 'remorca_list',
+                    'autocomplete' => 'off',
+                ],
+            ])
             ->add('nrAccidentAuto', TextType::class, [
                 'label' => 'Mașină Accident (Nr. Înmatriculare)',
                 'required' => false,

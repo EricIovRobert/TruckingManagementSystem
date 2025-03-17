@@ -65,11 +65,22 @@ class Comenzi
     #[ORM\OneToMany(targetEntity: Cheltuieli::class, mappedBy: 'comanda', cascade: ['remove'])]
     private Collection $cheltuielis;
 
+    #[ORM\Column]
+    private ?bool $calculata = false;
+
+    #[ORM\Column]
+    private ?bool $decont = false;
+
+    #[ORM\Column(length: 100)]
+    private ?string $nr_remorca = null;
+
     public function __construct()
     {
         $this->tururis = new ArrayCollection();
         $this->retururis = new ArrayCollection();
         $this->rezolvat = false; // Setăm valoarea implicită în constructor
+        $this->calculata = false; 
+        $this->decont = false; 
         $this->cheltuielis = new ArrayCollection();
     }
     public function calculateAndSetProfit(): void
@@ -322,6 +333,42 @@ class Comenzi
                 $cheltuieli->setComanda(null);
             }
         }
+
+        return $this;
+    }
+
+    public function isCalculata(): ?bool
+    {
+        return $this->calculata;
+    }
+
+    public function setCalculata(bool $calculata): static
+    {
+        $this->calculata = $calculata;
+
+        return $this;
+    }
+
+    public function isDecont(): ?bool
+    {
+        return $this->decont;
+    }
+
+    public function setDecont(bool $decont): static
+    {
+        $this->decont = $decont;
+
+        return $this;
+    }
+
+    public function getNrRemorca(): ?string
+    {
+        return $this->nr_remorca;
+    }
+
+    public function setNrRemorca(string $nr_remorca): static
+    {
+        $this->nr_remorca = $nr_remorca;
 
         return $this;
     }

@@ -17,6 +17,15 @@
                     </datalist>
                 </div>
                 <div class="col-md-6">
+                    {{ form_label(form.nr_remorca) }}
+                    {{ form_widget(form.nr_remorca, {'attr': {'class': 'form-control', 'list': 'parc_auto_list'}}) }}
+                    <datalist id="parc_auto_list">
+                        {% for remorca in parc_auto_list %}
+                            <option value="{{ remorca.nrAuto }}">{{ remorca.nrAuto }}</option>
+                        {% endfor %}
+                    </datalist>
+                </div>
+                <div class="col-md-6">
                     {{ form_label(form.nrAccidentAuto) }}
                     {{ form_widget(form.nrAccidentAuto, {'attr': {'class': 'form-control'}}) }}
                 </div>

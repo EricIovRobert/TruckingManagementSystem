@@ -19,6 +19,7 @@ use App\Entity\Consumabile;
 use App\Entity\CategoriiCheltuieli;
 use Knp\Component\Pager\PaginatorInterface;
 
+
 #[Route('/comenzi')]
 class ComenziController extends AbstractController
 {
@@ -32,11 +33,12 @@ class ComenziController extends AbstractController
         $search = $request->query->get('search');
         $startDate = $request->query->get('start_date');
         $sortBy = $request->query->get('sort_by');
-    
-        // Adăugăm parametrul pentru filtrul rezolvat
         $rezolvat = $request->query->get('rezolvat');
+        $decont = $request->query->get('decont'); // Nou
+        $calculata = $request->query->get('calculata'); // Nou
     
         $queryBuilder = $comenziRepository->createQueryBuilder('c');
+    
         if ($search) {
             $queryBuilder->andWhere(
                 $queryBuilder->expr()->orX(
@@ -68,16 +70,27 @@ class ComenziController extends AbstractController
                          ->setParameter('startDate', new \DateTime($startDate));
         }
     
-        // Aplicăm filtrul pentru rezolvat doar dacă este specificat explicit (1 sau 0)
+        // Filtru pentru rezolvat
         if ($rezolvat !== null && in_array($rezolvat, ['1', '0'])) {
             $queryBuilder->andWhere('c.rezolvat = :rezolvat')
                          ->setParameter('rezolvat', filter_var($rezolvat, FILTER_VALIDATE_BOOLEAN));
         }
     
+        // Filtru pentru decont
+        if ($decont !== null && in_array($decont, ['1', '0'])) {
+            $queryBuilder->andWhere('c.decont = :decont')
+                         ->setParameter('decont', filter_var($decont, FILTER_VALIDATE_BOOLEAN));
+        }
+    
+        // Filtru pentru calculata
+        if ($calculata !== null && in_array($calculata, ['1', '0'])) {
+            $queryBuilder->andWhere('c.calculata = :calculata')
+                         ->setParameter('calculata', filter_var($calculata, FILTER_VALIDATE_BOOLEAN));
+        }
+    
         $comenzi = $queryBuilder->getQuery()->getResult();
     
         usort($comenzi, function ($a, $b) use ($sortBy) {
-            // Dacă nu s-a selectat niciun filtru, se sortează descrescător după ID (implicit: ordine inversă adăugării)
             if (empty($sortBy)) {
                 return $b->getId() <=> $a->getId();
             } elseif ($sortBy === 'profit_desc') {
@@ -116,6 +129,8 @@ class ComenziController extends AbstractController
             'start_date' => $startDate,
             'sort_by' => $sortBy,
             'rezolvat' => $rezolvat,
+            'decont' => $decont, // Nou
+            'calculata' => $calculata, // Nou
         ]);
     }
     
@@ -271,6 +286,43 @@ public function edit(Request $request, Comenzi $comanda, EntityManagerInterface 
             $comanda->setRezolvat($rezolvat);
             $entityManager->flush();
 
+            return new JsonResponse(['success' => true]);
+        } catch (\Exception $e) {
+            return new JsonResponse(['success' => false, 'error' => $e->getMessage()], 500);
+        }
+    }
+
+    #[Route('/{id}/update-calculata', name: 'app_comenzi_update_calculata', methods: ['POST'])]
+    public function updateCalculata(Request $request, Comenzi $comanda, EntityManagerInterface $entityManager): JsonResponse
+    {
+        try {
+            if (!$comanda) {
+                throw $this->createNotFoundException('Comanda nu a fost găsită');
+            }
+
+            $calculata = filter_var($request->request->get('calculata', false), FILTER_VALIDATE_BOOLEAN);
+            $comanda->setCalculata($calculata);
+            $entityManager->flush();
+
+            return new JsonResponse(['success' => true]);
+        } catch (\Exception $e) {
+            return new JsonResponse(['success' => false, 'error' => $e->getMessage()], 500);
+        }
+    }
+
+
+    #[Route('/{id}/update-decont', name: 'app_comenzi_update_decont', methods: ['POST'])]
+    public function updateDecont(Request $request, Comenzi $comanda, EntityManagerInterface $entityManager): JsonResponse
+    {
+        try {
+            if (!$comanda) {
+                throw $this->createNotFoundException('Comanda nu a fost găsită');
+            }
+    
+            $decont = filter_var($request->request->get('decont', false), FILTER_VALIDATE_BOOLEAN);
+            $comanda->setDecont($decont);
+            $entityManager->flush();
+    
             return new JsonResponse(['success' => true]);
         } catch (\Exception $e) {
             return new JsonResponse(['success' => false, 'error' => $e->getMessage()], 500);

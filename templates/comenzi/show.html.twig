@@ -12,6 +12,9 @@
                 <strong>Mașină Principală:</strong> {{ comanda.parcAutoNrSnapshot ?: 'N/A' }}
             </div>
             <div class="mb-3">
+            <strong>Remorca:</strong> {{ comanda.getNrRemorca() ?: 'N/A' }}
+           </div>
+            <div class="mb-3">
                 <strong>Mașină Secundara:</strong> <span id="accident-auto-display">{{ comanda.nrAccidentAuto ?: 'N/A' }}</span>
                 <form id="accident-auto-form" method="post" action="{{ path('app_comenzi_update_nr_accident_auto', {'id': comanda.id}) }}" class="d-flex mt-1">
                     <input type="text" id="nrAccidentAuto" name="nrAccidentAuto" value="{{ comanda.nrAccidentAuto ?: '' }}" list="parc_auto_list" autocomplete="off" class="form-control me-2" style="max-width: 200px;">

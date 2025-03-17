@@ -1,7 +1,14 @@
 {% extends 'base.html.twig' %}
 
 {% block title %}Lista Comenzi{% endblock %}
-
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .bg-light-green {
+            background-color: rgba(0, 255, 0, 0.1);
+        }
+    </style>
+{% endblock %}
 {% block body %}
     <h1>Lista Comenzi</h1>
 
@@ -19,12 +26,12 @@
         </div>
     {% endfor %}
 
-<form method="get" class="mb-3">
+    <form method="get" class="mb-3">
     <div class="input-group">
         <input type="text" name="search" class="form-control" placeholder="Caută după mașină, șofer, locație..." value="{{ search ?? '' }}">
         <input type="date" name="start_date" class="form-control" placeholder="Data start" value="{{ start_date ?? '' }}">
         <select name="sort_by" class="form-select">
-            <option value="" {% if sort_by is null %}selected{% endif %}>-</option> <!-- Opțiune implicită pentru a nu aplica sortare -->
+            <option value="" {% if sort_by is null %}selected{% endif %}>-</option>
             <option value="profit_desc" {% if sort_by == 'profit_desc' %}selected{% endif %}>Profit Descrescător</option>
             <option value="profit_asc" {% if sort_by == 'profit_asc' %}selected{% endif %}>Profit Crescător</option>
             <option value="consum_desc" {% if sort_by == 'consum_desc' %}selected{% endif %}>Consum Descrescător</option>
@@ -33,9 +40,19 @@
             <option value="pret_km_asc" {% if sort_by == 'pret_km_asc' %}selected{% endif %}>Preț per km Crescător</option>
         </select>
         <select name="rezolvat" class="form-select">
-            <option value="" {% if rezolvat is null %}selected{% endif %}>Toate</option>
-            <option value="1" {% if rezolvat is same as('1') %}selected{% endif %}>Rezolvate</option>
-            <option value="0" {% if rezolvat is same as('0') %}selected{% endif %}>Nerezolvate</option>
+            <option value="" {% if rezolvat is null %}selected{% endif %}>Toate (Rezolvat)</option>
+            <option value="1" {% if rezolvat == '1' %}selected{% endif %}>Rezolvate</option>
+            <option value="0" {% if rezolvat == '0' %}selected{% endif %}>Nerezolvate</option>
+        </select>
+        <select name="decont" class="form-select">
+            <option value="" {% if decont is null %}selected{% endif %}>Toate (Decont)</option>
+            <option value="1" {% if decont == '1' %}selected{% endif %}>Decontate</option>
+            <option value="0" {% if decont == '0' %}selected{% endif %}>Nedecontate</option>
+        </select>
+        <select name="calculata" class="form-select">
+            <option value="" {% if calculata is null %}selected{% endif %}>Toate (Calculată)</option>
+            <option value="1" {% if calculata == '1' %}selected{% endif %}>Calculate</option>
+            <option value="0" {% if calculata == '0' %}selected{% endif %}>Necalculate</option>
         </select>
         <button type="submit" class="btn btn-primary">Caută</button>
         <a href="{{ path('app_comenzi_index') }}" class="btn btn-secondary">Resetează</a>
@@ -45,10 +62,10 @@
     <a href="{{ path('app_comenzi_new') }}" class="btn btn-primary mb-3">Adaugă Comandă</a>
 
     {# Tabelul cu comenzi #}
-        <table class="table table-striped table-hover rounded-3 ">
-
+    <table class="table table-striped table-hover rounded-3">
         <thead class="table-dark">
             <tr>
+                <th>Calculată</th>
                 <th>Mașină</th>
                 <th>Șofer</th>
                 <th>Data Start</th>
@@ -59,12 +76,16 @@
                 <th>Consum (l/100km)</th>
                 <th>Profit</th>
                 <th>Rezolvat</th>
+                <th>Decont</th>
                 <th>Acțiuni</th>
             </tr>
         </thead>
         <tbody>
             {% for comanda in pagination %}
-                <tr>
+                <tr class="{% if comanda.calculata %}bg-light-green{% endif %}">
+                    <td>
+                        <input type="checkbox" class="calculata-checkbox" data-id="{{ comanda.id }}" {% if comanda.calculata %}checked{% endif %}>
+                    </td>
                     <td>
                         <a href="{{ path('app_comenzi_show', {'id': comanda.id}) }}" class="text-decoration-none">
                             {{ comanda.parcAutoNrSnapshot ?: comanda.nrAccidentAuto ?: '-' }}
@@ -73,7 +94,6 @@
                     <td>{{ comanda.sofer ?: '-' }}</td>
                     <td>{{ comanda.dataStart ? comanda.dataStart|date('d/m/Y') : '-' }}</td>
                     <td>{{ comanda.dataStop ? comanda.dataStop|date('d/m/Y') : '-' }}</td>
-                    
                     <td>
                         {% set ultimaRutaDescarcare = null %}
                         {% if comanda.retururis|length > 0 %}
@@ -113,11 +133,12 @@
                             -
                         {% endif %}
                     </td>
-                    
                     <td>{{ comanda.profit is not null ? comanda.profit|number_format(2, ',', '.') : '-' }}</td>
-                    
                     <td>
                         <input type="checkbox" class="rezolvat-checkbox" data-id="{{ comanda.id }}" {% if comanda.rezolvat %}checked{% endif %}>
+                    </td>
+                    <td>
+                        <input type="checkbox" class="decont-checkbox" data-id="{{ comanda.id }}" {% if comanda.decont %}checked{% endif %}>
                     </td>
                     <td>
                         <div class="dropdown">
@@ -144,52 +165,138 @@
     <div class="navigation mt-3 d-flex justify-content-center">
         {{ knp_pagination_render(pagination) }}
     </div>
+{% endblock %}
 
-    {# JavaScript pentru checkbox-ul "Rezolvat" #}
-    {% block javascripts %}
-        {{ parent() }}
-        <script>
-            document.addEventListener('DOMContentLoaded', function() {
-                let processed = false;
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            let processedRezolvat = false;
+            let processedDecont = false;
+            let processedCalculata = false;
 
-                document.querySelectorAll('.rezolvat-checkbox').forEach(function(checkbox) {
-                    checkbox.addEventListener('change', function(e) {
-                        if (processed) return;
-                        processed = true;
+            // Funcționalitate pentru Rezolvat
+            document.querySelectorAll('.rezolvat-checkbox').forEach(function(checkbox) {
+                checkbox.addEventListener('change', function(e) {
+                    if (processedRezolvat) return;
+                    processedRezolvat = true;
 
-                        var id = this.getAttribute('data-id');
-                        var rezolvat = this.checked;
-                        var url = '{{ path('app_comenzi_update_rezolvat', {'id': 'ID'}) }}'.replace('ID', id);
+                    var id = this.getAttribute('data-id');
+                    var rezolvat = this.checked;
+                    var url = '{{ path('app_comenzi_update_rezolvat', {'id': 'ID'}) }}'.replace('ID', id);
 
-                        fetch(url, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/x-www-form-urlencoded',
-                                'X-Requested-With': 'XMLHttpRequest',
-                            },
-                            body: 'rezolvat=' + encodeURIComponent(rezolvat)
-                        })
-                        .then(response => {
-                            if (!response.ok) throw new Error('Eroare server');
-                            return response.json();
-                        })
-                        .then(data => {
-                            if (data.success) {
-                                console.log('Stare actualizată');
-                            } else {
-                                alert('Eroare: ' + (data.error || 'Răspuns neașteptat'));
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Eroare:', error);
-                            alert('Eroare la actualizare');
-                        })
-                        .finally(() => {
-                            processed = false;
-                        });
+                    fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'X-Requested-With': 'XMLHttpRequest',
+                        },
+                        body: 'rezolvat=' + encodeURIComponent(rezolvat)
+                    })
+                    .then(response => {
+                        if (!response.ok) throw new Error('Eroare server');
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.success) {
+                            console.log('Stare Rezolvat actualizată');
+                        } else {
+                            alert('Eroare: ' + (data.error || 'Răspuns neașteptat'));
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Eroare:', error);
+                        alert('Eroare la actualizare Rezolvat');
+                    })
+                    .finally(() => {
+                        processedRezolvat = false;
                     });
                 });
             });
-        </script>
-    {% endblock %}
+
+            // Funcționalitate pentru Decont
+            document.querySelectorAll('.decont-checkbox').forEach(function(checkbox) {
+                checkbox.addEventListener('change', function(e) {
+                    if (processedDecont) return;
+                    processedDecont = true;
+
+                    var id = this.getAttribute('data-id');
+                    var decont = this.checked;
+                    var url = '{{ path('app_comenzi_update_decont', {'id': 'ID'}) }}'.replace('ID', id);
+
+                    fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'X-Requested-With': 'XMLHttpRequest',
+                        },
+                        body: 'decont=' + encodeURIComponent(decont)
+                    })
+                    .then(response => {
+                        if (!response.ok) throw new Error('Eroare server');
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.success) {
+                            console.log('Stare Decont actualizată');
+                        } else {
+                            alert('Eroare: ' + (data.error || 'Răspuns neașteptat'));
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Eroare:', error);
+                        alert('Eroare la actualizare Decont');
+                    })
+                    .finally(() => {
+                        processedDecont = false;
+                    });
+                });
+            });
+
+            // Funcționalitate pentru Calculată
+            document.querySelectorAll('.calculata-checkbox').forEach(function(checkbox) {
+                checkbox.addEventListener('change', function(e) {
+                    if (processedCalculata) return;
+                    processedCalculata = true;
+
+                    var id = this.getAttribute('data-id');
+                    var calculata = this.checked;
+                    var url = '{{ path('app_comenzi_update_calculata', {'id': 'ID'}) }}'.replace('ID', id);
+
+                    fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'X-Requested-With': 'XMLHttpRequest',
+                        },
+                        body: 'calculata=' + encodeURIComponent(calculata)
+                    })
+                    .then(response => {
+                        if (!response.ok) throw new Error('Eroare server');
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.success) {
+                            console.log('Stare Calculată actualizată');
+                            var row = checkbox.closest('tr');
+                            if (calculata) {
+                                row.classList.add('bg-light-green');
+                            } else {
+                                row.classList.remove('bg-light-green');
+                            }
+                        } else {
+                            alert('Eroare: ' + (data.error || 'Răspuns neașteptat'));
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Eroare:', error);
+                        alert('Eroare la actualizare Calculată');
+                    })
+                    .finally(() => {
+                        processedCalculata = false;
+                    });
+                });
+            });
+        });
+    </script>
 {% endblock %}
