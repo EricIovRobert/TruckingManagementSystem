@@ -4,48 +4,71 @@
 
 {% block body %}
     <div class="container mt-4">
-        <h1>Detalii Comandă #{{ comanda.id }}</h1>
-
-        <!-- Secțiunea Detalii -->
-        <div class="mb-4">
-            <div class="mb-3">
-                <strong>Mașină Principală:</strong> {{ comanda.parcAutoNrSnapshot ?: 'N/A' }}
-            </div>
-            <div class="mb-3">
-            <strong>Remorca:</strong> {{ comanda.getNrRemorca() ?: 'N/A' }}
-           </div>
-            <div class="mb-3">
-                <strong>Mașină Secundara:</strong> <span id="accident-auto-display">{{ comanda.nrAccidentAuto ?: 'N/A' }}</span>
-                <form id="accident-auto-form" method="post" action="{{ path('app_comenzi_update_nr_accident_auto', {'id': comanda.id}) }}" class="d-flex mt-1">
-                    <input type="text" id="nrAccidentAuto" name="nrAccidentAuto" value="{{ comanda.nrAccidentAuto ?: '' }}" list="parc_auto_list" autocomplete="off" class="form-control me-2" style="max-width: 200px;">
-                    <button type="submit" class="btn btn-primary btn-sm">Actualizează</button>
-                </form>
-            </div>
-            <div class="mb-3">
-                <strong>Șofer:</strong> {{ comanda.sofer }}
-            </div>
-            <div class="mb-3">
-                <strong>Data Start:</strong> {{ comanda.dataStart ? comanda.dataStart|date('Y-m-d') : 'Nu sunt încă date disponibile' }}
-            </div>
-            <div class="mb-3">
-                <strong>Data Stop:</strong> {{ comanda.dataStop ? comanda.dataStop|date('Y-m-d') : 'Nu sunt încă date disponibile' }}
-            </div>
-            <div class="mb-3">
-                <strong>Număr Km:</strong> {{ comanda.numarKm is not null ? comanda.numarKm : 'Nu sunt încă date disponibile' }}
-            </div>
-            <div class="mb-3">
-                <strong>Profit:</strong> {{ comanda.profit is not null ? comanda.profit: 'Nu sunt încă date disponibile' }}
-            </div>
-            <div class="mb-3">
-                <strong>Observații:</strong> <span id="observatii-display">{{ comanda.observatii ?: 'N/A' }}</span>
-                <form id="observatii-form" method="post" action="{{ path('app_comenzi_update_observatii', {'id': comanda.id}) }}" class="d-flex mt-1">
-                    <textarea id="observatii" name="observatii" class="form-control me-2" style="max-width: 300px;">{{ comanda.observatii ?: '' }}</textarea>
-                    <button type="submit" class="btn btn-primary btn-sm">Actualizează</button>
-                </form>
-            </div>
+        <!-- Butonul "Înapoi la listă" stilizat și poziționat sus în dreapta -->
+        <div class="d-flex justify-content-end mb-3">
+            <a href="{{ path('app_comenzi_index') }}" class="btn btn-outline-secondary btn-sm">Înapoi la listă</a>
         </div>
 
-        <!-- Secțiunea Tururi -->
+        <h1>Detalii Comandă #{{ comanda.id }}</h1>
+
+      <!-- Secțiunea "Detalii" centrată, lată ca tabelele -->
+<div class="d-flex justify-content-center">
+    <div class="card shadow-sm rounded-3 bg-white p-4 mb-4" style="width: 100%;">
+        <div class="card-body">
+            <div class="row">
+                <!-- Coloana stânga -->
+                <div class="col-md-6">
+                    <div class="mb-4">
+                        <strong>Mașină Principală:</strong> {{ comanda.parcAutoNrSnapshot ?: 'N/A' }}
+                    </div>
+                    <div class="mb-4">
+                        <strong>Remorcă:</strong> {{ comanda.getNrRemorca() ?: 'N/A' }}
+                    </div>
+                    <div class="mb-4">
+                        <strong>Șofer:</strong> {{ comanda.sofer }}
+                    </div>
+                    <div class="mb-4">
+                        <strong>Data Start:</strong> {{ comanda.dataStart ? comanda.dataStart|date('Y-m-d') : 'Nu sunt încă date disponibile' }}
+                    </div>
+                    <div class="mb-4">
+                        <strong>Data Stop:</strong> {{ comanda.dataStop ? comanda.dataStop|date('Y-m-d') : 'Nu sunt încă date disponibile' }}
+                    </div>
+                    <div class="mb-4">
+                        <strong>Număr Km:</strong> {{ comanda.numarKm is not null ? comanda.numarKm : 'Nu sunt încă date disponibile' }}
+                    </div>
+                    <div class="mb-4">
+                        <strong>Profit:</strong> {{ comanda.profit is not null ? comanda.profit : 'Nu sunt încă date disponibile' }}
+                    </div>
+                </div>
+                <!-- Coloana dreapta -->
+                <div class="col-md-6">
+    <div class="mb-4">
+        <strong>Mașină Secundară:</strong>
+        <form id="accident-auto-form" method="post" action="{{ path('app_comenzi_update_nr_accident_auto', {'id': comanda.id}) }}" class="d-flex flex-column align-items-start mt-1">
+            <input type="text" id="nrAccidentAuto" name="nrAccidentAuto" value="{{ comanda.nrAccidentAuto ?: '' }}" list="parc_auto_list" autocomplete="off" class="form-control" style="max-width: 200px;">
+            <button type="submit" class="btn btn-outline-primary btn-sm mt-1 w-auto" style="width: fit-content;">Actualizează</button>
+        </form>
+    </div>
+    <div class="mb-4">
+        <strong>Observații:</strong>
+        <form id="observatii-form" method="post" action="{{ path('app_comenzi_update_observatii', {'id': comanda.id}) }}" class="d-flex flex-column align-items-start mt-1">
+            <textarea id="observatii" name="observatii" class="form-control" style="max-width: 300px;">{{ comanda.observatii ?: '' }}</textarea>
+            <button type="submit" class="btn btn-outline-primary btn-sm mt-1 w-auto" style="width: fit-content;">Actualizează</button>
+        </form>
+    </div>
+</div>
+
+            </div>
+            <!-- Butonul "Editează detalii" -->
+            <div class="text-center mt-4">
+                <a href="{{ path('app_comenzi_edit', {'id': comanda.id}) }}" class="btn btn-primary">Editează detalii</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+        <!-- Secțiunea Tururi (nemodificată) -->
         <h2 class="mt-4">Tururi</h2>
         <a href="{{ path('app_tururi_new', {'comanda_id': comanda.id}) }}" class="btn btn-primary mb-3">Adaugă Tur</a>
         <table class="table table-striped">
@@ -89,7 +112,7 @@
             </tbody>
         </table>
 
-        <!-- Secțiunea Retururi -->
+        <!-- Secțiunea Retururi (nemodificată) -->
         <h2 class="mt-4">Retururi</h2>
         <a href="{{ path('app_retururi_new', {'comanda_id': comanda.id}) }}" class="btn btn-primary mb-3">Adaugă Retur</a>
         <table class="table table-striped">
@@ -133,7 +156,7 @@
             </tbody>
         </table>
 
-        <!-- Secțiunea Cheltuieli -->
+        <!-- Secțiunea Cheltuieli (nemodificată) -->
         <h2 class="mt-4">Cheltuieli</h2>
         <a href="{{ path('app_comenzi_cheltuieli_new', {'id': comanda.id}) }}" class="btn btn-primary mb-3">Adaugă Cheltuială</a>
         <table class="table table-striped">
@@ -179,7 +202,7 @@
             </tbody>
         </table>
 
-        <!-- Secțiunea Cheltuieli cu TVA -->
+        <!-- Secțiunea Cheltuieli cu TVA (nemodificată) -->
         <h2 class="mt-4">Cheltuieli cu TVA</h2>
         <table class="table table-striped">
             <thead>
@@ -259,9 +282,6 @@
                 {% endif %}
             </tbody>
         </table>
-
-        <!-- Buton Înapoi -->
-        <a href="{{ path('app_comenzi_index') }}" class="btn btn-secondary mt-4">Înapoi la listă</a>
     </div>
 
     {% block javascripts %}
@@ -338,7 +358,6 @@
                     })
                     .then(data => {
                         if (data.success === true) {
-                            document.getElementById('observatii-display').textContent = data.observatii || 'N/A';
                             console.log('Observațiile au fost actualizate cu succes.');
                         } else {
                             console.error('Eroare server:', data.error);
@@ -374,7 +393,6 @@
                     })
                     .then(data => {
                         if (data.success === true) {
-                            document.getElementById('accident-auto-display').textContent = data.nrAccidentAuto;
                             console.log('Mașina de accident a fost actualizată cu succes.');
                         } else {
                             console.error('Eroare server:', data.error);
