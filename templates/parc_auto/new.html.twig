@@ -3,9 +3,28 @@
 {% block title %}Adaugă Mașină{% endblock %}
 
 {% block body %}
-    <h1>Adaugă Mașină</h1>
-    {{ form_start(form) }}
-        {{ form_widget(form) }}
-        <button type="submit" class="btn btn-primary">Salvează</button>
-    {{ form_end(form) }}
+    <div class="form-container shadow-sm rounded-3 bg-white p-4" style="max-width: 600px; margin: 0 auto;">
+        <h1 class="text-center mb-4">Adaugă Mașină</h1>
+        {{ form_start(form) }}
+            <div class="row g-3 align-items-center">
+                <div class="col-md-6">
+                    {{ form_label(form.nrAuto, null, {'label_attr': {'class': 'form-label'}}) }}
+                    {{ form_widget(form.nrAuto, {'attr': {'class': 'form-control'}}) }}
+                </div>
+                <div class="col-md-6">
+                    {{ form_label(form.an, null, {'label_attr': {'class': 'form-label'}}) }}
+                    {{ form_widget(form.an, {'attr': {'class': 'form-control'}}) }}
+                </div>
+                <div class="col-md-6">
+                    {{ form_label(form.categorieMasina, null, {'label_attr': {'class': 'form-label'}}) }}
+                    {{ form_widget(form.categorieMasina, {'attr': {'class': 'form-control'}}) }}
+                </div>
+            </div>
+            <div class="button-group mt-4 d-flex justify-content-between">
+                <a href="{{ path('app_parc_auto_index') }}" class="btn btn-secondary">Înapoi la listă</a>
+                <button type="submit" class="btn btn-primary">Salvează</button>
+            </div>
+        {{ form_end(form) }}
+    </div>
+
 {% endblock %}

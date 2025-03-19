@@ -68,7 +68,7 @@ class ParcAutoController extends AbstractController
 
             if (!empty($comenziAsociate)) {
                 // Dacă există comenzi asociate, afișează un mesaj de eroare
-                $this->addFlash('error', 'Nu se poate șterge, mașina este în folosință.');
+                $this->addFlash('error', 'Nu se poate șterge, mașina este legata de o comanda.');
                 return $this->redirectToRoute('app_parc_auto_index');
             }
 
