@@ -19,7 +19,6 @@ class RetururiType extends AbstractType
             ->add('kg')
             ->add('pret')
             ->add('liber')
-            ->add('facturat')
             ->add('moneda', ChoiceType::class, [
                 'choices' => [
                     'RON' => 'RON',

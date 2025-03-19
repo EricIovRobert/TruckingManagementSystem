@@ -36,7 +36,7 @@ class Retururi
     private ?string $liber = null;
 
     #[ORM\Column]
-    private ?bool $facturat = null;
+    private ?bool $facturat = false;
 
     public function getId(): ?int
     {
