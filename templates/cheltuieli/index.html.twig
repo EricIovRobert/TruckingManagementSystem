@@ -123,7 +123,7 @@
                         {% endif %}
                     </td>
                     <td>{{ sumaAjustata|number_format(2, ',', '.') }}</td>
-                    <td>{{ ch.dataCheltuiala ? ch.dataCheltuiala|date('d.m.y') : '' }}</td>
+                    <td>{{ ch.dataCheltuiala ? ch.dataCheltuiala|date('d/m/y') : '' }}</td>
                     <td>{{ ch.litriMotorina ?: '-' }}</td>
                     <td>{{ ch.descriere ?: '-' }}</td>
                     <td>

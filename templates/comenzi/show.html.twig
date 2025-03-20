@@ -10,6 +10,7 @@
         </div>
 
         <h1>Detalii Comandă #{{ comanda.id }}</h1>
+        </br>
 
       <!-- Secțiunea "Detalii" centrată, lată ca tabelele -->
 <div class="d-flex justify-content-center">
@@ -28,10 +29,10 @@
                         <strong>Șofer:</strong> {{ comanda.sofer }}
                     </div>
                     <div class="mb-4">
-                        <strong>Data Start:</strong> {{ comanda.dataStart ? comanda.dataStart|date('Y-m-d') : 'Nu sunt încă date disponibile' }}
+                        <strong>Data Start:</strong> {{ comanda.dataStart ? comanda.dataStart|date('d/m/Y') : 'Nu sunt încă date disponibile' }}
                     </div>
                     <div class="mb-4">
-                        <strong>Data Stop:</strong> {{ comanda.dataStop ? comanda.dataStop|date('Y-m-d') : 'Nu sunt încă date disponibile' }}
+                        <strong>Data Stop:</strong> {{ comanda.dataStop ? comanda.dataStop|date('d/m/Y') : 'Nu sunt încă date disponibile' }}
                     </div>
                     <div class="mb-4">
                         <strong>Număr Km:</strong> {{ comanda.numarKm is not null ? comanda.numarKm : 'Nu sunt încă date disponibile' }}
@@ -184,7 +185,7 @@
                             {% endif %}
                         </td>
                         <td>{{ cheltuiala.suma|number_format(2, ',', '.') }}</td>
-                        <td>{{ cheltuiala.dataCheltuiala ? cheltuiala.dataCheltuiala|date('Y-m-d') : 'N/A' }}</td>
+                        <td>{{ cheltuiala.dataCheltuiala ? cheltuiala.dataCheltuiala|date('d/m/Y') : 'N/A' }}</td>
                         <td>{{ cheltuiala.descriere ?: 'N/A' }}</td>
                         <td class="text-end">
                             <a href="{{ path('app_comenzi_cheltuieli_edit', {'comandaId': comanda.id, 'cheltuialaId': cheltuiala.id}) }}" class="btn btn-warning btn-sm me-1">Editează</a>

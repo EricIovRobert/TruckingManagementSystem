@@ -7,6 +7,7 @@ use App\Entity\ParcAuto;
 use App\Repository\ParcAutoRepository;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
+use Symfony\Component\Form\Extension\Core\Type\DateType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
@@ -48,8 +49,17 @@ class ComenziType extends AbstractType
                 ],
             ])
             ->add('sofer')
-            ->add('dataStart')
-            ->add('dataStop', null, [
+            ->add('dataStart', DateType::class, [
+                'widget' => 'single_text',         
+                'attr' => ['class' => 'datepicker'],
+                'format' => 'dd/MM/yyyy',          
+                'html5' => false,
+            ])
+            ->add('dataStop', DateType::class, [
+                'widget' => 'single_text',
+                'attr' => ['class' => 'datepicker'],
+                'format' => 'dd/MM/yyyy',
+                'html5' => false,
                 'required' => false,
             ])
             ->add('numarKm', null, [
