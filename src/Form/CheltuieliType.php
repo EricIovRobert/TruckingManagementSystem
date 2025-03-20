@@ -58,6 +58,9 @@ class CheltuieliType extends AbstractType
                 'label' => 'Data cheltuielii',
                 'widget' => 'single_text',
                 'required' => true,
+                'attr' => ['class' => 'datepicker'],
+                'format' => 'dd/MM/yyyy',          
+                'html5' => false,
             ])
             ->add('descriere', TextType::class, [
                 'label' => 'Descriere',
