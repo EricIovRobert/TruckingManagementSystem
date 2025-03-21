@@ -32,6 +32,16 @@ class ComenziController extends AbstractController
     ): Response {
         $search = $request->query->get('search');
         $startDate = $request->query->get('start_date');
+        $formattedDate=NULL;
+        if ($startDate) {
+            // Împarte data în zi, lună, an
+            $dateParts = explode('/', $startDate);
+            if (count($dateParts) === 3) {
+                // Recompune în format Y-m-d
+                $formattedDate = $dateParts[2] . '-' . $dateParts[1] . '-' . $dateParts[0];
+            }
+        }
+       
         $sortBy = $request->query->get('sort_by');
         $rezolvat = $request->query->get('rezolvat');
         $decont = $request->query->get('decont'); // Nou
@@ -65,9 +75,9 @@ class ComenziController extends AbstractController
             ->setParameter('search', '%' . $search . '%');
         }
     
-        if ($startDate) {
-            $queryBuilder->andWhere('c.dataStart >= :startDate')
-                         ->setParameter('startDate', new \DateTime($startDate));
+        if ($formattedDate) {
+            $queryBuilder->andWhere('c.dataStart = :formattedDate')
+                         ->setParameter('formattedDate', new \DateTime($formattedDate));
         }
     
         // Filtru pentru rezolvat

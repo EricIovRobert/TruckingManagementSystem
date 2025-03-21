@@ -29,7 +29,7 @@
     <form method="get" class="mb-3">
     <div class="input-group">
         <input type="text" name="search" class="form-control" placeholder="Caută după mașină, șofer, locație..." value="{{ search ?? '' }}">
-        <input type="date" name="start_date" class="form-control" placeholder="Data start" value="{{ start_date ?? '' }}">
+        <input type="text" name="start_date" class="form-control datepicker" placeholder="Data start" value="{{ start_date ?? '' }}">
         <select name="sort_by" class="form-select">
             <option value="" {% if sort_by is null %}selected{% endif %}>-</option>
             <option value="profit_desc" {% if sort_by == 'profit_desc' %}selected{% endif %}>Profit Descrescător</option>
