@@ -1,0 +1,68 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Editează Datorie Șofer{% endblock %}
+
+{% block body %}
+    <div class="form-container shadow-sm rounded-3 bg-white p-4" style="max-width: 600px; margin: 0 auto;">
+        <h1 class="text-center mb-4">Editează Datorie Șofer #{{ datorie.id }}</h1>
+        {{ form_start(form) }}
+            <div class="row g-3 align-items-center">
+                <div class="col-md-6">
+                    {{ form_label(form.nume_sofer, null, {'label_attr': {'class': 'form-label'}}) }}
+                    {{ form_widget(form.nume_sofer, {'attr': {'class': 'form-control'}}) }}
+                </div>
+                <div class="col-md-6">
+                    {{ form_label(form.denumire, null, {'label_attr': {'class': 'form-label'}}) }}
+                    {{ form_widget(form.denumire, {'attr': {'class': 'form-control'}}) }}
+                </div>
+                <div class="col-md-6">
+                    {{ form_label(form.suma, null, {'label_attr': {'class': 'form-label'}}) }}
+                    {{ form_widget(form.suma, {'attr': {'class': 'form-control'}}) }}
+                </div>
+                <div class="col-md-6">
+                    {{ form_label(form.data, null, {'label_attr': {'class': 'form-label'}}) }}
+                    {{ form_widget(form.data, {'attr': {'class': 'form-control datepicker'}}) }}
+                </div>
+                <div class="col-md-6">
+                    {{ form_label(form.achitata, null, {'label_attr': {'class': 'form-label'}}) }}
+                    {{ form_widget(form.achitata, {'attr': {'class': 'form-control'}}) }}
+                </div>
+                <div class="col-md-6">
+                    {{ form_label(form.observatii, null, {'label_attr': {'class': 'form-label'}}) }}
+                    {{ form_widget(form.observatii, {'attr': {'class': 'form-control'}}) }}
+                </div>
+            </div>
+            <div class="button-group mt-4 d-flex justify-content-between">
+                <a href="{{ path('app_datorii_sofer_index') }}" class="btn btn-secondary">Înapoi la listă</a>
+                <button type="submit" class="btn btn-primary">Salvează modificările</button>
+            </div>
+        {{ form_end(form) }}
+    </div>
+
+    <style>
+        .form-control {
+            height: 38px;
+        }
+        .form-label {
+            margin-bottom: 0.25rem;
+        }
+        .align-items-center {
+            align-items: center;
+        }
+    </style>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof $.datepicker !== 'undefined') {
+                $('.datepicker').datepicker({
+                    dateFormat: 'dd/mm/yy',
+                    changeMonth: true,
+                    changeYear: true
+                });
+            }
+        });
+    </script>
+{% endblock %}

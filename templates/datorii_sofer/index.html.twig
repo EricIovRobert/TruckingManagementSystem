@@ -1,0 +1,46 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Datorii Șoferi{% endblock %}
+
+{% block body %}
+    <div class="container mt-4">
+        <h1 class="mb-4">Datorii Șoferi</h1>
+        <a href="{{ path('app_datorii_sofer_new') }}" class="btn btn-primary mb-3">Adaugă Datorie</a>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Nume Șofer</th>
+                    <th>Denumire Datorie</th>
+                    <th>Suma</th>
+                    <th>Data</th>
+                    <th>Achitată</th>
+                    <th>Observații</th>
+                    <th>Acțiuni</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for datorie in datorii %}
+                    <tr>
+                        <td>{{ datorie.numeSofer }}</td>
+                        <td>{{ datorie.denumire }}</td>
+                        <td>{{ datorie.suma|number_format(2, ',', '.') }}</td>
+                        <td>{{ datorie.data|date('Y-m-d') }}</td>
+                        <td>{{ datorie.achitata|default(0)|number_format(2, ',', '.') }}</td>
+                        <td>{{ datorie.observatii }}</td>
+                        <td>
+                            <a href="{{ path('app_datorii_sofer_edit', {'id': datorie.id}) }}" class="btn btn-sm btn-warning">Editează</a>
+                            <form method="post" action="{{ path('app_datorii_sofer_delete', {'id': datorie.id}) }}" style="display:inline;" onsubmit="return confirm('Ești sigur că vrei să ștergi această datorie?');">
+                                <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ datorie.id) }}">
+                                <button class="btn btn-sm btn-danger">Șterge</button>
+                            </form>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="7">Nicio datorie găsită.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}
