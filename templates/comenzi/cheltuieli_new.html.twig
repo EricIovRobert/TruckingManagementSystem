@@ -76,6 +76,8 @@
 {% block javascripts %}
     {{ parent() }}
     <script>
+        const subcategoriesUrl = '{{ path('app_get_subcategories') }}';
+
         document.addEventListener('DOMContentLoaded', function() {
             const categorieField = document.querySelector('[name="cheltuieli[categorie]"]');
             const subcategorieField = document.querySelector('[name="cheltuieli[subcategorie]"]');
@@ -218,7 +220,7 @@
                     return;
                 }
 
-                fetch(`/comenzi/get-subcategories?categorie=${categorieId}`, {
+                fetch(`${subcategoriesUrl}?categorie=${categorieId}`, {
                     method: 'GET',
                     headers: {
                         'X-Requested-With': 'XMLHttpRequest'
