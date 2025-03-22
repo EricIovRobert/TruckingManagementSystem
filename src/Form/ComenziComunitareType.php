@@ -34,14 +34,28 @@ class ComenziComunitareType extends AbstractType
                     'autocomplete' => 'off',
                 ],
             ])
+            ->add('remorca', TextType::class, [
+                'label' => 'Remorcă (Nr. Înmatriculare)',
+                'required' => false,
+                'attr' => [
+                    'list' => 'remorca_list',
+                    'autocomplete' => 'off',
+                ],
+            ])
             ->add('sofer', TextType::class, ['label' => 'Șofer'])
             ->add('data_start', DateType::class, [
                 'label' => 'Data Start',
                 'widget' => 'single_text',
+                'attr' => ['class' => 'datepicker'],
+                'format' => 'dd/MM/yyyy',
+                'html5' => false,
             ])
             ->add('data_stop', DateType::class, [
                 'label' => 'Data Stop',
                 'widget' => 'single_text',
+                'attr' => ['class' => 'datepicker'],
+                'format' => 'dd/MM/yyyy',
+                'html5' => false,
                 'required' => false,
             ])
             ->add('nr_km', NumberType::class, [

@@ -53,6 +53,9 @@ class ComenziComunitare
     #[ORM\OneToMany(targetEntity: Cheltuieli::class, mappedBy: 'comunitar')]
     private Collection $cheltuielis;
 
+    #[ORM\Column(length: 100)]
+    private ?string $remorca = null;
+
     public function __construct()
     {
         $this->cheltuielis = new ArrayCollection();
@@ -211,6 +214,18 @@ class ComenziComunitare
                 $cheltuieli->setComunitar(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getRemorca(): ?string
+    {
+        return $this->remorca;
+    }
+
+    public function setRemorca(string $remorca): static
+    {
+        $this->remorca = $remorca;
 
         return $this;
     }

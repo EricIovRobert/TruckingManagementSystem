@@ -3,14 +3,61 @@
 {% block title %}Editează Comandă Comunitară{% endblock %}
 
 {% block body %}
-    <h1>Editează Comandă Comunitară</h1>
-    {{ form_start(form) }}
-        {{ form_widget(form) }}
-        <datalist id="parc_auto_list">
-            {% for parc_auto in parc_auto_list %}
-                <option value="{{ parc_auto.nrAuto }}">{{ parc_auto.nrAuto }}</option>
-            {% endfor %}
-        </datalist>
-        <button type="submit" class="btn btn-primary">Salvează</button>
-    {{ form_end(form) }}
+    <div class="form-container shadow-sm rounded-3 bg-white p-4" style="max-width: 600px; margin: 0 auto;">
+        <h1 class="text-center mb-4">Editează Comandă Comunitară</h1>
+        {{ form_start(form) }}
+            <div class="row g-3">
+                <div class="col-md-6">
+                    {{ form_label(form.nr_auto) }}
+                    {{ form_widget(form.nr_auto, {'attr': {'class': 'form-control', 'list': 'parc_auto_list'}}) }}
+                    <datalist id="parc_auto_list">
+                        {% for parc_auto in parc_auto_list %}
+                            <option value="{{ parc_auto.nrAuto }}">{{ parc_auto.nrAuto }}</option>
+                        {% endfor %}
+                    </datalist>
+                </div>
+                <div class="col-md-6">
+                    {{ form_label(form.remorca) }}
+                    {{ form_widget(form.remorca, {'attr': {'class': 'form-control', 'list': 'remorca_list'}}) }}
+                    <datalist id="remorca_list">
+                        {% for remorca in parc_auto_list %}
+                            <option value="{{ remorca.nrAuto }}">{{ remorca.nrAuto }}</option>
+                        {% endfor %}
+                    </datalist>
+                </div>
+                <div class="col-md-6">
+                    {{ form_label(form.sofer) }}
+                    {{ form_widget(form.sofer, {'attr': {'class': 'form-control'}}) }}
+                </div>
+                <div class="col-md-6">
+                    {{ form_label(form.data_start) }}
+                    {{ form_widget(form.data_start, {'attr': {'class': 'form-control datepicker'}}) }}
+                </div>
+                <div class="col-md-6">
+                    {{ form_label(form.data_stop) }}
+                    {{ form_widget(form.data_stop, {'attr': {'class': 'form-control datepicker'}}) }}
+                </div>
+                <div class="col-md-6">
+                    {{ form_label(form.nr_km) }}
+                    {{ form_widget(form.nr_km, {'attr': {'class': 'form-control'}}) }}
+                </div>
+                <div class="col-md-6">
+                    {{ form_label(form.kg) }}
+                    {{ form_widget(form.kg, {'attr': {'class': 'form-control'}}) }}
+                </div>
+                <div class="col-md-6">
+                    {{ form_label(form.pret) }}
+                    {{ form_widget(form.pret, {'attr': {'class': 'form-control'}}) }}
+                </div>
+                <div class="col-md-6">
+                    {{ form_label(form.firma) }}
+                    {{ form_widget(form.firma, {'attr': {'class': 'form-control'}}) }}
+                </div>
+            </div>
+            <div class="button-group mt-4 d-flex justify-content-between">
+                <a href="{{ path('app_comenzi_comunitare_index') }}" class="btn btn-secondary">Anulează</a>
+                <button type="submit" class="btn btn-primary">Salvează</button>
+            </div>
+        {{ form_end(form) }}
+    </div>
 {% endblock %}
