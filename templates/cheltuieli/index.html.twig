@@ -106,8 +106,9 @@
                     <td>{{ ch.id }}</td>
                     <td>
                         {% if ch.comanda %}
-                            #{{ ch.comanda.id }} 
                             <a href="{{ path('app_comenzi_show', {'id': ch.comanda.id}) }}">(vezi)</a>
+                        {% elseif ch.comunitar %}
+                            <a href="{{ path('app_comenzi_comunitare_show', {'id': ch.comunitar.id}) }}">(vezi)</a>
                         {% else %}
                             -
                         {% endif %}
