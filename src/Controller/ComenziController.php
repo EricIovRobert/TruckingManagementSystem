@@ -177,13 +177,16 @@ class ComenziController extends AbstractController
 
     $consumabile = $entityManager->getRepository(Consumabile::class)->findAll();
 
+    // Determinăm data implicită: data_stop dacă există, altfel data_start
+    $dataImplicit = $comanda->getDataStop() ?? $comanda->getDataStart();
+
     foreach ($consumabile as $consumabil) {
         $cheltuiala = new Cheltuieli();
         $cheltuiala->setComanda($comanda);
         $cheltuiala->setCategorie($consumabil->getCategorie());
         $cheltuiala->setConsumabil($consumabil);
         $cheltuiala->setSubcategorie(null);
-        $cheltuiala->setDataCheltuiala(new \DateTime());
+        $cheltuiala->setDataCheltuiala($dataImplicit ?? new \DateTime());
 
         $pretMaxim = $consumabil->getPretMaxim();
         $kmUtilizareMax = $consumabil->getKmUtilizareMax();
@@ -380,7 +383,10 @@ public function edit(Request $request, Comenzi $comanda, EntityManagerInterface 
     {
         $cheltuiala = new Cheltuieli();
         $cheltuiala->setComanda($comanda);
-        $cheltuiala->setDataCheltuiala(new \DateTime());
+        
+        // Setăm data implicită: data_stop dacă există, altfel data_start
+        $dataImplicit = $comanda->getDataStop() ?? $comanda->getDataStart();
+        $cheltuiala->setDataCheltuiala($dataImplicit ?? new \DateTime());
 
         $form = $this->createForm(CheltuieliType::class, $cheltuiala);
         $form->handleRequest($request);
