@@ -50,7 +50,7 @@ class ComenziComunitare
     /**
      * @var Collection<int, Cheltuieli>
      */
-    #[ORM\OneToMany(targetEntity: Cheltuieli::class, mappedBy: 'comunitar')]
+    #[ORM\OneToMany(targetEntity: Cheltuieli::class, mappedBy: 'comunitar', cascade: ['remove'])]
     private Collection $cheltuielis;
 
     #[ORM\Column(length: 100)]
@@ -61,7 +61,25 @@ class ComenziComunitare
         $this->cheltuielis = new ArrayCollection();
     }
 
-  
+
+public function calculateAndSetProfit(): void
+{
+    $totalCheltuieli = 0;
+    foreach ($this->cheltuielis as $cheltuiala) {
+        $sumaBruta = $cheltuiala->getSuma();
+        $tvaProcent = $cheltuiala->getTva() ?? 0;
+        $comisionTvaProcent = $cheltuiala->getComisionTva() ?? 0;
+        
+        $tvaValue = ($sumaBruta * $tvaProcent / (100 + $tvaProcent));
+        $comisionTva = ($tvaValue * $comisionTvaProcent / 100);
+        $cheltuialaNeta = $sumaBruta - $tvaValue + $comisionTva;
+        
+        $totalCheltuieli += $cheltuialaNeta;
+    }
+    
+    $profit = $this->pret - $totalCheltuieli;
+    $this->setProfit($profit);
+}
 
     public function getId(): ?int
     {

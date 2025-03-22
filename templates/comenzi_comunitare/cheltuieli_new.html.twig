@@ -1,0 +1,255 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Adaugă Cheltuială{% endblock %}
+
+{% block body %}
+    <div class="form-container shadow-sm rounded-3 bg-white p-4" style="max-width: 600px; margin: 0 auto;">
+        <h1 class="text-center mb-4">Adaugă Cheltuială pentru Comanda Comunitară #{{ comanda.id }}</h1>
+        {{ form_start(form) }}
+            <div class="row g-3 align-items-center">
+                <div class="col-md-6">
+                    {{ form_label(form.categorie, null, {'label_attr': {'class': 'form-label'}}) }}
+                    {{ form_widget(form.categorie, {'attr': {'class': 'form-control'}}) }}
+                </div>
+                <div class="col-md-6">
+                    <label for="cheltuieli_subcategorie_select" class="form-label">Subcategorie</label>
+                    {{ form_widget(form.subcategorie, {'attr': {'class': 'form-control', 'style': 'display: none;'}}) }}
+                </div>
+                <div class="col-md-6">
+                    {{ form_label(form.pret_unitate, null, {'label_attr': {'class': 'form-label'}}) }}
+                    {{ form_widget(form.pret_unitate, {'attr': {'class': 'form-control'}}) }}
+                </div>
+                <div class="col-md-6">
+                    {{ form_label(form.suma, null, {'label_attr': {'class': 'form-label'}}) }}
+                    {{ form_widget(form.suma, {'attr': {'class': 'form-control'}}) }}
+                </div>
+                <div class="col-md-6">
+                    {{ form_label(form.litri_motorina, null, {'label_attr': {'class': 'form-label'}}) }}
+                    {{ form_widget(form.litri_motorina, {'attr': {'class': 'form-control'}}) }}
+                </div>
+                <div class="col-md-6">
+                    {{ form_label(form.tva, null, {'label_attr': {'class': 'form-label'}}) }}
+                    {{ form_widget(form.tva, {'attr': {'class': 'form-control'}}) }}
+                </div>
+                <div class="col-md-6">
+                    {{ form_label(form.comision_tva, null, {'label_attr': {'class': 'form-label'}}) }}
+                    {{ form_widget(form.comision_tva, {'attr': {'class': 'form-control'}}) }}
+                </div>
+                <div class="col-md-6">
+                    {{ form_label(form.data_cheltuiala, null, {'label_attr': {'class': 'form-label'}}) }}
+                    {{ form_widget(form.data_cheltuiala, {'attr': {'class': 'form-control datepicker'}}) }}
+                </div>
+                <div class="col-md-6">
+                    {{ form_label(form.descriere, null, {'label_attr': {'class': 'form-label'}}) }}
+                    {{ form_widget(form.descriere, {'attr': {'class': 'form-control'}}) }}
+                </div>
+                <div class="col-md-6">
+                    {{ form_label(form.moneda, null, {'label_attr': {'class': 'form-label'}}) }}
+                    {{ form_widget(form.moneda, {'attr': {'class': 'form-control'}}) }}
+                </div>
+            </div>
+            <div class="button-group mt-4 d-flex justify-content-between">
+                <a href="{{ path('app_comenzi_comunitare_show', {'id': comanda.id}) }}" class="btn btn-secondary">Înapoi la detalii</a>
+                <button type="submit" class="btn btn-primary">Salvează</button>
+            </div>
+        {{ form_end(form) }}
+    </div>
+
+    <style>
+        .form-control {
+            height: 38px;
+        }
+        .form-label {
+            margin-bottom: 0.25rem;
+        }
+        .align-items-center {
+            align-items: center;
+        }
+    </style>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const categorieField = document.querySelector('[name="cheltuieli[categorie]"]');
+            const subcategorieField = document.querySelector('[name="cheltuieli[subcategorie]"]');
+            const sumaField = document.querySelector('[name="cheltuieli[suma]"]');
+            const litriMotorinaField = document.querySelector('[name="cheltuieli[litri_motorina]"]');
+            const pretUnitateField = document.querySelector('[name="cheltuieli[pret_unitate]"]');
+            const monedaField = document.querySelector('[name="cheltuieli[moneda]"]');
+            let cursEurRon = 0;
+
+            if (litriMotorinaField) {
+                litriMotorinaField.closest('.form-group, .form-row, div').style.display = 'none';
+            }
+            if (pretUnitateField) {
+                pretUnitateField.closest('.form-group, .form-row, div').style.display = 'none';
+            }
+
+            const numarKm = {{ comanda.nrKm is not null ? comanda.nrKm : 'null' }};
+            let subcategorieSelect = null;
+
+            fetch('/api/curs-valutar', {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                cursEurRon = data.conversion_rates.RON;
+                recalcSuma();
+            })
+            .catch(error => {
+                console.error('Eroare la preluarea cursului valutar:', error);
+                cursEurRon = 5;
+                recalcSuma();
+            });
+
+            function filterCategorii() {
+                for (let i = 0; i < categorieField.options.length; i++) {
+                    if (categorieField.options[i].text === 'Fixe') {
+                        categorieField.remove(i);
+                        break;
+                    }
+                }
+            }
+
+            function toggleMonedaField() {
+                const categorieNume = categorieField.options[categorieField.selectedIndex].text;
+                const monedaContainer = monedaField.closest('.form-group, .form-row, div');
+                if (categorieNume === 'Consumabile') {
+                    monedaContainer.style.display = 'none';
+                    monedaField.value = 'RON';
+                } else {
+                    monedaContainer.style.display = '';
+                }
+                recalcSuma();
+            }
+
+            function recalcSuma() {
+                const pretUnitate = parseFloat(pretUnitateField.value) || 0;
+                const litri = parseFloat(litriMotorinaField.value) || 0;
+                let suma = 0;
+                if (litriMotorinaField && litriMotorinaField.closest('.form-group, .form-row, div').style.display !== 'none') {
+                    suma = pretUnitate * litri;
+                } else {
+                    suma = pretUnitate;
+                }
+                const categorieNume = categorieField.options[categorieField.selectedIndex].text;
+                if (monedaField.value === 'EUR' && categorieNume !== 'Consumabile') {
+                    suma = suma * cursEurRon;
+                }
+                sumaField.value = suma.toFixed(2);
+            }
+
+            function onSubcategorieChange() {
+                const selectedOption = subcategorieSelect.options[subcategorieSelect.selectedIndex];
+                if (!selectedOption) return;
+
+                const pretStandard = parseFloat(selectedOption.getAttribute('data-pret-standard') || '0');
+                const kmUtilizareMax = parseFloat(selectedOption.getAttribute('data-km-utilizare-max') || '0');
+                const pretPerL = parseFloat(selectedOption.getAttribute('data-pret-per-l') || '0');
+                const subcategorieNume = selectedOption.text;
+
+                subcategorieField.value = subcategorieSelect.value;
+
+                pretUnitateField.closest('.form-group, .form-row, div').style.display = '';
+                if (pretPerL > 0) {
+                    pretUnitateField.value = pretPerL.toFixed(2);
+                    if (litriMotorinaField) {
+                        litriMotorinaField.closest('.form-group, .form-row, div').style.display = '';
+                        if (subcategorieNume === 'AdBlue' && numarKm !== null) {
+                            litriMotorinaField.value = (0.02 * numarKm).toFixed(2);
+                        }
+                    }
+                } else if (pretStandard > 0) {
+                    pretUnitateField.value = pretStandard.toFixed(2);
+                    if (litriMotorinaField) {
+                        litriMotorinaField.closest('.form-group, .form-row, div').style.display = 'none';
+                        litriMotorinaField.value = '';
+                    }
+                } else {
+                    pretUnitateField.value = '';
+                    if (litriMotorinaField) {
+                        litriMotorinaField.closest('.form-group, .form-row, div').style.display = 'none';
+                        litriMotorinaField.value = '';
+                    }
+                }
+
+                const categorieNume = categorieField.options[categorieField.selectedIndex].text;
+                if (categorieNume === 'Consumabile' && pretStandard > 0 && kmUtilizareMax > 0) {
+                    if (numarKm !== null && numarKm > 0) {
+                        const pretProportional = (pretStandard / kmUtilizareMax) * numarKm;
+                        pretUnitateField.value = pretStandard.toFixed(2);
+                        sumaField.value = pretProportional.toFixed(2);
+                    } else {
+                        pretUnitateField.value = pretStandard.toFixed(2);
+                        sumaField.value = pretStandard.toFixed(2);
+                    }
+                } else {
+                    recalcSuma();
+                }
+            }
+
+            function updateSubcategories() {
+                const categorieId = categorieField.value;
+                if (!categorieId) {
+                    subcategorieSelect.innerHTML = '<option value="">Selectează o subcategorie (opțional)</option>';
+                    subcategorieField.value = '';
+                    sumaField.value = '';
+                    pretUnitateField.value = '';
+                    pretUnitateField.closest('.form-group, .form-row, div').style.display = 'none';
+                    return;
+                }
+
+                fetch(`/comenzi/get-subcategories?categorie=${categorieId}`, {
+                    method: 'GET',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    subcategorieSelect.innerHTML = '<option value="">Selectează o subcategorie (opțional)</option>';
+                    data.forEach(sub => {
+                        const option = document.createElement('option');
+                        option.value = sub.id;
+                        option.text = sub.nume;
+                        option.setAttribute('data-pret-standard', sub.pret_standard || '0');
+                        option.setAttribute('data-km-utilizare-max', sub.km_utilizare_max || '0');
+                        option.setAttribute('data-pret-per-l', sub.pret_per_l || '0');
+                        subcategorieSelect.appendChild(option);
+                    });
+                })
+                .catch(error => console.error('Eroare la încărcarea subcategoriilor:', error));
+            }
+
+            if (categorieField && subcategorieField && sumaField && pretUnitateField) {
+                subcategorieSelect = document.createElement('select');
+                subcategorieSelect.name = 'cheltuieli[subcategorie_select]';
+                subcategorieSelect.classList.add('form-control');
+                subcategorieSelect.innerHTML = '<option value="">Selectează o subcategorie</option>';
+                subcategorieField.parentNode.insertBefore(subcategorieSelect, subcategorieField);
+
+                filterCategorii();
+                toggleMonedaField();
+
+                categorieField.addEventListener('change', function() {
+                    updateSubcategories();
+                    toggleMonedaField();
+                });
+                subcategorieSelect.addEventListener('change', onSubcategorieChange);
+
+                if (litriMotorinaField) {
+                    litriMotorinaField.addEventListener('input', recalcSuma);
+                }
+                pretUnitateField.addEventListener('input', recalcSuma);
+                monedaField.addEventListener('change', recalcSuma);
+
+                updateSubcategories();
+            }
+        });
+    </script>
+{% endblock %}

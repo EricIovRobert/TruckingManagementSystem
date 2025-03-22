@@ -18,7 +18,16 @@
         </div>
     {% endfor %}
 
-    <a href="{{ path('app_comenzi_comunitare_new') }}" class="btn btn-primary">Adaugă Comandă Comunitară</a>
+    <form method="get" class="mb-3">
+        <div class="input-group">
+            <input type="text" name="start_date" class="form-control datepicker" placeholder="Data start (dd/mm/yyyy)" value="{{ start_date ?? '' }}">
+            <button type="submit" class="btn btn-primary">Filtrează</button>
+            <a href="{{ path('app_comenzi_comunitare_index') }}" class="btn btn-secondary">Resetează</a>
+        </div>
+    </form>
+
+    <a href="{{ path('app_comenzi_comunitare_new') }}" class="btn btn-primary mb-3">Adaugă Comandă Comunitară</a>
+
     <table class="table table-striped">
         <thead>
             <tr>
@@ -35,7 +44,7 @@
             </tr>
         </thead>
         <tbody>
-            {% for comenzi_comunitare in comenzi_comunitares %}
+            {% for comenzi_comunitare in pagination %}
                 <tr>
                     <td>
                         <a href="{{ path('app_comenzi_comunitare_show', {'id': comenzi_comunitare.id}) }}">
@@ -43,8 +52,8 @@
                         </a>
                     </td>
                     <td>{{ comenzi_comunitare.sofer }}</td>
-                    <td>{{ comenzi_comunitare.dataStart ? comenzi_comunitare.dataStart|date('Y-m-d') : 'N/A' }}</td>
-                    <td>{{ comenzi_comunitare.dataStop ? comenzi_comunitare.dataStop|date('Y-m-d') : 'N/A' }}</td>
+                    <td>{{ comenzi_comunitare.dataStart ? comenzi_comunitare.dataStart|date('d/m/Y') : 'N/A' }}</td>
+                    <td>{{ comenzi_comunitare.dataStop ? comenzi_comunitare.dataStop|date('d/m/Y') : 'N/A' }}</td>
                     <td>{{ comenzi_comunitare.nrKm is not null ? comenzi_comunitare.nrKm : 'N/A' }}</td>
                     <td>{{ comenzi_comunitare.profit }}</td>
                     <td>{{ comenzi_comunitare.kg }}</td>
@@ -74,4 +83,25 @@
             {% endfor %}
         </tbody>
     </table>
+
+    {# Paginare #}
+    <div class="navigation mt-3 d-flex justify-content-center">
+        {{ knp_pagination_render(pagination) }}
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        // Adăugăm suport pentru datepicker dacă folosești unul (ex. Bootstrap Datepicker)
+        document.addEventListener('DOMContentLoaded', function() {
+            // Inițializează datepicker-ul dacă ai o bibliotecă inclusă
+            if (typeof $(document).datepicker !== 'undefined') {
+                $('.datepicker').datepicker({
+                    format: 'dd/mm/yyyy',
+                    autoclose: true
+                });
+            }
+        });
+    </script>
 {% endblock %}

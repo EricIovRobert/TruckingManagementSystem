@@ -1,36 +1,206 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Detalii Comanda Comunitara{% endblock %}
+{% block title %}Detalii Comandă Comunitară{% endblock %}
 
 {% block body %}
-    <div class="card">
-        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-            <h1 class="h3 mb-0">Detalii Comanda Comunitara</h1>
-            <a href="{{ path('app_comenzi_comunitare_index') }}" class="btn btn-light btn-sm"><i class="fas fa-arrow-left"></i> Inapoi</a>
+    <div class="container mt-4">
+        <!-- Butonul "Înapoi la listă" stilizat și poziționat sus în dreapta -->
+        <div class="d-flex justify-content-end mb-3">
+            <a href="{{ path('app_comenzi_comunitare_index') }}" class="btn btn-outline-secondary btn-sm">Înapoi la listă</a>
         </div>
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-6">
-                    <p><strong>ID:</strong> {{ comenzi_comunitare.id }}</p>
-                    <p><strong>Nr Auto:</strong> {{ comenzi_comunitare.nrAuto ? comenzi_comunitare.nrAuto.nrAuto : '' }}</p>
-                    <p><strong>Nr Auto Snapshot:</strong> {{ comenzi_comunitare.nrAutoSnapshot }}</p>
-                    <p><strong>Sofer:</strong> {{ comenzi_comunitare.sofer }}</p>
-                    <p><strong>Data Start:</strong> {{ comenzi_comunitare.dataStart ? comenzi_comunitare.dataStart|date('Y-m-d') : '' }}</p>
-                </div>
-                <div class="col-md-6">
-                    <p><strong>Data Stop:</strong> {{ comenzi_comunitare.dataStop ? comenzi_comunitare.dataStop|date('Y-m-d') : '' }}</p>
-                    <p><strong>Nr KM:</strong> {{ comenzi_comunitare.nrKm }}</p>
-                    <p><strong>Profit:</strong> {{ comenzi_comunitare.profit }}</p>
-                    <p><strong>Kg:</strong> {{ comenzi_comunitare.kg }}</p>
-                    <p><strong>Pret:</strong> {{ comenzi_comunitare.pret }}</p>
-                    <p><strong>Firma:</strong> {{ comenzi_comunitare.firma }}</p>
+
+        <h1>Detalii Comandă Comunitară #{{ comanda.id }}</h1>
+        </br>
+
+        <!-- Secțiunea "Detalii" centrată -->
+        <div class="d-flex justify-content-center">
+            <div class="card shadow-sm rounded-3 bg-white p-4 mb-4" style="width: 100%;">
+                <div class="card-body">
+                    <div class="row">
+                        <!-- Coloana stânga -->
+                        <div class="col-md-6">
+                            <div class="mb-4">
+                                <strong>Mașină Principală:</strong> {{ comanda.nrAutoSnapshot ?: 'N/A' }}
+                            </div>
+                            <div class="mb-4">
+                                <strong>Remorcă:</strong> {{ comanda.remorca ?: 'N/A' }}
+                            </div>
+                            <div class="mb-4">
+                                <strong>Șofer:</strong> {{ comanda.sofer }}
+                            </div>
+                            <div class="mb-4">
+                                <strong>Data Start:</strong> {{ comanda.dataStart ? comanda.dataStart|date('d/m/Y') : 'Nu sunt încă date disponibile' }}
+                            </div>
+                            <div class="mb-4">
+                                <strong>Data Stop:</strong> {{ comanda.dataStop ? comanda.dataStop|date('d/m/Y') : 'Nu sunt încă date disponibile' }}
+                            </div>
+                        </div>
+                        <!-- Coloana dreapta -->
+                        <div class="col-md-6">
+                            <div class="mb-4">
+                                <strong>Număr Km:</strong> {{ comanda.nrKm is not null ? comanda.nrKm : 'Nu sunt încă date disponibile' }}
+                            </div>
+                            <div class="mb-4">
+                                <strong>Profit:</strong> {{ comanda.profit is not null ? comanda.profit : 'Nu sunt încă date disponibile' }}
+                            </div>
+                            <div class="mb-4">
+                                <strong>Kg:</strong> {{ comanda.kg }}
+                            </div>
+                            <div class="mb-4">
+                                <strong>Preț:</strong> {{ comanda.pret }}
+                            </div>
+                            <div class="mb-4">
+                                <strong>Firmă:</strong> {{ comanda.firma }}
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Butonul "Editează detalii" -->
+                    <div class="text-center mt-4">
+                        <a href="{{ path('app_comenzi_comunitare_edit', {'id': comanda.id}) }}" class="btn btn-primary">Editează detalii</a>
+                    </div>
                 </div>
             </div>
-            <a href="{{ path('app_comenzi_comunitare_edit', {'id': comenzi_comunitare.id}) }}" class="btn btn-warning"><i class="fas fa-edit"></i> Editeaza</a>
-            <form method="post" action="{{ path('app_comenzi_comunitare_delete', {'id': comenzi_comunitare.id}) }}" style="display:inline;" onsubmit="return confirm('Sigur vrei să ștergi?');">
-                <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ comenzi_comunitare.id) }}">
-                <button class="btn btn-danger"><i class="fas fa-trash"></i> Sterge</button>
-            </form>
         </div>
+
+        <!-- Secțiunea Cheltuieli -->
+        <h2 class="mt-4">Cheltuieli</h2>
+        <a href="{{ path('app_comenzi_comunitare_cheltuieli_new', {'id': comanda.id}) }}" class="btn btn-primary mb-3">Adaugă Cheltuială</a>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Categorie</th>
+                    <th>Subcategorie</th>
+                    <th>Suma</th>
+                    <th>Data</th>
+                    <th>Descriere</th>
+                    <th class="text-end">Acțiuni</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cheltuiala in comanda.cheltuielis|filter(cheltuiala => cheltuiala.tva <= 0) %}
+                    <tr>
+                        <td>{{ cheltuiala.categorie ? cheltuiala.categorie.nume : 'N/A' }}</td>
+                        <td>
+                            {% if cheltuiala.subcategorie %}
+                                {{ cheltuiala.subcategorie.nume }}
+                            {% elseif cheltuiala.consumabil %}
+                                {{ cheltuiala.consumabil.nume }}
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </td>
+                        <td>{{ cheltuiala.suma|number_format(2, ',', '.') }}</td>
+                        <td>{{ cheltuiala.dataCheltuiala ? cheltuiala.dataCheltuiala|date('d/m/Y') : 'N/A' }}</td>
+                        <td>{{ cheltuiala.descriere ?: 'N/A' }}</td>
+                        <td class="text-end">
+                            <a href="{{ path('app_comenzi_comunitare_cheltuieli_edit', {'comandaId': comanda.id, 'cheltuialaId': cheltuiala.id}) }}" class="btn btn-warning btn-sm me-1">Editează</a>
+                            <form method="post" action="{{ path('app_comenzi_comunitare_cheltuieli_delete', {'comandaId': comanda.id, 'cheltuialaId': cheltuiala.id}) }}" style="display:inline;" onsubmit="return confirm('Ești sigur că vrei să ștergi această cheltuială?');">
+                                <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ cheltuiala.id) }}">
+                                <button class="btn btn-danger btn-sm">Șterge</button>
+                            </form>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center">Nicio cheltuială fără TVA asociată</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- Secțiunea Cheltuieli cu TVA -->
+        <h2 class="mt-4">Cheltuieli cu TVA</h2>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Categorie</th>
+                    <th>Subcategorie</th>
+                    <th>Suma Brută (€)</th>
+                    <th>TVA Recuperat (€)</th>
+                    <th>Comision TVA (€)</th>
+                    <th>Cheltuială Finală (€)</th>
+                    <th>Descriere</th>
+                    <th class="text-end">Acțiuni</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% set totalSumaBruta = 0 %}
+                {% set totalTvaNetRecuperat = 0 %}
+                {% set totalComisionTva = 0 %}
+                {% set totalCheltuialaNeta = 0 %}
+                {% set hasCheltuieli = false %}
+
+                {% for cheltuiala in comanda.cheltuielis|filter(cheltuiala => cheltuiala.tva > 0) %}
+                    {% set hasCheltuieli = true %}
+                    {% set sumaBruta = cheltuiala.suma %}
+                    {% set tvaProcent = cheltuiala.tva %}
+                    {% set comisionTvaProcent = cheltuiala.comisionTva ?? 0 %}
+                    {% set tvaValue = (sumaBruta * tvaProcent / (100 + tvaProcent))|round(2) %}
+                    {% set comisionTva = (tvaValue * (comisionTvaProcent / 100))|round(2) %}
+                    {% set tvaNetRecuperat = (tvaValue - comisionTva)|round(2) %}
+                    {% set cheltuialaNeta = (sumaBruta - tvaValue + comisionTva)|round(2) %}
+
+                    {% set totalSumaBruta = totalSumaBruta + sumaBruta %}
+                    {% set totalTvaNetRecuperat = totalTvaNetRecuperat + tvaNetRecuperat %}
+                    {% set totalComisionTva = totalComisionTva + comisionTva %}
+                    {% set totalCheltuialaNeta = totalCheltuialaNeta + cheltuialaNeta %}
+
+                    <tr>
+                        <td>{{ cheltuiala.categorie ? cheltuiala.categorie.nume : 'N/A' }}</td>
+                        <td>
+                            {% if cheltuiala.subcategorie %}
+                                {{ cheltuiala.subcategorie.nume }}
+                            {% elseif cheltuiala.consumabil %}
+                                {{ cheltuiala.consumabil.nume }}
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </td>
+                        <td>{{ sumaBruta|number_format(2, ',', '.') }}</td>
+                        <td>{{ tvaNetRecuperat|number_format(2, ',', '.') }}</td>
+                        <td>{{ comisionTva|number_format(2, ',', '.') }}</td>
+                        <td>{{ cheltuialaNeta|number_format(2, ',', '.') }}</td>
+                        <td>{{ cheltuiala.descriere ?: 'N/A' }}</td>
+                        <td class="text-end">
+                            <a href="{{ path('app_comenzi_comunitare_cheltuieli_edit', {'comandaId': comanda.id, 'cheltuialaId': cheltuiala.id}) }}" class="btn btn-warning btn-sm me-1">Editează</a>
+                            <form method="post" action="{{ path('app_comenzi_comunitare_cheltuieli_delete', {'comandaId': comanda.id, 'cheltuialaId': cheltuiala.id}) }}" style="display:inline;" onsubmit="return confirm('Ești sigur că vrei să ștergi această cheltuială?');">
+                                <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ cheltuiala.id) }}">
+                                <button class="btn btn-danger btn-sm">Șterge</button>
+                            </form>
+                        </td>
+                    </tr>
+                {% endfor %}
+
+                {% if hasCheltuieli %}
+                    <tr class="fw-bold">
+                        <td colspan="2">Total</td>
+                        <td>{{ totalSumaBruta|number_format(2, ',', '.') }}</td>
+                        <td>{{ totalTvaNetRecuperat|number_format(2, ',', '.') }}</td>
+                        <td>{{ totalComisionTva|number_format(2, ',', '.') }}</td>
+                        <td>{{ totalCheltuialaNeta|number_format(2, ',', '.') }}</td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="8" class="text-center">Nicio cheltuială cu TVA asociată</td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
     </div>
+
+    {% block javascripts %}
+        {{ parent() }}
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                // No additional JavaScript needed for this basic implementation
+            });
+        </script>
+        <datalist id="parc_auto_list">
+            {% for parc_auto in parc_autos %}
+                <option value="{{ parc_auto.nrAuto }}">
+            {% endfor %}
+        </datalist>
+    {% endblock %}
 {% endblock %}
