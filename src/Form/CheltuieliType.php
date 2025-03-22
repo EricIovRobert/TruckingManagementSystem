@@ -39,7 +39,7 @@ class CheltuieliType extends AbstractType
                 'attr' => ['step' => '0.01'], // Permite valori zecimale
             ])
             ->add('suma', NumberType::class, [
-                'label' => 'Suma (RON)',
+                'label' => 'Suma final',
                 'required' => true,
             ])
             ->add('litri_motorina', NumberType::class, [

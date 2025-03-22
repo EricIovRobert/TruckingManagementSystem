@@ -38,7 +38,7 @@
                         <strong>Număr Km:</strong> {{ comanda.numarKm is not null ? comanda.numarKm : 'Nu sunt încă date disponibile' }}
                     </div>
                     <div class="mb-4">
-                        <strong>Profit:</strong> {{ comanda.profit is not null ? comanda.profit : 'Nu sunt încă date disponibile' }}
+                        <strong>Profit:</strong> {{ comanda.profit is not null ? comanda.profit|round : 'Nu sunt încă date disponibile' }}
                     </div>
                 </div>
                 <!-- Coloana dreapta -->
@@ -78,7 +78,7 @@
                     <th>Firma</th>
                     <th>Ruta Încărcare</th>
                     <th>Ruta Descărcare</th>
-                    <th>Kg</th>
+                    <th>Tone</th>
                     <th>Preț</th>
                     <th>Liber</th>
                     <th>Facturat</th>
@@ -122,7 +122,7 @@
                     <th>Firma</th>
                     <th>Ruta Încărcare</th>
                     <th>Ruta Descărcare</th>
-                    <th>Kg</th>
+                    <th>Tone</th>
                     <th>Preț</th>
                     <th>Liber</th>
                     <th>Facturat</th>

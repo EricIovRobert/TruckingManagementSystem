@@ -16,7 +16,9 @@ class RetururiType extends AbstractType
             ->add('firma')
             ->add('rutaIncarcare')
             ->add('rutaDescarcare')
-            ->add('kg')
+            ->add('kg', null, [
+                'label' => 'Tone', // Schimbăm label-ul în "Tone"
+            ])
             ->add('pret')
             ->add('liber')
             ->add('moneda', ChoiceType::class, [

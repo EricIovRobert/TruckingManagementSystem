@@ -127,13 +127,13 @@
                             {% endif %}
                         {% endfor %}
                         {% if comanda.numarKm is not null and comanda.numarKm > 0 and totalLitriMotorina > 0 %}
-                            {% set consumPer100Km = (totalLitriMotorina / comanda.numarKm * 100)|round(2) %}
-                            {{ consumPer100Km|number_format(2, ',', '.') }}
+                            {% set consumPer100Km = (totalLitriMotorina / comanda.numarKm * 100)|round(1) %}
+                            {{ consumPer100Km|number_format(1, ',', '.') }}
                         {% else %}
                             -
                         {% endif %}
                     </td>
-                    <td>{{ comanda.profit is not null ? comanda.profit|number_format(2, ',', '.') : '-' }}</td>
+                    <td>{{ comanda.profit is not null ? comanda.profit|round : '-' }}</td>
                     <td>
                         <input type="checkbox" class="rezolvat-checkbox" data-id="{{ comanda.id }}" {% if comanda.rezolvat %}checked{% endif %}>
                     </td>

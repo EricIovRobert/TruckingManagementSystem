@@ -41,7 +41,7 @@
                                 <strong>Număr Km:</strong> {{ comanda.nrKm is not null ? comanda.nrKm : 'Nu sunt încă date disponibile' }}
                             </div>
                             <div class="mb-4">
-                                <strong>Profit:</strong> {{ comanda.profit is not null ? comanda.profit : 'Nu sunt încă date disponibile' }}
+                                <strong>Profit:</strong> {{ comanda.profit is not null ? comanda.profit|round : 'Nu sunt încă date disponibile' }}
                             </div>
                             <div class="mb-4">
                                 <strong>Kg:</strong> {{ comanda.kg }}

@@ -62,7 +62,7 @@ class ComenziComunitareType extends AbstractType
                 'label' => 'Număr KM',
                 'required' => false,
             ])
-            ->add('kg', NumberType::class, ['label' => 'Kilograme'])
+            ->add('kg', NumberType::class, ['label' => 'Tone'])
             ->add('pret', NumberType::class, ['label' => 'Preț'])
             ->add('firma', TextType::class, ['label' => 'Firmă'])
         ;
