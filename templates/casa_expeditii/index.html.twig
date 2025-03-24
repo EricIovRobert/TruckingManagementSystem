@@ -1,0 +1,62 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Casa Expediții{% endblock %}
+
+{% block body %}
+    <div class="container mt-4">
+        <h1 class="mb-4">Casa Expediții</h1>
+        <a href="{{ path('app_casa_expeditii_new') }}" class="btn btn-primary mb-3">Adaugă Intrare</a>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Nume Client</th>
+                    <th>Nr. Comandă Client</th>
+                    <th>Preț Client</th>
+                    <th>Nr. Factură Client</th>
+                    <th>Nume Transportator</th>
+                    <th>Preț Transportator</th>
+                    <th>Nr. Comandă Transportator</th>
+                    <th>Profit</th>
+                    <th>Acțiuni</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for expeditie in expeditii %}
+                    <tr>
+                        <td>{{ expeditie.numeClient }}</td>
+                        <td>{{ expeditie.nrComandaClient }}</td>
+                        <td>{{ expeditie.pretClient|number_format(2, ',', '.') }}</td>
+                        <td>{{ expeditie.nrFacturaClient|default('-') }}</td>
+                        <td>{{ expeditie.numeTransportator }}</td>
+                        <td>{{ expeditie.pretTransportator|number_format(2, ',', '.') }}</td>
+                        <td>{{ expeditie.nrComandaTransportator }}</td>
+                        <td>
+                            {% set profit = expeditie.pretClient - expeditie.pretTransportator %}
+                            {{ profit|number_format(2, ',', '.') }}
+                        </td>
+                        <td>
+                            <div class="dropdown">
+                                <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" id="dropdownMenuButton-{{ expeditie.id }}" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="bi bi-three-dots-vertical"></i>
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton-{{ expeditie.id }}">
+                                    <li><a class="dropdown-item text-warning" href="{{ path('app_casa_expeditii_edit', {'id': expeditie.id}) }}">Editează</a></li>
+                                    <li>
+                                        <form method="post" action="{{ path('app_casa_expeditii_delete', {'id': expeditie.id}) }}" onsubmit="return confirm('Ești sigur că vrei să ștergi această intrare?');">
+                                            <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ expeditie.id) }}">
+                                            <button type="submit" class="dropdown-item text-danger">Șterge</button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </div>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="9">Nicio intrare găsită.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}

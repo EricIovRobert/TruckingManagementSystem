@@ -28,11 +28,20 @@
                         <td>{{ datorie.achitata|default(0)|number_format(2, ',', '.') }}</td>
                         <td>{{ datorie.observatii }}</td>
                         <td>
-                            <a href="{{ path('app_datorii_sofer_edit', {'id': datorie.id}) }}" class="btn btn-sm btn-warning">Editează</a>
-                            <form method="post" action="{{ path('app_datorii_sofer_delete', {'id': datorie.id}) }}" style="display:inline;" onsubmit="return confirm('Ești sigur că vrei să ștergi această datorie?');">
-                                <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ datorie.id) }}">
-                                <button class="btn btn-sm btn-danger">Șterge</button>
-                            </form>
+                            <div class="dropdown">
+                                <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" id="dropdownMenuButton-{{ datorie.id }}" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="bi bi-three-dots-vertical"></i>
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton-{{ datorie.id }}">
+                                    <li><a class="dropdown-item text-warning" href="{{ path('app_datorii_sofer_edit', {'id': datorie.id}) }}">Editează</a></li>
+                                    <li>
+                                        <form method="post" action="{{ path('app_datorii_sofer_delete', {'id': datorie.id}) }}" onsubmit="return confirm('Ești sigur că vrei să ștergi această datorie?');">
+                                            <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ datorie.id) }}">
+                                            <button type="submit" class="dropdown-item text-danger">Șterge</button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </div>
                         </td>
                     </tr>
                 {% else %}
