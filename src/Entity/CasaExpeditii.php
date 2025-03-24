@@ -34,6 +34,9 @@ class CasaExpeditii
     #[ORM\Column(length: 255)]
     private ?string $nrComandaTransportator = null;
 
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $contractPath = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -119,6 +122,18 @@ class CasaExpeditii
     public function setNrComandaTransportator(string $nrComandaTransportator): static
     {
         $this->nrComandaTransportator = $nrComandaTransportator;
+
+        return $this;
+    }
+
+    public function getContractPath(): ?string
+    {
+        return $this->contractPath;
+    }
+
+    public function setContractPath(?string $contractPath): static
+    {
+        $this->contractPath = $contractPath;
 
         return $this;
     }
