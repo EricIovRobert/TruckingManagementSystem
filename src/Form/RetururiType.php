@@ -21,16 +21,6 @@ class RetururiType extends AbstractType
             ])
             ->add('pret')
             ->add('liber')
-            ->add('moneda', ChoiceType::class, [
-                'choices' => [
-                    'RON' => 'RON',
-                    'EUR' => 'EUR',
-                ],
-                'label' => 'Moneda',
-                'required' => true,
-                'data' => 'RON', // Implicit RON
-                'mapped' => false, // Nu se leagă de entitate
-            ])
         ;
     }
 

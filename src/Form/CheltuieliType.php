@@ -65,16 +65,6 @@ class CheltuieliType extends AbstractType
             ->add('descriere', TextType::class, [
                 'label' => 'Descriere',
                 'required' => false,
-            ])
-            ->add('moneda', ChoiceType::class, [
-                'choices' => [
-                    'RON' => 'RON',
-                    'EUR' => 'EUR',
-                ],
-                'label' => 'Moneda',
-                'required' => true,
-                'data' => 'RON', // Implicit RON
-                'mapped' => false, // Nu se leagă de entitate, doar pentru formular
             ]);
     }
 

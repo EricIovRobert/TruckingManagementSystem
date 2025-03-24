@@ -43,10 +43,6 @@
                     {{ form_label(form.descriere, null, {'label_attr': {'class': 'form-label'}}) }}
                     {{ form_widget(form.descriere, {'attr': {'class': 'form-control'}}) }}
                 </div>
-                <div class="col-md-6">
-                    {{ form_label(form.moneda, null, {'label_attr': {'class': 'form-label'}}) }}
-                    {{ form_widget(form.moneda, {'attr': {'class': 'form-control'}}) }}
-                </div>
             </div>
             <div class="button-group mt-4 d-flex justify-content-between">
                 <a href="{{ path('app_comenzi_comunitare_show', {'id': comanda.id}) }}" class="btn btn-secondary">Înapoi la detalii</a>
@@ -78,8 +74,6 @@
             const sumaField = document.querySelector('[name="cheltuieli[suma]"]');
             const litriMotorinaField = document.querySelector('[name="cheltuieli[litri_motorina]"]');
             const pretUnitateField = document.querySelector('[name="cheltuieli[pret_unitate]"]');
-            const monedaField = document.querySelector('[name="cheltuieli[moneda]"]');
-            let cursEurRon = 0;
 
             if (litriMotorinaField) {
                 litriMotorinaField.closest('.form-group, .form-row, div').style.display = 'none';
@@ -91,23 +85,6 @@
             const numarKm = {{ comanda.nrKm is not null ? comanda.nrKm : 'null' }};
             let subcategorieSelect = null;
 
-            fetch('/api/curs-valutar', {
-                method: 'GET',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                cursEurRon = data.conversion_rates.RON;
-                recalcSuma();
-            })
-            .catch(error => {
-                console.error('Eroare la preluarea cursului valutar:', error);
-                cursEurRon = 5;
-                recalcSuma();
-            });
-
             function filterCategorii() {
                 for (let i = 0; i < categorieField.options.length; i++) {
                     if (categorieField.options[i].text === 'Fixe') {
@@ -115,18 +92,6 @@
                         break;
                     }
                 }
-            }
-
-            function toggleMonedaField() {
-                const categorieNume = categorieField.options[categorieField.selectedIndex].text;
-                const monedaContainer = monedaField.closest('.form-group, .form-row, div');
-                if (categorieNume === 'Consumabile') {
-                    monedaContainer.style.display = 'none';
-                    monedaField.value = 'RON';
-                } else {
-                    monedaContainer.style.display = '';
-                }
-                recalcSuma();
             }
 
             function recalcSuma() {
@@ -137,10 +102,6 @@
                     suma = pretUnitate * litri;
                 } else {
                     suma = pretUnitate;
-                }
-                const categorieNume = categorieField.options[categorieField.selectedIndex].text;
-                if (monedaField.value === 'EUR' && categorieNume !== 'Consumabile') {
-                    suma = suma * cursEurRon;
                 }
                 sumaField.value = suma.toFixed(2);
             }
@@ -241,11 +202,9 @@
                 subcategorieField.parentNode.insertBefore(subcategorieSelect, subcategorieField);
 
                 filterCategorii();
-                toggleMonedaField();
 
                 categorieField.addEventListener('change', function() {
                     updateSubcategories();
-                    toggleMonedaField();
                 });
                 subcategorieSelect.addEventListener('change', onSubcategorieChange);
 
@@ -253,7 +212,6 @@
                     litriMotorinaField.addEventListener('input', recalcSuma);
                 }
                 pretUnitateField.addEventListener('input', recalcSuma);
-                monedaField.addEventListener('change', recalcSuma);
 
                 updateSubcategories();
             }
