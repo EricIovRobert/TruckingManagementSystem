@@ -3,6 +3,8 @@
 namespace App\Controller;
 
 use App\Entity\Cheltuieli;
+use App\Entity\Comenzi;
+use App\Entity\ComenziComunitare;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -31,7 +33,7 @@ class StatisticiCheltuieliController extends AbstractController
             $luna = str_pad($luna, 2, '0', STR_PAD_LEFT); // Format "01", "02", etc.
         }
 
-        // Construim QueryBuilder pentru suma totală a tuturor cheltuielilor
+        // --- Cheltuieli ---
         $qbTotal = $em->getRepository(Cheltuieli::class)->createQueryBuilder('ch')
             ->select('SUM(
                 CASE
@@ -41,72 +43,118 @@ class StatisticiCheltuieliController extends AbstractController
                     ELSE
                         ch.suma
                 END
-            ) as total');
+            ) as total')
+            ->leftJoin('ch.comanda', 'cmd')
+            ->leftJoin('ch.comunitar', 'com')
+            ->andWhere('
+                (cmd.id IS NOT NULL AND cmd.calculata = :calculata_true) OR 
+                (com.id IS NOT NULL AND com.calculata = :calculata_true) OR 
+                (cmd.id IS NULL AND com.id IS NULL)
+            ')
+            ->setParameter('calculata_true', true);
 
-        // Query separat pentru a obține cheltuielile (nu doar suma)
-        $qbCheltuieli = $em->getRepository(Cheltuieli::class)->createQueryBuilder('ch')
-            ->select('ch');
+        // --- Comenzi ---
+        $qbComenzi = $em->getRepository(Comenzi::class)->createQueryBuilder('c')
+            ->select('c')
+            ->where('c.calculata = :calculata')
+            ->setParameter('calculata', true);
 
-        // Filtru an (aplicat ambelor query-uri)
+        // --- Comunitare ---
+        $qbComunitare = $em->getRepository(ComenziComunitare::class)->createQueryBuilder('cc')
+            ->select('cc')
+            ->where('cc.calculata = :calculata')
+            ->setParameter('calculata', true);
+
+        // Filtru an (dacă există)
         if ($anValid) {
             $startDate = new \DateTime("$an-01-01 00:00:00");
             $endDate = new \DateTime("$an-12-31 23:59:59");
+
             $qbTotal->andWhere('ch.data_cheltuiala >= :startDate')
                     ->andWhere('ch.data_cheltuiala <= :endDate')
                     ->setParameter('startDate', $startDate)
                     ->setParameter('endDate', $endDate);
-            $qbCheltuieli->andWhere('ch.data_cheltuiala >= :startDate')
-                         ->andWhere('ch.data_cheltuiala <= :endDate')
-                         ->setParameter('startDate', $startDate)
-                         ->setParameter('endDate', $endDate);
+
+            $qbComenzi->andWhere('c.dataStop >= :start')
+                      ->andWhere('c.dataStop <= :end')
+                      ->setParameter('start', $startDate)
+                      ->setParameter('end', $endDate);
+
+            $qbComunitare->andWhere('cc.data_stop >= :start')
+                         ->andWhere('cc.data_stop <= :end')
+                         ->setParameter('start', $startDate)
+                         ->setParameter('end', $endDate);
         }
 
-        // Filtru lună (aplicat ambelor query-uri)
+        // Filtru lună (dacă există)
         if ($lunaValid) {
             if ($anValid) {
+                // An și lună selectate
                 $startDate = new \DateTime("$an-$luna-01 00:00:00");
                 $endDate = (clone $startDate)->modify('last day of this month')->setTime(23, 59, 59);
+
                 $qbTotal->andWhere('ch.data_cheltuiala >= :s2')
                         ->andWhere('ch.data_cheltuiala <= :e2')
                         ->setParameter('s2', $startDate)
                         ->setParameter('e2', $endDate);
-                $qbCheltuieli->andWhere('ch.data_cheltuiala >= :s2')
-                             ->andWhere('ch.data_cheltuiala <= :e2')
+
+                $qbComenzi->andWhere('c.dataStop >= :s2')
+                          ->andWhere('c.dataStop <= :e2')
+                          ->setParameter('s2', $startDate)
+                          ->setParameter('e2', $endDate);
+
+                $qbComunitare->andWhere('cc.data_stop >= :s2')
+                             ->andWhere('cc.data_stop <= :e2')
                              ->setParameter('s2', $startDate)
                              ->setParameter('e2', $endDate);
             } else {
+                // Doar lună selectată (toți anii)
                 $minMax = $em->createQueryBuilder()
                     ->select('MIN(ch.data_cheltuiala) as minDate, MAX(ch.data_cheltuiala) as maxDate')
                     ->from(Cheltuieli::class, 'ch')
                     ->getQuery()
                     ->getSingleResult();
-                $minDate = $minMax['minDate'] ? new \DateTime($minMax['minDate']) : new \DateTime();
-                $maxDate = $minMax['maxDate'] ? new \DateTime($minMax['maxDate']) : new \DateTime();
-                $minYear = (int) $minDate->format('Y');
-                $maxYear = (int) $maxDate->format('Y');
+                $minYear = $minMax['minDate'] ? (int) (new \DateTime($minMax['minDate']))->format('Y') : (int) date('Y');
+                $maxYear = $minMax['maxDate'] ? (int) (new \DateTime($minMax['maxDate']))->format('Y') : (int) date('Y');
+
                 $orXTotal = $qbTotal->expr()->orX();
-                $orXCheltuieli = $qbCheltuieli->expr()->orX();
+                $orXComenzi = $qbComenzi->expr()->orX();
+                $orXComunitare = $qbComunitare->expr()->orX();
+
                 for ($year = $minYear; $year <= $maxYear; $year++) {
                     $start = new \DateTime("$year-$luna-01 00:00:00");
                     $end = (clone $start)->modify('last day of this month')->setTime(23, 59, 59);
+
                     $orXTotal->add($qbTotal->expr()->andX(
                         $qbTotal->expr()->gte('ch.data_cheltuiala', ":start_$year"),
                         $qbTotal->expr()->lte('ch.data_cheltuiala', ":end_$year")
                     ));
-                    $orXCheltuieli->add($qbCheltuieli->expr()->andX(
-                        $qbCheltuieli->expr()->gte('ch.data_cheltuiala', ":start_$year"),
-                        $qbCheltuieli->expr()->lte('ch.data_cheltuiala', ":end_$year")
-                    ));
                     $qbTotal->setParameter("start_$year", $start)
                             ->setParameter("end_$year", $end);
-                    $qbCheltuieli->setParameter("start_$year", $start)
+
+                    $orXComenzi->add($qbComenzi->expr()->andX(
+                        $qbComenzi->expr()->gte('c.dataStop', ":start_$year"),
+                        $qbComenzi->expr()->lte('c.dataStop', ":end_$year")
+                    ));
+                    $qbComenzi->setParameter("start_$year", $start)
+                              ->setParameter("end_$year", $end);
+
+                    $orXComunitare->add($qbComunitare->expr()->andX(
+                        $qbComunitare->expr()->gte('cc.data_stop', ":start_$year"),
+                        $qbComunitare->expr()->lte('cc.data_stop', ":end_$year")
+                    ));
+                    $qbComunitare->setParameter("start_$year", $start)
                                  ->setParameter("end_$year", $end);
                 }
+
                 if ($orXTotal->count() > 0) {
                     $qbTotal->andWhere($orXTotal);
                 }
-                if ($orXCheltuieli->count() > 0) {
-                    $qbCheltuieli->andWhere($orXCheltuieli);
+                if ($orXComenzi->count() > 0) {
+                    $qbComenzi->andWhere($orXComenzi);
+                }
+                if ($orXComunitare->count() > 0) {
+                    $qbComunitare->andWhere($orXComunitare);
                 }
             }
         }
@@ -115,38 +163,25 @@ class StatisticiCheltuieliController extends AbstractController
         $total = $qbTotal->getQuery()->getSingleScalarResult();
         $total = $total ? round($total, 2) : 0;
 
-        // Obținem cheltuielile filtrate
-        $cheltuieli = $qbCheltuieli->getQuery()->getResult();
+        // Calculăm sumele pentru comenzi și comunitare
+        $totalComenzi = 0.0;
+        $totalComunitare = 0.0;
 
-        // Calculăm sumele pentru comenzi și comunitare, evitând duplicarea
-        $totalComenzi = 0.0; // Suma prețurilor tururilor și retururilor
-        $totalComunitare = 0.0; // Suma prețurilor comunitare
-        $processedComenzi = []; // Array pentru a ține evidența comenzilor procesate
-        $processedComunitare = []; // Array pentru a ține evidența comunitarelor procesate
-
-        foreach ($cheltuieli as $cheltuiala) {
-            if ($cheltuiala->getComanda() !== null) {
-                $comanda = $cheltuiala->getComanda();
-                $comandaId = $comanda->getId();
-                // Verificăm dacă comanda nu a fost deja procesată și dacă calculata = true
-                if (!in_array($comandaId, $processedComenzi) && $comanda->isCalculata()) {
-                    foreach ($comanda->getTururis() as $tur) {
-                        $totalComenzi += $tur->getPret() ?? 0;
-                    }
-                    foreach ($comanda->getRetururis() as $retur) {
-                        $totalComenzi += $retur->getPret() ?? 0;
-                    }
-                    $processedComenzi[] = $comandaId; // Marcăm comanda ca procesată
-                }
-            } elseif ($cheltuiala->getComunitar() !== null) {
-                $comunitar = $cheltuiala->getComunitar();
-                $comunitarId = $comunitar->getId();
-                // Verificăm dacă comunitarul nu a fost deja procesat și dacă calculata = true
-                if (!in_array($comunitarId, $processedComunitare) && $comunitar->isCalculata()) {
-                    $totalComunitare += $comunitar->getPret() ?? 0;
-                    $processedComunitare[] = $comunitarId; // Marcăm comunitarul ca procesat
-                }
+        // Comenzi
+        $comenzi = $qbComenzi->getQuery()->getResult();
+        foreach ($comenzi as $comanda) {
+            foreach ($comanda->getTururis() as $tur) {
+                $totalComenzi += $tur->getPret() ?? 0;
             }
+            foreach ($comanda->getRetururis() as $retur) {
+                $totalComenzi += $retur->getPret() ?? 0;
+            }
+        }
+
+        // Comunitare
+        $comunitare = $qbComunitare->getQuery()->getResult();
+        foreach ($comunitare as $comunitar) {
+            $totalComunitare += $comunitar->getPret() ?? 0;
         }
 
         // Rotunjim sumele la 2 zecimale
