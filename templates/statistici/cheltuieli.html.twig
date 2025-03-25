@@ -12,6 +12,8 @@
         {% endif %}
         <h3>Total Incasat Comenzi (Tururi + Retururi): {{ totalComenzi|number_format(2, ',', '.') }} €</h3>
         <h3>Total Incasat Comunitare: {{ totalComunitare|number_format(2, ',', '.') }} €</h3>
+         <h3>Total Incasat: {{ (totalComunitare + totalComenzi)|number_format(2, ',', '.') }} €</h3>
+         <h3>Total Profit: {{ ((totalComunitare + totalComenzi) - total)|number_format(2, ',', '.') }} €</h3>
 
         {# Formular de filtrare #}
         <form method="get" class="mb-3">

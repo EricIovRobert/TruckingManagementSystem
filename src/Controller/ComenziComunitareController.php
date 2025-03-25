@@ -102,6 +102,7 @@ public function new(Request $request, EntityManagerInterface $entityManager, Par
     public function edit(Request $request, ComenziComunitare $comenziComunitare, EntityManagerInterface $entityManager, ParcAutoRepository $parcAutoRepository): Response
     {
         $oldNrKm = $comenziComunitare->getNrKm();
+        $oldDataStop = $comenziComunitare->getDataStop();
     
         $form = $this->createForm(ComenziComunitareType::class, $comenziComunitare);
         $form->get('nr_auto')->setData($comenziComunitare->getNrAuto() ? $comenziComunitare->getNrAuto()->getNrAuto() : '');
@@ -111,7 +112,8 @@ public function new(Request $request, EntityManagerInterface $entityManager, Par
             $entityManager->flush();
     
             $newNrKm = $comenziComunitare->getNrKm();
-            if ($oldNrKm !== $newNrKm) {
+            $newDataStop = $comenziComunitare->getDataStop();
+            if ($oldNrKm !== $newNrKm || $oldDataStop !== $newDataStop) {
                 // Ștergem cheltuielile existente care au un consumabil setat
                 foreach ($comenziComunitare->getCheltuielis() as $cheltuiala) {
                     if ($cheltuiala->getConsumabil() !== null) {

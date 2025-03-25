@@ -235,6 +235,7 @@ public function new(Request $request, EntityManagerInterface $entityManager, Par
 public function edit(Request $request, Comenzi $comanda, EntityManagerInterface $entityManager, ParcAutoRepository $parcAutoRepository): Response
 {
     $oldNumarKm = $comanda->getNumarKm();
+    $oldDataStop = $comanda->getDataStop();
 
     $form = $this->createForm(ComenziType::class, $comanda);
     $form->get('parcAutoNr')->setData($comanda->getParcAuto() ? $comanda->getParcAuto()->getNrAuto() : '');
@@ -244,7 +245,8 @@ public function edit(Request $request, Comenzi $comanda, EntityManagerInterface 
         $entityManager->flush();
 
         $newNumarKm = $comanda->getNumarKm();
-        if ($oldNumarKm !== $newNumarKm) {
+        $newDataStop = $comanda->getDataStop();
+        if ($oldNumarKm !== $newNumarKm || $oldDataStop !== $newDataStop) {
             // Ștergem cheltuielile existente care au un consumabil setat
             foreach ($comanda->getCheltuielis() as $cheltuiala) {
                 if ($cheltuiala->getConsumabil() !== null) {
