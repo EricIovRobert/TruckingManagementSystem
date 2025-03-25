@@ -3,33 +3,54 @@
 {% block title %}Statistici Cheltuieli{% endblock %}
 
 {% block body %}
-    <h1>Statistici Cheltuieli</h1>
+    <div class="container">
+        <h1>Statistici Cheltuieli</h1>
 
-    <!-- Formular de filtrare -->
-    <form method="get" class="mb-3">
-       <div class="input-group">
-    <input type="text" name="an" class="form-control" placeholder="An (ex. 2025)" value="{{ an ?? '' }}">
-    <select name="luna" class="form-select">
-        <option value="" {% if luna is null %}selected{% endif %}>Alege Luna</option>
-        {% for i in 1..12 %}
-            <option value="{{ i }}" {% if luna == i %}selected{% endif %}>{{ lunaNume[i] }}</option>
-        {% endfor %}
-    </select>
-    <button type="submit" class="btn btn-primary">Filtrează</button>
-    <a href="{{ path('app_statistici_cheltuieli') }}" class="btn btn-secondary">Resetează</a>
-</div>
-    </form>
+        {# Afișare sume calculate #}
+        {% if total is defined %}
+            <h3>Total Cheltuieli: {{ total|number_format(2, ',', '.') }} €</h3>
+        {% endif %}
+        <h3>Total Incasat Comenzi (Tururi + Retururi): {{ totalComenzi|number_format(2, ',', '.') }} €</h3>
+        <h3>Total Incasat Comunitare: {{ totalComunitare|number_format(2, ',', '.') }} €</h3>
 
-    <!-- Afișare perioadă selectată -->
-    {% if an or luna %}
-        <p>Perioada:
-            {% if an %}An: {{ an }}{% endif %}
-            {% if luna %}/ Luna: {{ lunaNume[luna] }}{% endif %}
-        </p>
-    {% else %}
-        <p>Perioada: Toate</p>
-    {% endif %}
+        {# Formular de filtrare #}
+        <form method="get" class="mb-3">
+            <div class="input-group">
+                <input type="text" name="an" class="form-control" placeholder="An (ex. 2025)" value="{{ an ?? '' }}">
+                <select name="luna" class="form-select">
+                    <option value="" {% if luna is null %}selected{% endif %}>Alege Luna</option>
+                    <option value="1"  {% if luna == '01' %}selected{% endif %}>Ianuarie</option>
+                    <option value="2"  {% if luna == '02' %}selected{% endif %}>Februarie</option>
+                    <option value="3"  {% if luna == '03' %}selected{% endif %}>Martie</option>
+                    <option value="4"  {% if luna == '04' %}selected{% endif %}>Aprilie</option>
+                    <option value="5"  {% if luna == '05' %}selected{% endif %}>Mai</option>
+                    <option value="6"  {% if luna == '06' %}selected{% endif %}>Iunie</option>
+                    <option value="7"  {% if luna == '07' %}selected{% endif %}>Iulie</option>
+                    <option value="8"  {% if luna == '08' %}selected{% endif %}>August</option>
+                    <option value="9"  {% if luna == '09' %}selected{% endif %}>Septembrie</option>
+                    <option value="10" {% if luna == '10' %}selected{% endif %}>Octombrie</option>
+                    <option value="11" {% if luna == '11' %}selected{% endif %}>Noembrie</option>
+                    <option value="12" {% if luna == '12' %}selected{% endif %}>Decembrie</option>
+                </select>
+                <button type="submit" class="btn btn-primary">Filtrează</button>
+                <a href="{{ path('app_statistici_cheltuieli') }}" class="btn btn-secondary">Resetează</a>
+            </div>
+        </form>
 
-    <!-- Afișare profit total -->
-    <h3>Profit Total: {{ profitTotal|number_format(2, ',', '.') }} €</h3>
+        {# Afișăm filtrele curente #}
+        {% if an or luna %}
+            <p>Filtre aplicate:
+                {% if an %}An: {{ an }}{% endif %}
+                {% if luna %}
+                    {% set lunaNume = {
+                        '01': 'Ianuarie', '02': 'Februarie', '03': 'Martie', '04': 'Aprilie', '05': 'Mai', '06': 'Iunie',
+                        '07': 'Iulie', '08': 'August', '09': 'Septembrie', '10': 'Octombrie', '11': 'Noiembrie', '12': 'Decembrie'
+                    } %}
+                    / Luna: {{ lunaNume[luna] ?? luna }}
+                {% endif %}
+            </p>
+        {% else %}
+            <p>Perioada: Toată</p>
+        {% endif %}
+    </div>
 {% endblock %}

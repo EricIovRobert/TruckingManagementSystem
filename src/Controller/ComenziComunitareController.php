@@ -332,4 +332,22 @@ public function newCheltuiala(Request $request, ComenziComunitare $comanda, Enti
 
         return $this->redirectToRoute('app_comenzi_comunitare_show', ['id' => $comandaId]);
     }
+
+    #[Route('/{id}/update-calculata', name: 'app_comenzi_comunitare_update_calculata', methods: ['POST'])]
+    public function updateCalculata(Request $request, ComenziComunitare $comanda, EntityManagerInterface $entityManager): JsonResponse
+    {
+        try {
+            if (!$comanda) {
+                throw $this->createNotFoundException('Comanda nu a fost găsită');
+            }
+
+            $calculata = filter_var($request->request->get('calculata', false), FILTER_VALIDATE_BOOLEAN);
+            $comanda->setCalculata($calculata);
+            $entityManager->flush();
+
+            return new JsonResponse(['success' => true]);
+        } catch (\Exception $e) {
+            return new JsonResponse(['success' => false, 'error' => $e->getMessage()], 500);
+        }
+    }
 }

@@ -56,9 +56,13 @@ class ComenziComunitare
     #[ORM\Column(length: 100)]
     private ?string $remorca = null;
 
+    #[ORM\Column]
+    private ?bool $calculata = false;
+
     public function __construct()
     {
         $this->cheltuielis = new ArrayCollection();
+        $this->calculata = false; 
     }
 
 
@@ -244,6 +248,18 @@ public function calculateAndSetProfit(): void
     public function setRemorca(string $remorca): static
     {
         $this->remorca = $remorca;
+
+        return $this;
+    }
+
+    public function isCalculata(): ?bool
+    {
+        return $this->calculata;
+    }
+
+    public function setCalculata(bool $calculata): static
+    {
+        $this->calculata = $calculata;
 
         return $this;
     }
