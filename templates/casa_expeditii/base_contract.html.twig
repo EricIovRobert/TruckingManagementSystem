@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8" />
+    <title>Contract Transport</title>
+    <style>
+        body {
+            font-family: "Arial", serif; /* Fallback to DejaVu Serif if Georgia fails */
+            font-size: 12pt;
+            line-height: 1.5;
+        }
+        h1 {
+            font-size: 14pt;
+            text-align: center;
+            font-weight: bold;
+        }
+        p {
+            margin: 5px 0;
+        }
+        .bold {
+            font-weight: bold;
+        }
+        .underline {
+            text-decoration: underline;
+        }
+        .center {
+            text-align: center;
+        }
+        .header {
+            font-size: 18pt;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .clauses {
+            margin-top: 20px; /* Increased spacing before the clauses */
+        }
+        .clause {
+            margin: 1px 0; /* Further reduced spacing between clauses for a more compact look */
+            text-align: left; /* Left-aligned as in the image */
+            margin-left: 3px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Company Header -->
+    <div class="header">
+        <p>SC SIGSTAR TRUCK SRL</p>
+    </div>
+    <div class="center">
+        <p>RO 21977262 *** J02/1198/2007</p>
+        <p>STRADA ȘTEFAN TENETCHI NR. 24, ARAD, JUD. ARAD, ROMÂNIA</p>
+    </div>
+
+    <br/>
+    <div class="center">
+        <h3 class="underline bold">CONTRACT TRANSPORT</h3>
+        <p class="bold">NR. {{ casaExpeditii.nrComandaTransportator }}</p>
+    </div>
+    <p class="bold">Către: {{ casaExpeditii.numeTransportator|upper }}</p>
+    <p class="bold">Adresa</p>
+    <p class="bold">Nr tel</p>
+
+    <br/>
+
+    <p>În urma înțelegerii telefonice, vă transmitem datele comenzii de transport:</p>
+    <p>- Tip auto: <span class="bold">-</span></p>
+    <p>- Nr. auto: <span class="bold">-</span></p>
+    <p>- Nume/prenume + Nr. telefon șofer: <span class="bold">-</span></p>
+    <p>Felul mărfii: <span class="bold">-</span></p>
+
+    <p>Adresa de încărcare: <span class="bold">-</span></p>
+    <p>Data încărcării: <span class="bold">-</span> ORA <span class="bold">-</span></p>
+    <p>Observații: <span class="bold">-</span></p>
+
+    <p>Adresa de descărcare: <span class="bold">-</span></p>
+    <p>DATA DESCĂRCARE: <span class="bold">-</span></p>
+    <br/>
+
+    <p class="bold">Tarif transport: {{ casaExpeditii.pretTransportator|number_format(2, ',', '.') }} EUR + TVA</p>
+
+    <p>Modalitate de plată: Plata se va face la <span class="bold">- zile</span> de la data prezentării facturii, însoțită de CMR confirmat + alte documente în original fără rezerve. În caz contrar se vor percepe penalitățile aferente.</p>
+
+    <br/>
+    <p class="bold center">FĂRĂ CONFIRMAREA COMENZII ȘI ASIGURAREA CMR VALABILĂ NU SE POATE EFECTUA TRANSPORTUL!!!</p>
+
+    <!-- First clause as a standalone paragraph -->
+    <p>
+        Transportul se va efectua conform convenției CMR, cu asigurare CMR, la valoarea de minim 100.000 EURO. Asigurarea CMR este obligativitatea TRANSPORTATORULUI. În caz de nerespectare a acestei clauze, TRANSPORTATORUL își asumă întreaga responsabilitate pentru plata eventualelor daune cauzate de deteriorarea mărfurilor pe durata transportului.
+    </p>
+
+    <!-- Clauses formatted as a list with dashes -->
+    <div class="clauses">
+        <p class="clause">
+            - Transportatorul este obligat să respecte termenul de încărcare și descărcare. Orice întârziere pe durata transportului se comunică imediat, în scris, la SC SIGSTAR TRUCK SRL. Nerespectarea neanunțată și nejustificată a termenului de încărcare și/sau întârzierile nejustificate pe durata transportului vor face obiectul eventualelor penalități la valoarea transportului solicitate de beneficiarul final al transportului și suportate de TRANSPORTATOR. Anularea sau nerespectarea comenzii de transport în ziua încărcării/descărcării se penalizează cu 500 EURO.
+        </p>
+        <p class="clause">
+            - Nu se permite încărcarea altor mărfuri în cazul în care camionul a fost angajat integral, fără acordul scris al SC SIGSTAR TRUCK SRL. De asemenea, nu se acceptă transbordarea mărfurilor fără acceptul scris al SC SIGSTAR TRUCK SRL.
+        </p>
+        <p class="clause">
+            - Orice neconcordanță se consemnează în CMR și ni se va comunica înainte de părăsirea locului de încărcare/descărcare. După încărcarea/descărcarea mărfii, transportatorul are obligația să transfere IMEDIAT actele pe email sau WhatsApp.
+        </p>
+        <p class="clause">
+            - Transportatorul va asigura integritatea mărfii pe toată durata transportului, altfel daunele constatate, precum și orice alte daune produse de camionul acestuia, se vor reține din costul transportului. Șoferul este obligat să supravegheze încărcarea/descărcarea mărfii, iar dacă nu este lăsat să asiste, are obligația de a informa SC SIGSTAR TRUCK SRL.
+        </p>
+        <p class="clause">
+            - Transportatorul este responsabil cu aranjarea și ancorarea mărfurilor în măsura posibilităților tehnice oferite de tipul respectiv de mijloc de transport auto (chingi, bari etc.) pentru a evita eventualele depășiri de greutate pe axe.
+        </p>
+        <p class="clause">
+            - Prețul de transport convenit cuprinde toate cheltuielile privind transportul. Transportatorul se obligă să nu angajeze transporturi directe cu Expeditorul și/sau Destinatarul mărfurilor. Nerespectarea acestei clauze atrage după sine penalizarea TRANSPORTATORULUI cu suma de 150.000 EURO.
+        </p>
+        <p class="clause">
+            - Șoferul trebuie să dețină autorizații de transport valabile. Orice pagubă și prejudiciu adus proprietarului de drept al mărfurilor încărcate, prin nerespectarea acestei clauze, va fi debitată integral TRANSPORTATORULUI.
+        </p>
+        <p class="clause">
+            - Pentru transportul mărfurilor congelate, transportatorul trebuie să dețină autorizație FRC și sanitară veterinară valabilă. În cazul introducerii de materiale prohibite sau clandestine în spațiul destinat mărfurilor, responsabilitatea este exclusiv a TRANSPORTATORULUI.
+        </p>
+        <p class="clause">
+            - Contractul poate fi semnat de părți și prin corespondență sau prin transmiterea de email, care vor fi semnate de ambele părți, aceste semnături fiind valabile prin existența contractului.
+        </p>
+        <p class="clause">
+            - Orice litigiu de orice natură ce se va ivi pe perioada acestui transport este de competența Instanțelor de judecată de pe raza Tribunalului Arad.
+        </p>
+        <p class="clause">
+            - În lipsa refuzării sau confirmării a acestei comenzi în timp de 30 minute de la transmiterea ei, comanda se consideră acceptată cu toate condițiile din prezenta anexă.
+        </p>
+    </div>
+
+    <br/>
+    <p class="bold">Obligatoriu mijlocul de transport auto trebuie să dețină asigurarea mărfii, fără aceasta neputându-se efectua transportul. Vă rugăm să ne trimiteți confirmarea comenzii + asigurarea CMR valabilă pe email.</p>
+
+    <div style="margin-top: 40px;">
+        <table style="width: 100%;">
+            <tr>
+                <td style="width: 50%; text-align: center;">EXPEDITOR</td>
+                <td style="width: 50%; text-align: center;">TRANSPORTATOR</td>
+            </tr>
+            <tr>
+                <td style="text-align: center;">SIGSTAR TRUCK SRL</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td style="text-align: center;">0746685783</td>
+                <td></td>
+            </tr>
+        </table>
+    </div>
+</body>
+</html>

@@ -17,6 +17,7 @@
                     <th>Preț Tran.</th>
                     <th>Nr. Comandă Tran.</th>
                     <th>Profit</th>
+                    <th>Document</th>
                     <th>Acțiuni</th>
                 </tr>
             </thead>
@@ -34,26 +35,59 @@
                             {% set profit = expeditie.pretClient - expeditie.pretTransportator %}
                             {{ profit|number_format(2, ',', '.') }}
                         </td>
+ <td>
+    {% if expeditie.contractPath %}
+        <div class="dropdown">
+            <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" id="dropdownDocument-{{ expeditie.id }}" data-bs-toggle="dropdown" aria-expanded="false">
+                Document
+            </button>
+            <ul class="dropdown-menu" aria-labelledby="dropdownDocument-{{ expeditie.id }}">
+                <li>
+                    <a class="dropdown-item" href="{{ path('app_casa_expeditii_view_document', {'id': expeditie.id}) }}" target="_blank">Vezi</a>
+                </li>
+                <li>
+                    <a class="dropdown-item" href="{{ path('app_casa_expeditii_download_pdf', {'id': expeditie.id}) }}">PDF</a>
+                </li>
+                <li>
+                    <form method="post" action="{{ path('app_casa_expeditii_delete_document', {'id': expeditie.id}) }}" onsubmit="return confirm('Ești sigur că vrei să ștergi documentul?');">
+                        <input type="hidden" name="_token" value="{{ csrf_token('delete_document' ~ expeditie.id) }}">
+                        <button type="submit" class="dropdown-item text-danger">Șterge</button>
+                    </form>
+                </li>
+            </ul>
+        </div>
+    {% else %}
+        <span class="badge bg-secondary">Nedisponibil</span>
+    {% endif %}
+</td>
+
+
                         <td>
-                            <div class="dropdown">
-                                <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" id="dropdownMenuButton-{{ expeditie.id }}" data-bs-toggle="dropdown" aria-expanded="false">
-                                    <i class="bi bi-three-dots-vertical"></i>
-                                </button>
-                                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton-{{ expeditie.id }}">
-                                    <li><a class="dropdown-item text-warning" href="{{ path('app_casa_expeditii_edit', {'id': expeditie.id}) }}">Editează</a></li>
-                                    <li>
-                                        <form method="post" action="{{ path('app_casa_expeditii_delete', {'id': expeditie.id}) }}" onsubmit="return confirm('Ești sigur că vrei să ștergi această intrare?');">
-                                            <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ expeditie.id) }}">
-                                            <button type="submit" class="dropdown-item text-danger">Șterge</button>
-                                        </form>
-                                    </li>
-                                </ul>
-                            </div>
-                        </td>
+    <div class="dropdown">
+        <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" id="dropdownMenuButton-{{ expeditie.id }}" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="bi bi-three-dots-vertical"></i>
+        </button>
+        <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton-{{ expeditie.id }}">
+            <li>
+                <a class="dropdown-item" href="{{ path('app_casa_expeditii_edit_document', {'id': expeditie.id}) }}">Adaugă/Editare Document</a>
+            </li>
+            <li>
+                <a class="dropdown-item text-warning" href="{{ path('app_casa_expeditii_edit', {'id': expeditie.id}) }}">Editează</a>
+            </li>
+            <li>
+                <form method="post" action="{{ path('app_casa_expeditii_delete', {'id': expeditie.id}) }}" onsubmit="return confirm('Ești sigur?');">
+                    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ expeditie.id) }}">
+                    <button type="submit" class="dropdown-item text-danger">Șterge</button>
+                </form>
+            </li>
+        </ul>
+    </div>
+</td>
+
                     </tr>
                 {% else %}
                     <tr>
-                        <td colspan="9">Nicio intrare găsită.</td>
+                        <td colspan="10">Nicio intrare găsită.</td>
                     </tr>
                 {% endfor %}
             </tbody>

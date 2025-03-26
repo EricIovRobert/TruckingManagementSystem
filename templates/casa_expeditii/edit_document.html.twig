@@ -1,0 +1,24 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Editare Document{% endblock %}
+
+{% block body %}
+    <div class="container mt-4">
+        <h1>Editare Document pentru {{ casaExpeditii.numeClient }}</h1>
+        <form method="post" action="{{ path('app_casa_expeditii_edit_document', {'id': casaExpeditii.id}) }}">
+            <textarea id="contract_editor" name="contractHtml" rows="10">{{ contractHtml|raw }}</textarea>
+            <button type="submit" class="btn btn-primary mt-3">Salvează Document</button>
+            <a href="{{ path('app_casa_expeditii_index') }}" class="btn btn-secondary mt-3">Înapoi</a>
+        </form>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="https://cdn.ckeditor.com/4.16.0/standard/ckeditor.js"></script>
+    <script>
+        CKEDITOR.replace('contract_editor', {
+            allowedContent: true // Permite păstrarea stilurilor din HTML
+        });
+    </script>
+{% endblock %}

@@ -9,18 +9,27 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Filesystem\Filesystem;
+use Dompdf\Dompdf;
+use Dompdf\Options;
+use PhpOffice\PhpWord\PhpWord;
+use PhpOffice\PhpWord\IOFactory;
 
 #[Route('/casa-expeditii')]
 class CasaExpeditiiController extends AbstractController
 {
+    private function getDocumentDirectory(): string
+    {
+        return $this->getParameter('kernel.project_dir') . '/public/documents/';
+    }
+
     #[Route('/', name: 'app_casa_expeditii_index', methods: ['GET'])]
     public function index(CasaExpeditiiRepository $casaExpeditiiRepository): Response
     {
-        $expeditii = $casaExpeditiiRepository->findAll();
-
         return $this->render('casa_expeditii/index.html.twig', [
-            'expeditii' => $expeditii,
+            'expeditii' => $casaExpeditiiRepository->findAll(),
         ]);
     }
 
@@ -35,7 +44,7 @@ class CasaExpeditiiController extends AbstractController
             $entityManager->persist($casaExpeditii);
             $entityManager->flush();
 
-            return $this->redirectToRoute('app_casa_expeditii_index', [], Response::HTTP_SEE_OTHER);
+            return $this->redirectToRoute('app_casa_expeditii_index');
         }
 
         return $this->render('casa_expeditii/new.html.twig', [
@@ -53,7 +62,7 @@ class CasaExpeditiiController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             $entityManager->flush();
 
-            return $this->redirectToRoute('app_casa_expeditii_index', [], Response::HTTP_SEE_OTHER);
+            return $this->redirectToRoute('app_casa_expeditii_index');
         }
 
         return $this->render('casa_expeditii/edit.html.twig', [
@@ -70,6 +79,101 @@ class CasaExpeditiiController extends AbstractController
             $entityManager->flush();
         }
 
-        return $this->redirectToRoute('app_casa_expeditii_index', [], Response::HTTP_SEE_OTHER);
+        return $this->redirectToRoute('app_casa_expeditii_index');
     }
+
+    #[Route('/{id}/document/edit', name: 'app_casa_expeditii_edit_document', methods: ['GET', 'POST'])]
+    public function editDocument(Request $request, CasaExpeditii $casaExpeditii, EntityManagerInterface $entityManager): Response
+    {
+        $filesystem = new Filesystem();
+        $documentPath = $casaExpeditii->getContractPath();
+
+        if ($documentPath && $filesystem->exists($this->getDocumentDirectory() . $documentPath)) {
+            $contractHtml = file_get_contents($this->getDocumentDirectory() . $documentPath);
+        } else {
+            $contractHtml = $this->renderView('casa_expeditii/base_contract.html.twig', [
+                'casaExpeditii' => $casaExpeditii
+            ]);
+        }
+
+        if ($request->isMethod('POST')) {
+            $contractHtml = $request->request->get('contractHtml');
+            $fileName = $casaExpeditii->getId() . '_' . uniqid() . '.html';
+            $filesystem->dumpFile($this->getDocumentDirectory() . $fileName, $contractHtml);
+            $casaExpeditii->setContractPath($fileName);
+            $entityManager->flush();
+
+            return $this->redirectToRoute('app_casa_expeditii_index');
+        }
+
+        return $this->render('casa_expeditii/edit_document.html.twig', [
+            'casaExpeditii' => $casaExpeditii,
+            'contractHtml' => $contractHtml,
+        ]);
+    }
+
+    #[Route('/{id}/document/view', name: 'app_casa_expeditii_view_document', methods: ['GET'])]
+    public function viewDocument(CasaExpeditii $casaExpeditii): Response
+    {
+        $filesystem = new Filesystem();
+        $documentPath = $casaExpeditii->getContractPath();
+
+        if ($documentPath && $filesystem->exists($this->getDocumentDirectory() . $documentPath)) {
+            $contractHtml = file_get_contents($this->getDocumentDirectory() . $documentPath);
+            return new Response($contractHtml, Response::HTTP_OK, ['Content-Type' => 'text/html']);
+        } else {
+            return new Response('<p>Documentul nu este disponibil.</p>', Response::HTTP_NOT_FOUND);
+        }
+    }
+
+    #[Route('/{id}/document/delete', name: 'app_casa_expeditii_delete_document', methods: ['POST'])]
+    public function deleteDocument(Request $request, CasaExpeditii $casaExpeditii, EntityManagerInterface $entityManager): Response
+    {
+        if ($this->isCsrfTokenValid('delete_document'.$casaExpeditii->getId(), $request->request->get('_token'))) {
+            $filesystem = new Filesystem();
+            $documentPath = $casaExpeditii->getContractPath();
+
+            if ($documentPath && $filesystem->exists($this->getDocumentDirectory() . $documentPath)) {
+                $filesystem->remove($this->getDocumentDirectory() . $documentPath);
+            }
+
+            $casaExpeditii->setContractPath(null);
+            $entityManager->flush();
+        }
+
+        return $this->redirectToRoute('app_casa_expeditii_index');
+    }
+
+    #[Route('/{id}/document/download/pdf', name: 'app_casa_expeditii_download_pdf', methods: ['GET'])]
+    public function downloadPdf(CasaExpeditii $casaExpeditii): Response
+    {
+        $filesystem = new Filesystem();
+        $documentPath = $casaExpeditii->getContractPath();
+        $contractHtml = $documentPath && $filesystem->exists($this->getDocumentDirectory() . $documentPath)
+            ? file_get_contents($this->getDocumentDirectory() . $documentPath)
+            : $this->renderView('casa_expeditii/base_contract.html.twig', [
+                'casaExpeditii' => $casaExpeditii
+            ]);
+    
+        // Configurează opțiunile Dompdf
+        $options = new Options();
+        $options->set('isRemoteEnabled', true);
+        $options->set('isHtml5ParserEnabled', true);
+        $options->set('defaultFont', 'Arial'); 
+    
+        $dompdf = new Dompdf($options);
+        $dompdf->loadHtml($contractHtml, 'UTF-8');
+        $dompdf->setPaper('A4', 'portrait');
+        $dompdf->render();
+    
+        return new Response(
+            $dompdf->output(),
+            Response::HTTP_OK,
+            [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'attachment; filename="document_' . $casaExpeditii->getId() . '.pdf"',
+            ]
+        );
+    }
+
 }
