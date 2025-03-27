@@ -29,7 +29,7 @@ class CasaExpeditiiController extends AbstractController
     public function index(CasaExpeditiiRepository $casaExpeditiiRepository): Response
     {
         return $this->render('casa_expeditii/index.html.twig', [
-            'expeditii' => $casaExpeditiiRepository->findAll(),
+            'expeditii' => $casaExpeditiiRepository->findBy([], ['id' => 'DESC']),
         ]);
     }
 
@@ -117,10 +117,30 @@ class CasaExpeditiiController extends AbstractController
     {
         $filesystem = new Filesystem();
         $documentPath = $casaExpeditii->getContractPath();
-
-        if ($documentPath && $filesystem->exists($this->getDocumentDirectory() . $documentPath)) {
-            $contractHtml = file_get_contents($this->getDocumentDirectory() . $documentPath);
-            return new Response($contractHtml, Response::HTTP_OK, ['Content-Type' => 'text/html']);
+        $fullPath = $this->getDocumentDirectory() . $documentPath;
+    
+        if ($documentPath && $filesystem->exists($fullPath)) {
+            $contractHtml = file_get_contents($fullPath);
+    
+            // Configurează Dompdf
+            $options = new Options();
+            $options->set('isHtml5ParserEnabled', true);
+            $options->set('isRemoteEnabled', true);
+            $options->set('defaultPaperSize', 'A4');
+    
+            $dompdf = new Dompdf($options);
+            $dompdf->loadHtml($contractHtml);
+            $dompdf->setPaper('A4', 'portrait');
+            $dompdf->render();
+    
+            return new Response(
+                $dompdf->output(),
+                Response::HTTP_OK,
+                [
+                    'Content-Type' => 'application/pdf',
+                    'Content-Disposition' => 'inline; filename="' . $casaExpeditii->getNrComandaTransportator() . '_' . $casaExpeditii->getNumeTransportator() . '.pdf"'
+                ]
+            );
         } else {
             return new Response('<p>Documentul nu este disponibil.</p>', Response::HTTP_NOT_FOUND);
         }
@@ -159,7 +179,7 @@ class CasaExpeditiiController extends AbstractController
         $options = new Options();
         $options->set('isRemoteEnabled', true);
         $options->set('isHtml5ParserEnabled', true);
-        $options->set('defaultFont', 'Arial'); 
+        $options->set('defaultFont', 'DejaVu Sans'); 
     
         $dompdf = new Dompdf($options);
         $dompdf->loadHtml($contractHtml, 'UTF-8');
@@ -171,8 +191,7 @@ class CasaExpeditiiController extends AbstractController
             Response::HTTP_OK,
             [
                 'Content-Type' => 'application/pdf',
-                'Content-Disposition' => 'attachment; filename="document_' . $casaExpeditii->getId() . '.pdf"',
-            ]
+                'Content-Disposition' => 'attachment; filename="' . $casaExpeditii->getNrComandaTransportator() . '_' . $casaExpeditii->getNumeTransportator() . '.pdf"',            ]
         );
     }
 
