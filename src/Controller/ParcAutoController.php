@@ -11,16 +11,28 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Knp\Component\Pager\PaginatorInterface;
 
 #[Route('/parc-auto')]
 class ParcAutoController extends AbstractController
 {
     #[Route('/', name: 'app_parc_auto_index', methods: ['GET'])]
-    public function index(ParcAutoRepository $parcAutoRepository): Response
-    {
-        $parcAutos = $parcAutoRepository->findAll();
+    public function index(
+        Request $request,
+        ParcAutoRepository $parcAutoRepository,
+        PaginatorInterface $paginator // Injectăm PaginatorInterface
+    ): Response {
+        $query = $parcAutoRepository->createQueryBuilder('pa')->getQuery();
+
+        // Paginare cu 10 elemente pe pagină
+        $pagination = $paginator->paginate(
+            $query,
+            $request->query->getInt('page', 1), // Numărul paginii curente, implicit 1
+            10 // Limita de 10 elemente pe pagină
+        );
+
         return $this->render('parc_auto/index.html.twig', [
-            'parc_autos' => $parcAutos,
+            'pagination' => $pagination, // Transmitem obiectul de paginare către șablon
         ]);
     }
 

@@ -16,6 +16,8 @@ use Dompdf\Dompdf;
 use Dompdf\Options;
 use PhpOffice\PhpWord\PhpWord;
 use PhpOffice\PhpWord\IOFactory;
+use Knp\Component\Pager\PaginatorInterface;
+
 
 #[Route('/casa-expeditii')]
 class CasaExpeditiiController extends AbstractController
@@ -26,10 +28,24 @@ class CasaExpeditiiController extends AbstractController
     }
 
     #[Route('/', name: 'app_casa_expeditii_index', methods: ['GET'])]
-    public function index(CasaExpeditiiRepository $casaExpeditiiRepository): Response
-    {
+    public function index(
+        Request $request,
+        CasaExpeditiiRepository $casaExpeditiiRepository,
+        PaginatorInterface $paginator // Injectăm PaginatorInterface
+    ): Response {
+        $query = $casaExpeditiiRepository->createQueryBuilder('ce')
+            ->orderBy('ce.id', 'DESC')
+            ->getQuery();
+
+        // Paginare cu 10 elemente pe pagină
+        $pagination = $paginator->paginate(
+            $query,
+            $request->query->getInt('page', 1), // Numărul paginii curente, implicit 1
+            10 // Limita de 10 elemente pe pagină
+        );
+
         return $this->render('casa_expeditii/index.html.twig', [
-            'expeditii' => $casaExpeditiiRepository->findBy([], ['id' => 'DESC']),
+            'expeditii' => $pagination, // Transmitem obiectul de paginare către șablon
         ]);
     }
 

@@ -83,7 +83,7 @@
     <table class="table table-striped">
         <thead>
             <tr>
-                <th>ID</th>
+              
                 <th>Comandă</th>
                 <th>Categorie</th>
                 <th>Subcategorie</th>
@@ -103,7 +103,7 @@
                     {% set sumaAjustata = (ch.suma - tvaValue + comisionTva)|round(2) %}
                 {% endif %}
                 <tr>
-                    <td>{{ ch.id }}</td>
+                    
                     <td>
                         {% if ch.comanda %}
                             <a href="{{ path('app_comenzi_show', {'id': ch.comanda.id}) }}">(vezi)</a>
