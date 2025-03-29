@@ -115,10 +115,15 @@
                     </td>
                     <td>{{ ch.categorie ? ch.categorie.nume : '-' }}</td>
                     <td>
-                        {% if ch.subcategorie %}
+                       {% if ch.subcategorie %}
+                        {% if ch.tva is not null and ch.tva > 0 %}
+                            {{ ch.subcategorie.nume }} cu TVA
+                        {% else %}
                             {{ ch.subcategorie.nume }}
+                        {% endif %}
                         {% elseif ch.consumabil %}
-                            {{ ch.consumabil.nume }}
+                        {{ ch.consumabil.nume }}
+
                         {% else %}
                             -
                         {% endif %}
@@ -129,13 +134,15 @@
                     <td>{{ ch.descriere ?: '-' }}</td>
                 <td>
     {% if ch.comanda is null and ch.comunitar is null %}
-        <a href="{{ path('app_cheltuieli_edit', {'id': ch.id}) }}" class="btn btn-warning btn-sm me-1">Editează</a>
+        <a href="{{ path('app_cheltuieli_edit', {'id': ch.id}) }}" class="btn btn-warning btn-sm me-1"> <i class="fa fa-edit"></i></a>
         <form method="post"
               action="{{ path('app_cheltuieli_delete', {'id': ch.id}) }}"
               onsubmit="return confirm('Ești sigur că vrei să ștergi această cheltuială?');"
               style="display:inline;">
             <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ ch.id) }}">
-            <button type="submit" class="btn btn-danger btn-sm">Șterge</button>
+            <button class="btn btn-danger btn-sm">
+                                    <i class="fa fa-trash"></i>
+                                </button>
         </form>
     {% endif %}
 </td>

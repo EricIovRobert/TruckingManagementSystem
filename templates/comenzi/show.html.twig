@@ -98,10 +98,14 @@
                             <input type="checkbox" class="facturat-checkbox" data-id="{{ tur.id }}" data-type="tururi" {% if tur.facturat %}checked{% endif %}>
                         </td>
                         <td class="text-end">
-                            <a href="{{ path('app_tururi_edit', {'id': tur.id}) }}" class="btn btn-warning btn-sm me-1">Editează</a>
+                            <a href="{{ path('app_tururi_edit', {'id': tur.id}) }}" class="btn btn-warning btn-sm me-1">
+                                <i class="fa fa-edit"></i>
+                            </a>
                             <form method="post" action="{{ path('app_tururi_delete', {'id': tur.id}) }}" style="display:inline;" onsubmit="return confirm('Ești sigur că vrei să ștergi acest tur?');">
                                 <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ tur.id) }}">
-                                <button class="btn btn-danger btn-sm">Șterge</button>
+                               <button class="btn btn-danger btn-sm">
+                                    <i class="fa fa-trash"></i>
+                                </button>
                             </form>
                         </td>
                     </tr>
@@ -142,10 +146,12 @@
                             <input type="checkbox" class="facturat-checkbox" data-id="{{ retur.id }}" data-type="retururi" {% if retur.facturat %}checked{% endif %}>
                         </td>
                         <td class="text-end">
-                            <a href="{{ path('app_retururi_edit', {'id': retur.id}) }}" class="btn btn-warning btn-sm me-1">Editează</a>
+                            <a href="{{ path('app_retururi_edit', {'id': retur.id}) }}" class="btn btn-warning btn-sm me-1"> <i class="fa fa-edit"></i></a>
                             <form method="post" action="{{ path('app_retururi_delete', {'id': retur.id}) }}" style="display:inline;" onsubmit="return confirm('Ești sigur că vrei să ștergi acest retur?');">
                                 <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ retur.id) }}">
-                                <button class="btn btn-danger btn-sm">Șterge</button>
+                                <button class="btn btn-danger btn-sm">
+                                    <i class="fa fa-trash"></i>
+                                </button>
                             </form>
                         </td>
                     </tr>
@@ -188,10 +194,12 @@
                         <td>{{ cheltuiala.dataCheltuiala ? cheltuiala.dataCheltuiala|date('d/m/Y') : 'N/A' }}</td>
                         <td>{{ cheltuiala.descriere ?: 'N/A' }}</td>
                         <td class="text-end">
-                            <a href="{{ path('app_comenzi_cheltuieli_edit', {'comandaId': comanda.id, 'cheltuialaId': cheltuiala.id}) }}" class="btn btn-warning btn-sm me-1">Editează</a>
+                            <a href="{{ path('app_comenzi_cheltuieli_edit', {'comandaId': comanda.id, 'cheltuialaId': cheltuiala.id}) }}" class="btn btn-warning btn-sm me-1"> <i class="fa fa-edit"></i></a>
                             <form method="post" action="{{ path('app_comenzi_cheltuieli_delete', {'comandaId': comanda.id, 'cheltuialaId': cheltuiala.id}) }}" style="display:inline;" onsubmit="return confirm('Ești sigur că vrei să ștergi această cheltuială?');">
                                 <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ cheltuiala.id) }}">
-                                <button class="btn btn-danger btn-sm">Șterge</button>
+                                <button class="btn btn-danger btn-sm">
+                                    <i class="fa fa-trash"></i>
+                                </button>
                             </form>
                         </td>
                     </tr>
@@ -257,10 +265,12 @@
                         <td>{{ cheltuialaNeta|number_format(2, ',', '.') }}</td>
                         <td>{{ cheltuiala.descriere ?: 'N/A' }}</td>
                         <td class="text-end">
-                            <a href="{{ path('app_comenzi_cheltuieli_edit', {'comandaId': comanda.id, 'cheltuialaId': cheltuiala.id}) }}" class="btn btn-warning btn-sm me-1">Editează</a>
+                            <a href="{{ path('app_comenzi_cheltuieli_edit', {'comandaId': comanda.id, 'cheltuialaId': cheltuiala.id}) }}" class="btn btn-warning btn-sm me-1"> <i class="fa fa-edit"></i></a>
                             <form method="post" action="{{ path('app_comenzi_cheltuieli_delete', {'comandaId': comanda.id, 'cheltuialaId': cheltuiala.id}) }}" style="display:inline;" onsubmit="return confirm('Ești sigur că vrei să ștergi această cheltuială?');">
                                 <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ cheltuiala.id) }}">
-                                <button class="btn btn-danger btn-sm">Șterge</button>
+                                <button class="btn btn-danger btn-sm">
+                                    <i class="fa fa-trash"></i>
+                                </button>
                             </form>
                         </td>
                     </tr>

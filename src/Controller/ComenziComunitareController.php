@@ -55,7 +55,7 @@ public function index(
     $pagination = $paginator->paginate(
         $comenzi,
         $request->query->getInt('page', 1),
-        10 // 10 comenzi pe pagină
+        15 // 10 comenzi pe pagină
     );
 
     return $this->render('comenzi_comunitare/index.html.twig', [

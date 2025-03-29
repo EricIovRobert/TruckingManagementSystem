@@ -93,10 +93,12 @@
                         <td>{{ cheltuiala.dataCheltuiala ? cheltuiala.dataCheltuiala|date('d/m/Y') : 'N/A' }}</td>
                         <td>{{ cheltuiala.descriere ?: 'N/A' }}</td>
                         <td class="text-end">
-                            <a href="{{ path('app_comenzi_comunitare_cheltuieli_edit', {'comandaId': comanda.id, 'cheltuialaId': cheltuiala.id}) }}" class="btn btn-warning btn-sm me-1">Editează</a>
+                            <a href="{{ path('app_comenzi_comunitare_cheltuieli_edit', {'comandaId': comanda.id, 'cheltuialaId': cheltuiala.id}) }}" class="btn btn-warning btn-sm me-1"> <i class="fa fa-edit"></i></a>
                             <form method="post" action="{{ path('app_comenzi_comunitare_cheltuieli_delete', {'comandaId': comanda.id, 'cheltuialaId': cheltuiala.id}) }}" style="display:inline;" onsubmit="return confirm('Ești sigur că vrei să ștergi această cheltuială?');">
                                 <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ cheltuiala.id) }}">
-                                <button class="btn btn-danger btn-sm">Șterge</button>
+                                <button class="btn btn-danger btn-sm">
+                                    <i class="fa fa-trash"></i>
+                                </button>
                             </form>
                         </td>
                     </tr>
@@ -162,10 +164,12 @@
                         <td>{{ cheltuialaNeta|number_format(2, ',', '.') }}</td>
                         <td>{{ cheltuiala.descriere ?: 'N/A' }}</td>
                         <td class="text-end">
-                            <a href="{{ path('app_comenzi_comunitare_cheltuieli_edit', {'comandaId': comanda.id, 'cheltuialaId': cheltuiala.id}) }}" class="btn btn-warning btn-sm me-1">Editează</a>
+                            <a href="{{ path('app_comenzi_comunitare_cheltuieli_edit', {'comandaId': comanda.id, 'cheltuialaId': cheltuiala.id}) }}" class="btn btn-warning btn-sm me-1"> <i class="fa fa-edit"></i></a>
                             <form method="post" action="{{ path('app_comenzi_comunitare_cheltuieli_delete', {'comandaId': comanda.id, 'cheltuialaId': cheltuiala.id}) }}" style="display:inline;" onsubmit="return confirm('Ești sigur că vrei să ștergi această cheltuială?');">
                                 <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ cheltuiala.id) }}">
-                                <button class="btn btn-danger btn-sm">Șterge</button>
+                                <button class="btn btn-danger btn-sm">
+                                    <i class="fa fa-trash"></i>
+                                </button>
                             </form>
                         </td>
                     </tr>

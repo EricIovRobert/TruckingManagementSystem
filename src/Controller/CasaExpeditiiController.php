@@ -41,7 +41,7 @@ class CasaExpeditiiController extends AbstractController
         $pagination = $paginator->paginate(
             $query,
             $request->query->getInt('page', 1), // Numărul paginii curente, implicit 1
-            10 // Limita de 10 elemente pe pagină
+            15 // Limita de 10 elemente pe pagină
         );
 
         return $this->render('casa_expeditii/index.html.twig', [

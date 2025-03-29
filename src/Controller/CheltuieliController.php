@@ -136,7 +136,7 @@ class CheltuieliController extends AbstractController
         $pagination = $paginator->paginate(
             $query,
             $request->query->getInt('page', 1),
-            10
+            15
         );
 
         $cheltuieli = $pagination->getItems();
@@ -293,7 +293,7 @@ public function newFixe(Request $request, EntityManagerInterface $em): Response
                 'subcategorie' => $subcat->getNume(),
                 'suma' => $subcat->getPretStandard() ?? 0,
                 'data' => $dataCheltuiala->format('Y-m-d'),
-                'descriere' => 'Cheltuială fixă pentru ' . 'luna ' . $lunaNume[$luna],
+                'descriere' => '-',
             ];
         }
 
@@ -342,7 +342,7 @@ public function addFixe(Request $request, EntityManagerInterface $em): Response
         $cheltuiala->setSubcategorie($subcat);
         $cheltuiala->setSuma($subcat->getPretStandard() ?? 0);
         $cheltuiala->setDataCheltuiala($dataCheltuiala);
-        $cheltuiala->setDescriere('Cheltuială fixă pentru ' . $subcat->getNume());
+        $cheltuiala->setDescriere('-');
         $cheltuiala->setComanda(null); // Fără comandă
         $em->persist($cheltuiala);
     }

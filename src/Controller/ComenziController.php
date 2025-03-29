@@ -130,7 +130,7 @@ class ComenziController extends AbstractController
         $pagination = $paginator->paginate(
             $comenzi,
             $request->query->getInt('page', 1),
-            10
+            15
         );
     
         return $this->render('comenzi/index.html.twig', [
