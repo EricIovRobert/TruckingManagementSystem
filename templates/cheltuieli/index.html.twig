@@ -122,7 +122,13 @@
                             {{ ch.subcategorie.nume }}
                         {% endif %}
                         {% elseif ch.consumabil %}
-                        {{ ch.consumabil.nume }}
+                            {% if ch.tva is not null and ch.tva > 0 %}
+                            {{ ch.consumabil.nume }} cu TVA
+                            {% else %}
+                            {{ ch.consumabil.nume }}
+                        {% endif %}
+
+                        
 
                         {% else %}
                             -

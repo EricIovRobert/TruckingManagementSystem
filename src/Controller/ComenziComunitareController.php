@@ -237,7 +237,7 @@ public function newCheltuiala(Request $request, ComenziComunitare $comanda, Enti
                     $consumabil = $entityManager->getRepository(Consumabile::class)->find($subcategorieId);
                     if ($consumabil) {
                         $cheltuiala->setConsumabil($consumabil);
-                        $numarKm = $comanda->getNrKm();
+                       /* $numarKm = $comanda->getNrKm();
                         $pretMaxim = $consumabil->getPretMaxim();
                         $kmUtilizareMax = $consumabil->getKmUtilizareMax();
 
@@ -246,7 +246,7 @@ public function newCheltuiala(Request $request, ComenziComunitare $comanda, Enti
                             $cheltuiala->setSuma($sumaProportionala);
                         } else {
                             $cheltuiala->setSuma($pretMaxim);
-                        }
+                        }*/
                     }
                 }
             } else {

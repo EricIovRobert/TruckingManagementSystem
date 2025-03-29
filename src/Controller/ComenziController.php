@@ -472,7 +472,7 @@ public function edit(Request $request, Comenzi $comanda, EntityManagerInterface 
                     $consumabil = $entityManager->getRepository(Consumabile::class)->find($subcategorieId);
                     if ($consumabil) {
                         $cheltuiala->setConsumabil($consumabil);
-                        $numarKm = $comanda->getNumarKm();
+                        /*$numarKm = $comanda->getNumarKm();
                         $pretMaxim = $consumabil->getPretMaxim();
                         $kmUtilizareMax = $consumabil->getKmUtilizareMax();
 
@@ -481,7 +481,7 @@ public function edit(Request $request, Comenzi $comanda, EntityManagerInterface 
                             $cheltuiala->setSuma($sumaProportionala);
                         } else {
                             $cheltuiala->setSuma($pretMaxim);
-                        }
+                        }*/
                     }
                 }
             } else {
