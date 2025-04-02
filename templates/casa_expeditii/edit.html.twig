@@ -20,10 +20,6 @@
                     {{ form_widget(form.pretClient, {'attr': {'class': 'form-control'}}) }}
                 </div>
                 <div class="col-md-6">
-                    {{ form_label(form.nrFacturaClient, null, {'label_attr': {'class': 'form-label'}}) }}
-                    {{ form_widget(form.nrFacturaClient, {'attr': {'class': 'form-control'}}) }}
-                </div>
-                <div class="col-md-6">
                     {{ form_label(form.numeTransportator, null, {'label_attr': {'class': 'form-label'}}) }}
                     {{ form_widget(form.numeTransportator, {'attr': {'class': 'form-control'}}) }}
                 </div>
@@ -34,6 +30,14 @@
                 <div class="col-md-6">
                     {{ form_label(form.nrComandaTransportator, null, {'label_attr': {'class': 'form-label'}}) }}
                     {{ form_widget(form.nrComandaTransportator, {'attr': {'class': 'form-control'}}) }}
+                </div>
+                <div class="col-md-6">
+                    {{ form_label(form.scadenta, null, {'label_attr': {'class': 'form-label'}}) }}
+                    {{ form_widget(form.scadenta, {'attr': {'class': 'form-control datepicker'}}) }}
+                </div>
+                <div class="col-md-6">
+                    {{ form_label(form.data_platii, null, {'label_attr': {'class': 'form-label'}}) }}
+                    {{ form_widget(form.data_platii, {'attr': {'class': 'form-control datepicker'}}) }}
                 </div>
             </div>
             <div class="button-group mt-4 d-flex justify-content-between">

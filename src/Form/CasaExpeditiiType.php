@@ -4,6 +4,7 @@ namespace App\Form;
 
 use App\Entity\CasaExpeditii;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\DateType;
 use Symfony\Component\Form\Extension\Core\Type\NumberType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
@@ -29,11 +30,6 @@ class CasaExpeditiiType extends AbstractType
                 'required' => true,
                 'attr' => ['class' => 'form-control', 'step' => '0.01'],
             ])
-            ->add('nrFacturaClient', TextType::class, [
-                'label' => 'Nr. Factură Client',
-                'required' => false, // Poate fi null
-                'attr' => ['class' => 'form-control'],
-            ])
             ->add('numeTransportator', TextType::class, [
                 'label' => 'Nume Transportator',
                 'required' => true,
@@ -48,6 +44,22 @@ class CasaExpeditiiType extends AbstractType
                 'label' => 'Nr. Comandă Transportator',
                 'required' => true,
                 'attr' => ['class' => 'form-control'],
+            ])
+            ->add('scadenta', DateType::class, [
+                'label' => 'Scadența',
+                'required' => false,
+                'widget' => 'single_text',
+                'attr' => ['class' => 'form-control datepicker'],
+                'format' => 'dd/MM/yyyy',
+                'html5' => false,
+            ])
+            ->add('data_platii', DateType::class, [
+                'label' => 'Data Plății',
+                'required' => false,
+                'widget' => 'single_text',
+                'attr' => ['class' => 'form-control datepicker'],
+                'format' => 'dd/MM/yyyy',
+                'html5' => false,
             ]);
     }
 

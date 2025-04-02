@@ -12,10 +12,11 @@
                     <th>Nume Client</th>
                     <th>Nr. Comandă Client</th>
                     <th>Preț Client</th>
-                    <th>Nr. Factură Client</th>
                     <th>Nume Tran.</th>
                     <th>Preț Tran.</th>
                     <th>Nr. Comandă Tran.</th>
+                    <th>Scadența</th>
+                    <th>Data Plății</th>
                     <th>Profit</th>
                     <th>Document</th>
                     <th>Acțiuni</th>
@@ -27,14 +28,16 @@
                         <td>{{ expeditie.numeClient }}</td>
                         <td>{{ expeditie.nrComandaClient }}</td>
                         <td>{{ expeditie.pretClient|number_format(2, ',', '.') }}</td>
-                        <td>{{ expeditie.nrFacturaClient|default('-') }}</td>
                         <td>{{ expeditie.numeTransportator }}</td>
                         <td>{{ expeditie.pretTransportator|number_format(2, ',', '.') }}</td>
                         <td>{{ expeditie.nrComandaTransportator }}</td>
+                        <td>{{ expeditie.scadenta ? expeditie.scadenta|date('d.m.Y') : '-' }}</td>
+                        <td>{{ expeditie.dataPlatii ? expeditie.dataPlatii|date('d.m.Y') : '-' }}</td>
                         <td>
                             {% set profit = expeditie.pretClient - expeditie.pretTransportator %}
                             {{ profit|number_format(2, ',', '.') }}
                         </td>
+
                         <td>
                             {% if expeditie.contractPath %}
                                 <div class="dropdown">
@@ -84,16 +87,14 @@
                     </tr>
                 {% else %}
                     <tr>
-                        <td colspan="10">Nicio intrare găsită.</td>
+                        <td colspan="11">Nicio intrare găsită.</td>
                     </tr>
                 {% endfor %}
             </tbody>
         </table>
 
-        {# Afișăm navigarea pentru paginare #}
-        <div class="navigation mt-3 d-flex justify-content-center" >
+        <div class="navigation mt-3 d-flex justify-content-center">
             {{ knp_pagination_render(expeditii) }}
         </div>
-        
     </div>
 {% endblock %}

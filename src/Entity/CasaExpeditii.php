@@ -3,6 +3,7 @@
 namespace App\Entity;
 
 use App\Repository\CasaExpeditiiRepository;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: CasaExpeditiiRepository::class)]
@@ -36,6 +37,12 @@ class CasaExpeditii
 
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $contractPath = null;
+
+    #[ORM\Column(type: Types::DATE_MUTABLE, nullable: true)]
+    private ?\DateTimeInterface $scadenta = null;
+
+    #[ORM\Column(type: Types::DATE_MUTABLE, nullable: true)]
+    private ?\DateTimeInterface $data_platii = null;
 
     public function getId(): ?int
     {
@@ -134,6 +141,30 @@ class CasaExpeditii
     public function setContractPath(?string $contractPath): static
     {
         $this->contractPath = $contractPath;
+
+        return $this;
+    }
+
+    public function getScadenta(): ?\DateTimeInterface
+    {
+        return $this->scadenta;
+    }
+
+    public function setScadenta(?\DateTimeInterface $scadenta): static
+    {
+        $this->scadenta = $scadenta;
+
+        return $this;
+    }
+
+    public function getDataPlatii(): ?\DateTimeInterface
+    {
+        return $this->data_platii;
+    }
+
+    public function setDataPlatii(?\DateTimeInterface $data_platii): static
+    {
+        $this->data_platii = $data_platii;
 
         return $this;
     }
