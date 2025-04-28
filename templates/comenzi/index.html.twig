@@ -7,6 +7,12 @@
         .bg-light-green {
             background-color: rgba(0, 255, 0, 0.1);
         }
+        .bold-row {
+            font-weight: bold;
+        }
+        .calculata-checkbox {
+            transform: scale(1.3);
+        }
     </style>
 {% endblock %}
 {% block body %}
@@ -67,6 +73,7 @@
             <tr>
                 <th>Calculată</th>
                 <th>Mașină</th>
+                <th>Remorcă</th>
                 <th>Șofer</th>
                 <th>Data Start</th>
                 <th>Data Stop</th>
@@ -82,7 +89,7 @@
         </thead>
         <tbody>
             {% for comanda in pagination %}
-                <tr class="{% if comanda.calculata %}bg-light-green{% endif %}">
+                <tr class="{% if comanda.rezolvat %}bg-light-green{% endif %} {% if comanda.calculata %}bold-row{% endif %}">
                     <td>
                         <input type="checkbox" class="calculata-checkbox" data-id="{{ comanda.id }}" {% if comanda.calculata %}checked{% endif %}>
                     </td>
@@ -91,19 +98,24 @@
                             {{ comanda.parcAutoNrSnapshot ?: comanda.nrAccidentAuto ?: '-' }}
                         </a>
                     </td>
+                    <td>{{ comanda.getNrRemorca() ?: '-'}}</td>
                     <td>{{ comanda.sofer ?: '-' }}</td>
                     <td>{{ comanda.dataStart ? comanda.dataStart|date('d/m/Y') : '-' }}</td>
                     <td>{{ comanda.dataStop ? comanda.dataStop|date('d/m/Y') : '-' }}</td>
                     <td>
+                        {% set ultimaRutaIncarcare = null %}
                         {% set ultimaRutaDescarcare = null %}
+
                         {% if comanda.retururis|length > 0 %}
                             {% set ultimulRetur = comanda.retururis|last %}
+                            {% set ultimaRutaIncarcare = ultimulRetur.rutaIncarcare %}
                             {% set ultimaRutaDescarcare = ultimulRetur.rutaDescarcare %}
                         {% elseif comanda.tururis|length > 0 %}
                             {% set ultimulTur = comanda.tururis|last %}
+                            {% set ultimaRutaIncarcare = ultimulTur.rutaIncarcare %}
                             {% set ultimaRutaDescarcare = ultimulTur.rutaDescarcare %}
                         {% endif %}
-                        {{ ultimaRutaDescarcare ?: '-' }}
+                        {{ ultimaRutaIncarcare ?: '-' }} / {{ ultimaRutaDescarcare ?: '-' }}
                     </td>
                     <td>
                         {% set ultimulLiber = null %}
@@ -200,6 +212,12 @@
                     .then(data => {
                         if (data.success) {
                             console.log('Stare Rezolvat actualizată');
+                            var row = checkbox.closest('tr');
+                            if (rezolvat) {
+                                row.classList.add('bg-light-green');
+                            } else {
+                                row.classList.remove('bg-light-green');
+                            }
                         } else {
                             alert('Eroare: ' + (data.error || 'Răspuns neașteptat'));
                         }
@@ -280,9 +298,9 @@
                             console.log('Stare Calculată actualizată');
                             var row = checkbox.closest('tr');
                             if (calculata) {
-                                row.classList.add('bg-light-green');
+                                row.classList.add('bold-row');
                             } else {
-                                row.classList.remove('bg-light-green');
+                                row.classList.remove('bold-row');
                             }
                         } else {
                             alert('Eroare: ' + (data.error || 'Răspuns neașteptat'));
