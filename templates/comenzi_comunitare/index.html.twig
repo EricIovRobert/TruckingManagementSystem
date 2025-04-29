@@ -47,6 +47,7 @@
                 <th>Data Stop</th>
                 <th>Număr Zile</th>
                 <th>Număr Km</th>
+                <th>Consum (l/100km)</th>
                 <th>Profit</th>
                 <th>Tone</th>
                 <th>Preț</th>
@@ -76,6 +77,22 @@
                         {% endif %}
                     </td>
                     <td>{{ comenzi_comunitare.nrKm is not null ? comenzi_comunitare.nrKm : '-' }}</td>
+                    <td>
+                        {% set totalLitriMotorina = 0 %}
+                        {% for cheltuiala in comenzi_comunitare.cheltuielis %}
+                            {% set categorieNume = cheltuiala.categorie ? cheltuiala.categorie.nume|lower : '' %}
+                            {% set subcategorieNume = cheltuiala.subcategorie ? cheltuiala.subcategorie.nume|lower : '' %}
+                            {% if 'motorina' in categorieNume or 'motorina' in subcategorieNume %}
+                                {% set totalLitriMotorina = totalLitriMotorina + (cheltuiala.litriMotorina ?: 0) %}
+                            {% endif %}
+                        {% endfor %}
+                        {% if comenzi_comunitare.nrKm is not null and comenzi_comunitare.nrKm > 0 and totalLitriMotorina > 0 %}
+                            {% set consumPer100Km = (totalLitriMotorina / comenzi_comunitare.nrKm * 100)|round(1) %}
+                            {{ consumPer100Km|number_format(1, ',', '.') }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
                     <td>{{ comenzi_comunitare.profit is not null ? comenzi_comunitare.profit|round : '-' }}</td>
                     <td>{{ comenzi_comunitare.kg }}</td>
                     <td>{{ comenzi_comunitare.pret }}</td>
@@ -99,7 +116,7 @@
                 </tr>
             {% else %}
                 <tr>
-                    <td colspan="12">Nu există înregistrări.</td>
+                    <td colspan="13">Nu există înregistrări.</td>
                 </tr>
             {% endfor %}
         </tbody>
