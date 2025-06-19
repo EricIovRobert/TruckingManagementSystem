@@ -41,7 +41,7 @@ class ComenziController extends AbstractController
                 $formattedDate = $dateParts[2] . '-' . $dateParts[1] . '-' . $dateParts[0];
             }
         }
-       
+        
         $sortBy = $request->query->get('sort_by');
         $rezolvat = $request->query->get('rezolvat');
         $decont = $request->query->get('decont'); // Nou
@@ -61,14 +61,22 @@ class ComenziController extends AbstractController
                             ->select('t.id')
                             ->from('App\Entity\Tururi', 't')
                             ->where('t.comanda = c.id')
-                            ->andWhere('t.rutaIncarcare LIKE :search OR t.rutaDescarcare LIKE :search')
+                            ->andWhere($queryBuilder->expr()->orX(
+                                't.rutaIncarcare LIKE :search',
+                                't.rutaDescarcare LIKE :search',
+                                't.firma LIKE :search' // Căutare după firmă în Tururi
+                            ))
                     ),
                     $queryBuilder->expr()->exists(
                         $entityManager->createQueryBuilder()
                             ->select('r.id')
                             ->from('App\Entity\Retururi', 'r')
                             ->where('r.comanda = c.id')
-                            ->andWhere('r.rutaIncarcare LIKE :search OR r.rutaDescarcare LIKE :search')
+                            ->andWhere($queryBuilder->expr()->orX(
+                                'r.rutaIncarcare LIKE :search',
+                                'r.rutaDescarcare LIKE :search',
+                                'r.firma LIKE :search' // Căutare după firmă în Retururi
+                            ))
                     )
                 )
             )
