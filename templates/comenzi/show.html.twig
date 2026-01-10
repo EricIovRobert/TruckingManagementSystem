@@ -6,7 +6,7 @@
     <div class="container mt-4">
         <!-- Butonul "Înapoi la listă" stilizat și poziționat sus în dreapta -->
         <div class="d-flex justify-content-end mb-3">
-            <a href="{{ path('app_comenzi_index') }}" class="btn btn-outline-secondary btn-sm">Înapoi la listă</a>
+            <a href="{{ path('app_comenzi_index', {'page': page|default(1)}) }}" class="btn btn-outline-secondary btn-sm">Înapoi la listă</a>
         </div>
 
         <h1>Detalii Comandă #{{ comanda.id }}</h1>
@@ -62,7 +62,7 @@
             </div>
             <!-- Butonul "Editează detalii" -->
             <div class="text-center mt-4">
-                <a href="{{ path('app_comenzi_edit', {'id': comanda.id}) }}" class="btn btn-primary">Editează detalii</a>
+                <a href="{{ path('app_comenzi_edit', {'id': comanda.id, 'page': page|default(1)}) }}" class="btn btn-primary">Editează detalii</a>
             </div>
         </div>
     </div>
@@ -71,7 +71,7 @@
 
         <!-- Secțiunea Tururi (nemodificată) -->
         <h2 class="mt-4">Tururi</h2>
-        <a href="{{ path('app_tururi_new', {'comanda_id': comanda.id}) }}" class="btn btn-primary mb-3">Adaugă Tur</a>
+        <a href="{{ path('app_tururi_new', {'comanda_id': comanda.id, 'page': page|default(1)}) }}" class="btn btn-primary mb-3">Adaugă Tur</a>
         <table class="table table-striped">
             <thead>
                 <tr>
@@ -98,10 +98,10 @@
                             <input type="checkbox" class="facturat-checkbox" data-id="{{ tur.id }}" data-type="tururi" {% if tur.facturat %}checked{% endif %}>
                         </td>
                         <td class="text-end">
-                            <a href="{{ path('app_tururi_edit', {'id': tur.id}) }}" class="btn btn-warning btn-sm me-1">
+                            <a href="{{ path('app_tururi_edit', {'id': tur.id, 'page': page|default(1)}) }}" class="btn btn-warning btn-sm me-1">
                                 <i class="fa fa-edit"></i>
                             </a>
-                            <form method="post" action="{{ path('app_tururi_delete', {'id': tur.id}) }}" style="display:inline;" onsubmit="return confirm('Ești sigur că vrei să ștergi acest tur?');">
+                            <form method="post" action="{{ path('app_tururi_delete', {'id': tur.id, 'page': page|default(1)}) }}" style="display:inline;" onsubmit="return confirm('Ești sigur că vrei să ștergi acest tur?');">
                                 <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ tur.id) }}">
                                <button class="btn btn-danger btn-sm">
                                     <i class="fa fa-trash"></i>
@@ -119,7 +119,7 @@
 
         <!-- Secțiunea Retururi (nemodificată) -->
         <h2 class="mt-4">Retururi</h2>
-        <a href="{{ path('app_retururi_new', {'comanda_id': comanda.id}) }}" class="btn btn-primary mb-3">Adaugă Retur</a>
+        <a href="{{ path('app_retururi_new', {'comanda_id': comanda.id, 'page': page|default(1)}) }}" class="btn btn-primary mb-3">Adaugă Retur</a>
         <table class="table table-striped">
             <thead>
                 <tr>
@@ -146,8 +146,8 @@
                             <input type="checkbox" class="facturat-checkbox" data-id="{{ retur.id }}" data-type="retururi" {% if retur.facturat %}checked{% endif %}>
                         </td>
                         <td class="text-end">
-                            <a href="{{ path('app_retururi_edit', {'id': retur.id}) }}" class="btn btn-warning btn-sm me-1"> <i class="fa fa-edit"></i></a>
-                            <form method="post" action="{{ path('app_retururi_delete', {'id': retur.id}) }}" style="display:inline;" onsubmit="return confirm('Ești sigur că vrei să ștergi acest retur?');">
+                            <a href="{{ path('app_retururi_edit', {'id': retur.id, 'page': page|default(1)}) }}" class="btn btn-warning btn-sm me-1"> <i class="fa fa-edit"></i></a>
+                            <form method="post" action="{{ path('app_retururi_delete', {'id': retur.id, 'page': page|default(1)}) }}" style="display:inline;" onsubmit="return confirm('Ești sigur că vrei să ștergi acest retur?');">
                                 <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ retur.id) }}">
                                 <button class="btn btn-danger btn-sm">
                                     <i class="fa fa-trash"></i>
@@ -165,7 +165,7 @@
 
         <!-- Secțiunea Cheltuieli (nemodificată) -->
         <h2 class="mt-4">Cheltuieli</h2>
-        <a href="{{ path('app_comenzi_cheltuieli_new', {'id': comanda.id}) }}" class="btn btn-primary mb-3">Adaugă Cheltuială</a>
+        <a href="{{ path('app_comenzi_cheltuieli_new', {'id': comanda.id, 'page': page|default(1)}) }}" class="btn btn-primary mb-3">Adaugă Cheltuială</a>
         <table class="table table-striped">
             <thead>
                 <tr>
@@ -194,8 +194,8 @@
                         <td>{{ cheltuiala.dataCheltuiala ? cheltuiala.dataCheltuiala|date('d/m/Y') : 'N/A' }}</td>
                         <td>{{ cheltuiala.descriere ?: 'N/A' }}</td>
                         <td class="text-end">
-                            <a href="{{ path('app_comenzi_cheltuieli_edit', {'comandaId': comanda.id, 'cheltuialaId': cheltuiala.id}) }}" class="btn btn-warning btn-sm me-1"> <i class="fa fa-edit"></i></a>
-                            <form method="post" action="{{ path('app_comenzi_cheltuieli_delete', {'comandaId': comanda.id, 'cheltuialaId': cheltuiala.id}) }}" style="display:inline;" onsubmit="return confirm('Ești sigur că vrei să ștergi această cheltuială?');">
+                            <a href="{{ path('app_comenzi_cheltuieli_edit', {'comandaId': comanda.id, 'cheltuialaId': cheltuiala.id, 'page': page|default(1)}) }}" class="btn btn-warning btn-sm me-1"> <i class="fa fa-edit"></i></a>
+                            <form method="post" action="{{ path('app_comenzi_cheltuieli_delete', {'comandaId': comanda.id, 'cheltuialaId': cheltuiala.id, 'page': page|default(1)}) }}" style="display:inline;" onsubmit="return confirm('Ești sigur că vrei să ștergi această cheltuială?');">
                                 <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ cheltuiala.id) }}">
                                 <button class="btn btn-danger btn-sm">
                                     <i class="fa fa-trash"></i>
@@ -265,8 +265,8 @@
                         <td>{{ cheltuialaNeta|number_format(2, ',', '.') }}</td>
                         <td>{{ cheltuiala.descriere ?: 'N/A' }}</td>
                         <td class="text-end">
-                            <a href="{{ path('app_comenzi_cheltuieli_edit', {'comandaId': comanda.id, 'cheltuialaId': cheltuiala.id}) }}" class="btn btn-warning btn-sm me-1"> <i class="fa fa-edit"></i></a>
-                            <form method="post" action="{{ path('app_comenzi_cheltuieli_delete', {'comandaId': comanda.id, 'cheltuialaId': cheltuiala.id}) }}" style="display:inline;" onsubmit="return confirm('Ești sigur că vrei să ștergi această cheltuială?');">
+                            <a href="{{ path('app_comenzi_cheltuieli_edit', {'comandaId': comanda.id, 'cheltuialaId': cheltuiala.id, 'page': page|default(1)}) }}" class="btn btn-warning btn-sm me-1"> <i class="fa fa-edit"></i></a>
+                            <form method="post" action="{{ path('app_comenzi_cheltuieli_delete', {'comandaId': comanda.id, 'cheltuialaId': cheltuiala.id, 'page': page|default(1)}) }}" style="display:inline;" onsubmit="return confirm('Ești sigur că vrei să ștergi această cheltuială?');">
                                 <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ cheltuiala.id) }}">
                                 <button class="btn btn-danger btn-sm">
                                     <i class="fa fa-trash"></i>

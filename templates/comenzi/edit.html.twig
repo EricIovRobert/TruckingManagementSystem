@@ -47,7 +47,7 @@
                 </div>
             </div>
             <div class="button-group mt-4 d-flex justify-content-between">
-                <a href="{{ path('app_comenzi_index') }}" class="btn btn-secondary">Anulează</a>
+                <a href="{{ path('app_comenzi_index', {'page': page|default(1)}) }}" class="btn btn-secondary">Anulează</a>
                 <button type="submit" class="btn btn-primary">Salvează</button>
             </div>
         {{ form_end(form) }}

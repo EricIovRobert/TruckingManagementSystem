@@ -94,7 +94,7 @@
                         <input type="checkbox" class="calculata-checkbox" data-id="{{ comanda.id }}" {% if comanda.calculata %}checked{% endif %}>
                     </td>
                     <td>
-                        <a href="{{ path('app_comenzi_show', {'id': comanda.id}) }}" class="text-decoration-none">
+                        <a href="{{ path('app_comenzi_show', {'id': comanda.id, 'page': pagination.currentPageNumber}) }}" class="text-decoration-none">
                             {{ comanda.parcAutoNrSnapshot ?: comanda.nrAccidentAuto ?: '-' }}
                         </a>
                     </td>
@@ -158,9 +158,9 @@
                                 <i class="bi bi-three-dots-vertical"></i>
                             </button>
                             <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton-{{ comanda.id }}">
-                                <li><a class="dropdown-item text-warning" href="{{ path('app_comenzi_edit', {'id': comanda.id}) }}">Editează</a></li>
+                                <li><a class="dropdown-item text-warning" href="{{ path('app_comenzi_edit', {'id': comanda.id, 'page': pagination.currentPageNumber}) }}">Editează</a></li>
                                 <li>
-                                    <form method="post" action="{{ path('app_comenzi_delete', {'id': comanda.id}) }}" onsubmit="return confirm('Ești sigur că vrei să ștergi această comandă?');">
+                                    <form method="post" action="{{ path('app_comenzi_delete', {'id': comanda.id, 'page': pagination.currentPageNumber}) }}" onsubmit="return confirm('Ești sigur că vrei să ștergi această comandă?');">
                                         <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ comanda.id) }}">
                                         <button type="submit" class="dropdown-item text-danger">Șterge</button>
                                     </form>

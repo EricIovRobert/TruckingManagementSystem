@@ -50,37 +50,48 @@ class ComenziController extends AbstractController
         $queryBuilder = $comenziRepository->createQueryBuilder('c');
     
         if ($search) {
-            $queryBuilder->andWhere(
-                $queryBuilder->expr()->orX(
-                    'c.parcAutoNrSnapshot LIKE :search',
-                    'c.nrAccidentAuto LIKE :search',
-                    'c.sofer LIKE :search',
-                    'c.observatii LIKE :search',
-                    $queryBuilder->expr()->exists(
-                        $entityManager->createQueryBuilder()
-                            ->select('t.id')
-                            ->from('App\Entity\Tururi', 't')
-                            ->where('t.comanda = c.id')
-                            ->andWhere($queryBuilder->expr()->orX(
-                                't.rutaIncarcare LIKE :search',
-                                't.rutaDescarcare LIKE :search',
-                                't.firma LIKE :search' // Căutare după firmă în Tururi
-                            ))
-                    ),
-                    $queryBuilder->expr()->exists(
-                        $entityManager->createQueryBuilder()
-                            ->select('r.id')
-                            ->from('App\Entity\Retururi', 'r')
-                            ->where('r.comanda = c.id')
-                            ->andWhere($queryBuilder->expr()->orX(
-                                'r.rutaIncarcare LIKE :search',
-                                'r.rutaDescarcare LIKE :search',
-                                'r.firma LIKE :search' // Căutare după firmă în Retururi
-                            ))
+            $terms = explode(' ', $search);
+            foreach ($terms as $key => $term) {
+                if (empty(trim($term))) {
+                    continue;
+                }
+                $paramName = 'search_' . $key;
+                $tAlias = 't' . $key;
+                $rAlias = 'r' . $key;
+
+                $queryBuilder->andWhere(
+                    $queryBuilder->expr()->orX(
+                        'c.parcAutoNrSnapshot LIKE :' . $paramName,
+                        'c.nrAccidentAuto LIKE :' . $paramName,
+                        'c.sofer LIKE :' . $paramName,
+                        'c.observatii LIKE :' . $paramName,
+                        'c.nr_remorca LIKE :' . $paramName,
+                        $queryBuilder->expr()->exists(
+                            $entityManager->createQueryBuilder()
+                                ->select($tAlias . '.id')
+                                ->from('App\Entity\Tururi', $tAlias)
+                                ->where($tAlias . '.comanda = c.id')
+                                ->andWhere($queryBuilder->expr()->orX(
+                                    $tAlias . '.rutaIncarcare LIKE :' . $paramName,
+                                    $tAlias . '.rutaDescarcare LIKE :' . $paramName,
+                                    $tAlias . '.firma LIKE :' . $paramName
+                                ))
+                        ),
+                        $queryBuilder->expr()->exists(
+                            $entityManager->createQueryBuilder()
+                                ->select($rAlias . '.id')
+                                ->from('App\Entity\Retururi', $rAlias)
+                                ->where($rAlias . '.comanda = c.id')
+                                ->andWhere($queryBuilder->expr()->orX(
+                                    $rAlias . '.rutaIncarcare LIKE :' . $paramName,
+                                    $rAlias . '.rutaDescarcare LIKE :' . $paramName,
+                                    $rAlias . '.firma LIKE :' . $paramName
+                                ))
+                        )
                     )
                 )
-            )
-            ->setParameter('search', '%' . $search . '%');
+                ->setParameter($paramName, '%' . $term . '%');
+            }
         }
     
         if ($formattedDate) {
@@ -242,6 +253,7 @@ public function new(Request $request, EntityManagerInterface $entityManager, Par
 #[Route('/{id}/edit', name: 'app_comenzi_edit', methods: ['GET', 'POST'])]
 public function edit(Request $request, Comenzi $comanda, EntityManagerInterface $entityManager, ParcAutoRepository $parcAutoRepository): Response
 {
+    $page = $request->query->getInt('page', 1);
     $oldNumarKm = $comanda->getNumarKm();
     $oldDataStop = $comanda->getDataStop();
 
@@ -267,33 +279,37 @@ public function edit(Request $request, Comenzi $comanda, EntityManagerInterface 
             $this->addConsumabileCheltuieli($comanda, $entityManager);
         }
 
-        return $this->redirectToRoute('app_comenzi_show', ['id' => $comanda->getId()]);
+        return $this->redirectToRoute('app_comenzi_show', ['id' => $comanda->getId(), 'page' => $page]);
     }
 
     return $this->render('comenzi/edit.html.twig', [
         'form' => $form->createView(),
         'comanda' => $comanda,
         'parc_auto_list' => $parcAutoRepository->findAll(),
+        'page' => $page,
     ]);
 }
 
     #[Route('/{id}', name: 'app_comenzi_delete', methods: ['POST'])]
     public function delete(Request $request, Comenzi $comanda, EntityManagerInterface $entityManager): Response
     {
+        $page = $request->query->getInt('page', 1);
         if ($this->isCsrfTokenValid('delete' . $comanda->getId(), $request->request->get('_token'))) {
             $entityManager->remove($comanda);
             $entityManager->flush();
         }
 
-        return $this->redirectToRoute('app_comenzi_index');
+        return $this->redirectToRoute('app_comenzi_index', ['page' => $page]);
     }
 
     #[Route('/{id}/show', name: 'app_comenzi_show', methods: ['GET'])]
-    public function show(Comenzi $comanda, ParcAutoRepository $parcAutoRepository): Response
+    public function show(Request $request, Comenzi $comanda, ParcAutoRepository $parcAutoRepository): Response
     {
+        $page = $request->query->getInt('page', 1);
         return $this->render('comenzi/show.html.twig', [
             'comanda' => $comanda,
             'parc_autos' => $parcAutoRepository->findAll(),
+            'page' => $page,
         ]);
     }
 
@@ -439,12 +455,14 @@ public function edit(Request $request, Comenzi $comanda, EntityManagerInterface 
             $comanda->calculateAndSetProfit();
             $entityManager->flush();
 
-            return $this->redirectToRoute('app_comenzi_show', ['id' => $comanda->getId()]);
+            $page = $request->query->getInt('page', 1);
+            return $this->redirectToRoute('app_comenzi_show', ['id' => $comanda->getId(), 'page' => $page]);
         }
 
         return $this->render('comenzi/cheltuieli_new.html.twig', [
             'form' => $form->createView(),
             'comanda' => $comanda,
+            'page' => $request->query->getInt('page', 1),
         ]);
     }
 
@@ -505,13 +523,15 @@ public function edit(Request $request, Comenzi $comanda, EntityManagerInterface 
             $comanda->calculateAndSetProfit();
             $entityManager->flush();
 
-            return $this->redirectToRoute('app_comenzi_show', ['id' => $comandaId]);
+            $page = $request->query->getInt('page', 1);
+            return $this->redirectToRoute('app_comenzi_show', ['id' => $comandaId, 'page' => $page]);
         }
 
         return $this->render('comenzi/cheltuieli_edit.html.twig', [
             'comanda' => $comanda,
             'cheltuiala' => $cheltuiala,
             'form' => $form->createView(),
+            'page' => $request->query->getInt('page', 1),
         ]);
     }
 
@@ -539,7 +559,8 @@ public function edit(Request $request, Comenzi $comanda, EntityManagerInterface 
             $entityManager->flush();
         }
 
-        return $this->redirectToRoute('app_comenzi_show', ['id' => $comandaId]);
+        $page = $request->query->getInt('page', 1);
+        return $this->redirectToRoute('app_comenzi_show', ['id' => $comandaId, 'page' => $page]);
     }
 
     #[Route('/get-subcategories', name: 'app_get_subcategories', methods: ['GET'])]

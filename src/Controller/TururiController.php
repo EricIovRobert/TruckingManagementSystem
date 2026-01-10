@@ -34,12 +34,14 @@ class TururiController extends AbstractController
             $comanda = $tur->getComanda();
             $comanda->calculateAndSetProfit();
             $entityManager->flush();
-            return $this->redirectToRoute('app_comenzi_show', ['id' => $comanda->getId()]);
+            $page = $request->query->getInt('page', 1);
+            return $this->redirectToRoute('app_comenzi_show', ['id' => $comanda->getId(), 'page' => $page]);
         }
 
         return $this->render('tururi/new.html.twig', [
             'form' => $form->createView(),
             'comanda' => $comanda,
+            'page' => $request->query->getInt('page', 1),
         ]);
     }
 
@@ -54,12 +56,14 @@ class TururiController extends AbstractController
             $comanda = $tur->getComanda();
             $comanda->calculateAndSetProfit();
             $entityManager->flush();
-            return $this->redirectToRoute('app_comenzi_show', ['id' => $tur->getComanda()->getId()]);
+            $page = $request->query->getInt('page', 1);
+            return $this->redirectToRoute('app_comenzi_show', ['id' => $tur->getComanda()->getId(), 'page' => $page]);
         }
 
         return $this->render('tururi/edit.html.twig', [
             'form' => $form->createView(),
             'tur' => $tur,
+            'page' => $request->query->getInt('page', 1),
         ]);
     }
 
@@ -73,10 +77,12 @@ class TururiController extends AbstractController
             $comanda = $tur->getComanda();
             $comanda->calculateAndSetProfit();
             $entityManager->flush();
-            return $this->redirectToRoute('app_comenzi_show', ['id' => $comandaId]);
+            $page = $request->query->getInt('page', 1);
+            return $this->redirectToRoute('app_comenzi_show', ['id' => $comandaId, 'page' => $page]);
         }
 
-        return $this->redirectToRoute('app_comenzi_show', ['id' => $tur->getComanda()->getId()]);
+        $page = $request->query->getInt('page', 1);
+        return $this->redirectToRoute('app_comenzi_show', ['id' => $tur->getComanda()->getId(), 'page' => $page]);
     }
 
     #[Route('/{id}/update-facturat', name: 'app_tururi_update_facturat', methods: ['POST'])]

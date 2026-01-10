@@ -5,7 +5,7 @@
 {% block body %}
     <div class="form-container shadow-sm rounded-3 bg-white p-4" style="max-width: 600px; margin: 0 auto;">
         <h1 class="text-center mb-4">Editează Tur pentru Comanda #{{ tur.comanda.id }}</h1>
-        {{ form_start(form) }}
+        {{ form_start(form, {'action': path('app_tururi_edit', {'id': tur.id, 'page': page|default(1)})}) }}
             <div class="row g-3">
                 <div class="col-md-6">
                     {{ form_label(form.firma) }}
@@ -33,7 +33,7 @@
                 </div>
             </div>
             <div class="button-group mt-4 d-flex justify-content-between">
-                <a href="{{ path('app_comenzi_show', {'id': tur.comanda.id}) }}" class="btn btn-secondary">Înapoi la detalii</a>
+                <a href="{{ path('app_comenzi_show', {'id': tur.comanda.id, 'page': page|default(1)}) }}" class="btn btn-secondary">Înapoi la detalii</a>
                 <button type="submit" class="btn btn-primary">Salvează</button>
             </div>
         {{ form_end(form) }}
