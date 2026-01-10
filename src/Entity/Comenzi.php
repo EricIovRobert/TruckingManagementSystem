@@ -71,6 +71,9 @@ class Comenzi
     #[ORM\Column]
     private ?bool $decont = false;
 
+    #[ORM\Column]
+    private ?bool $facturat = false;
+
     #[ORM\Column(length: 100)]
     private ?string $nr_remorca = null;
 
@@ -81,6 +84,7 @@ class Comenzi
         $this->rezolvat = false; // Setăm valoarea implicită în constructor
         $this->calculata = false; 
         $this->decont = false; 
+        $this->facturat = false; 
         $this->cheltuielis = new ArrayCollection();
     }
     public function calculateAndSetProfit(): void
@@ -357,6 +361,18 @@ class Comenzi
     public function setDecont(bool $decont): static
     {
         $this->decont = $decont;
+
+        return $this;
+    }
+
+    public function isFacturat(): ?bool
+    {
+        return $this->facturat;
+    }
+
+    public function setFacturat(bool $facturat): static
+    {
+        $this->facturat = $facturat;
 
         return $this;
     }

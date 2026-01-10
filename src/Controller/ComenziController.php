@@ -46,6 +46,7 @@ class ComenziController extends AbstractController
         $rezolvat = $request->query->get('rezolvat');
         $decont = $request->query->get('decont'); // Nou
         $calculata = $request->query->get('calculata'); // Nou
+        $facturat = $request->query->get('facturat'); // Nou
     
         $queryBuilder = $comenziRepository->createQueryBuilder('c');
     
@@ -116,6 +117,12 @@ class ComenziController extends AbstractController
             $queryBuilder->andWhere('c.calculata = :calculata')
                          ->setParameter('calculata', filter_var($calculata, FILTER_VALIDATE_BOOLEAN));
         }
+
+        // Filtru pentru facturat
+        if ($facturat !== null && in_array($facturat, ['1', '0'])) {
+            $queryBuilder->andWhere('c.facturat = :facturat')
+                         ->setParameter('facturat', filter_var($facturat, FILTER_VALIDATE_BOOLEAN));
+        }
     
         $comenzi = $queryBuilder->getQuery()->getResult();
     
@@ -159,7 +166,9 @@ class ComenziController extends AbstractController
             'sort_by' => $sortBy,
             'rezolvat' => $rezolvat,
             'decont' => $decont, // Nou
+            'decont' => $decont, // Nou
             'calculata' => $calculata, // Nou
+            'facturat' => $facturat, // Nou
         ]);
     }
     
@@ -360,6 +369,24 @@ public function edit(Request $request, Comenzi $comanda, EntityManagerInterface 
     
             $decont = filter_var($request->request->get('decont', false), FILTER_VALIDATE_BOOLEAN);
             $comanda->setDecont($decont);
+            $entityManager->flush();
+    
+            return new JsonResponse(['success' => true]);
+        } catch (\Exception $e) {
+            return new JsonResponse(['success' => false, 'error' => $e->getMessage()], 500);
+        }
+    }
+
+    #[Route('/{id}/update-facturat', name: 'app_comenzi_update_facturat', methods: ['POST'])]
+    public function updateFacturat(Request $request, Comenzi $comanda, EntityManagerInterface $entityManager): JsonResponse
+    {
+        try {
+            if (!$comanda) {
+                throw $this->createNotFoundException('Comanda nu a fost găsită');
+            }
+    
+            $facturat = filter_var($request->request->get('facturat', false), FILTER_VALIDATE_BOOLEAN);
+            $comanda->setFacturat($facturat);
             $entityManager->flush();
     
             return new JsonResponse(['success' => true]);

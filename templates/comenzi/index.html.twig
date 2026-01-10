@@ -60,6 +60,11 @@
             <option value="1" {% if calculata == '1' %}selected{% endif %}>Calculate</option>
             <option value="0" {% if calculata == '0' %}selected{% endif %}>Necalculate</option>
         </select>
+        <select name="facturat" class="form-select">
+            <option value="" {% if facturat is null %}selected{% endif %}>Toate (Facturat)</option>
+            <option value="1" {% if facturat == '1' %}selected{% endif %}>Facturate</option>
+            <option value="0" {% if facturat == '0' %}selected{% endif %}>Nefacturate</option>
+        </select>
         <button type="submit" class="btn btn-primary">Caută</button>
         <a href="{{ path('app_comenzi_index') }}" class="btn btn-secondary">Resetează</a>
     </div>
@@ -84,6 +89,7 @@
                 <th>Profit</th>
                 <th>Rezolvat</th>
                 <th>Decont</th>
+                <th>Facturat</th>
                 <th>Acțiuni</th>
             </tr>
         </thead>
@@ -153,6 +159,9 @@
                         <input type="checkbox" class="decont-checkbox" data-id="{{ comanda.id }}" {% if comanda.decont %}checked{% endif %}>
                     </td>
                     <td>
+                        <input type="checkbox" class="facturat-checkbox" data-id="{{ comanda.id }}" {% if comanda.facturat %}checked{% endif %}>
+                    </td>
+                    <td>
                         <div class="dropdown">
                             <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" id="dropdownMenuButton-{{ comanda.id }}" data-bs-toggle="dropdown" aria-expanded="false">
                                 <i class="bi bi-three-dots-vertical"></i>
@@ -186,6 +195,7 @@
             let processedRezolvat = false;
             let processedDecont = false;
             let processedCalculata = false;
+            let processedFacturat = false;
 
             // Funcționalitate pentru Rezolvat
             document.querySelectorAll('.rezolvat-checkbox').forEach(function(checkbox) {
@@ -312,6 +322,45 @@
                     })
                     .finally(() => {
                         processedCalculata = false;
+                    });
+                });
+            });
+
+            // Funcționalitate pentru Facturat
+            document.querySelectorAll('.facturat-checkbox').forEach(function(checkbox) {
+                checkbox.addEventListener('change', function(e) {
+                    if (processedFacturat) return;
+                    processedFacturat = true;
+
+                    var id = this.getAttribute('data-id');
+                    var facturat = this.checked;
+                    var url = '{{ path('app_comenzi_update_facturat', {'id': 'ID'}) }}'.replace('ID', id);
+
+                    fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'X-Requested-With': 'XMLHttpRequest',
+                        },
+                        body: 'facturat=' + encodeURIComponent(facturat)
+                    })
+                    .then(response => {
+                        if (!response.ok) throw new Error('Eroare server');
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.success) {
+                            console.log('Stare Facturat actualizată');
+                        } else {
+                            alert('Eroare: ' + (data.error || 'Răspuns neașteptat'));
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Eroare:', error);
+                        alert('Eroare la actualizare Facturat');
+                    })
+                    .finally(() => {
+                        processedFacturat = false;
                     });
                 });
             });
