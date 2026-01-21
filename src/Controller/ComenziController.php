@@ -493,6 +493,63 @@ public function edit(Request $request, Comenzi $comanda, EntityManagerInterface 
         ]);
     }
 
+    #[Route('/{id}/cheltuieli/batch-new', name: 'app_comenzi_cheltuieli_batch_new', methods: ['GET', 'POST'])]
+    public function newBatchCheltuieli(Request $request, Comenzi $comanda, EntityManagerInterface $entityManager): Response
+    {
+        $form = $this->createForm(\App\Form\ComenziCheltuieliBatchType::class);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            foreach ($form->get('cheltuielis') as $childForm) {
+                $cheltuiala = $childForm->getData();
+                $cheltuiala->setComanda($comanda);
+                
+                 // Set default date if null
+                if (!$cheltuiala->getDataCheltuiala()) {
+                     $dataImplicit = $comanda->getDataStop() ?? $comanda->getDataStart();
+                     $cheltuiala->setDataCheltuiala($dataImplicit ?? new \DateTime());
+                }
+
+                $categorie = $cheltuiala->getCategorie();
+                $subcategorieId = $childForm->get('subcategorie')->getData();
+
+                if ($categorie && $categorie->getNume() === 'Consumabile') {
+                     if ($subcategorieId) {
+                        $consumabil = $entityManager->getRepository(Consumabile::class)->find($subcategorieId);
+                        if ($consumabil) {
+                            $cheltuiala->setConsumabil($consumabil);
+                            $cheltuiala->setSubcategorie(null);
+                        }
+                    }
+                } else {
+                    if ($subcategorieId) {
+                        $subcategorie = $entityManager->getRepository(SubcategoriiCheltuieli::class)->find($subcategorieId);
+                        if ($subcategorie) {
+                            $cheltuiala->setSubcategorie($subcategorie);
+                            $cheltuiala->setConsumabil(null);
+                        }
+                    }
+                }
+                
+                $entityManager->persist($cheltuiala);
+            }
+
+            $entityManager->flush();
+            $comanda->calculateAndSetProfit();
+            $entityManager->flush();
+
+            $page = $request->query->getInt('page', 1);
+            return $this->redirectToRoute('app_comenzi_show', ['id' => $comanda->getId(), 'page' => $page]);
+        }
+
+        return $this->render('comenzi/cheltuieli_batch.html.twig', [
+            'form' => $form->createView(),
+            'comanda' => $comanda,
+            'page' => $request->query->getInt('page', 1),
+            'default_date' => ($comanda->getDataStop() ?? $comanda->getDataStart() ?? new \DateTime())->format('d/m/Y'),
+        ]);
+    }
+
     #[Route('/{comandaId}/cheltuieli/{cheltuialaId}/edit', name: 'app_comenzi_cheltuieli_edit', methods: ['GET', 'POST'])]
     public function editCheltuiala(
         Request $request,

@@ -133,7 +133,7 @@
                     if (litriMotorinaField) {
                         litriMotorinaField.closest('.form-group, .form-row, div').style.display = '';
                         // Dacă subcategoria este "AdBlue", setăm automat litriMotorinaField
-                        if (subcategorieNume === 'AdBlue' && numarKm !== null) {
+                        if (subcategorieNume.toLowerCase().includes('adblue') && numarKm !== null) {
                             litriMotorinaField.value = (0.02 * numarKm).toFixed(2);
                         }
                     }

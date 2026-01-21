@@ -1,0 +1,256 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Adaugă Cheltuieli (Batch) - Comanda #{{ comanda.id }}{% endblock %}
+
+{% block body %}
+    <style>
+        .form-control { height: 38px; }
+        .form-label { margin-bottom: 0.25rem; }
+        .align-items-center { align-items: center; }
+        .cheltuiala-item { position: relative; }
+        .remove-cheltuiala-btn { z-index: 10; cursor: pointer; }
+    </style>
+
+    <div class="container mt-4">
+        <h1 class="text-center mb-4">Adaugă Cheltuieli Multiple pentru Comanda #{{ comanda.id }}</h1>
+
+        {{ form_start(form) }}
+        
+        {# Construct the prototype manually to match the grid layout #}
+        {% set prototypeHtml %}
+            <div class="row g-3 align-items-center p-3">
+                <div class="col-md-6">
+                    {{ form_label(form.cheltuielis.vars.prototype.categorie, null, {'label_attr': {'class': 'form-label'}}) }}
+                    {{ form_widget(form.cheltuielis.vars.prototype.categorie, {'attr': {'class': 'form-control categorie-select'}}) }}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Subcategorie</label>
+                    {{ form_widget(form.cheltuielis.vars.prototype.subcategorie, {'attr': {'class': 'form-control subcategorie-field', 'style': 'display: none;'}}) }}
+                    <select class="form-control subcategorie-select"><option value="">Selectează o subcategorie</option></select>
+                </div>
+                <div class="col-md-6 pret-unitate-wrapper" style="display: none;">
+                    {{ form_label(form.cheltuielis.vars.prototype.pret_unitate, null, {'label_attr': {'class': 'form-label'}}) }}
+                    {{ form_widget(form.cheltuielis.vars.prototype.pret_unitate, {'attr': {'class': 'form-control pret-unitate-field'}}) }}
+                </div>
+                <div class="col-md-6">
+                    {{ form_label(form.cheltuielis.vars.prototype.suma, null, {'label_attr': {'class': 'form-label'}}) }}
+                    {{ form_widget(form.cheltuielis.vars.prototype.suma, {'attr': {'class': 'form-control suma-field'}}) }}
+                </div>
+                <div class="col-md-6 litri-wrapper" style="display: none;">
+                    {{ form_label(form.cheltuielis.vars.prototype.litri_motorina, null, {'label_attr': {'class': 'form-label'}}) }}
+                    {{ form_widget(form.cheltuielis.vars.prototype.litri_motorina, {'attr': {'class': 'form-control litri-field'}}) }}
+                </div>
+                <div class="col-md-6">
+                    {{ form_label(form.cheltuielis.vars.prototype.tva, null, {'label_attr': {'class': 'form-label'}}) }}
+                    {{ form_widget(form.cheltuielis.vars.prototype.tva, {'attr': {'class': 'form-control'}}) }}
+                </div>
+                <div class="col-md-6">
+                    {{ form_label(form.cheltuielis.vars.prototype.comision_tva, null, {'label_attr': {'class': 'form-label'}}) }}
+                    {{ form_widget(form.cheltuielis.vars.prototype.comision_tva, {'attr': {'class': 'form-control'}}) }}
+                </div>
+                <div class="col-md-6">
+                    {{ form_label(form.cheltuielis.vars.prototype.data_cheltuiala, null, {'label_attr': {'class': 'form-label'}}) }}
+                    {{ form_widget(form.cheltuielis.vars.prototype.data_cheltuiala, {'attr': {'class': 'form-control datepicker'}}) }}
+                </div>
+                <div class="col-md-6">
+                    {{ form_label(form.cheltuielis.vars.prototype.descriere, null, {'label_attr': {'class': 'form-label'}}) }}
+                    {{ form_widget(form.cheltuielis.vars.prototype.descriere, {'attr': {'class': 'form-control'}}) }}
+                </div>
+            </div>
+        {% endset %}
+
+        <div id="cheltuieli-list" data-prototype="{{ prototypeHtml|e('html_attr') }}" data-subcategories-url="{{ path('app_get_subcategories') }}">
+            {# Iterate existing if any #}
+        </div>
+
+        <button type="button" class="btn btn-primary add-cheltuiala-btn mb-4 w-100">Adaugă încă o cheltuială</button>
+
+        <input type="hidden" id="comanda-numar-km" value="{{ comanda.numarKm }}">
+        <input type="hidden" id="default-date" value="{{ default_date }}">
+
+        <div class="d-flex justify-content-between mb-5">
+            <a href="{{ path('app_comenzi_show', {'id': comanda.id, 'page': page|default(1)}) }}" class="btn btn-secondary">Înapoi la detalii</a>
+            <button type="submit" class="btn btn-success">Salvează Tot</button>
+        </div>
+
+        {{ form_end(form) }}
+    </div>
+
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const listWrapper = document.getElementById('cheltuieli-list');
+            const addBtn = document.querySelector('.add-cheltuiala-btn');
+            const subcategoriesUrl = listWrapper.dataset.subcategoriesUrl;
+            const numarKm = parseFloat(document.getElementById('comanda-numar-km').value) || 0;
+            const defaultDate = document.getElementById('default-date').value;
+            let index = 0;
+
+            function initRow(row) {
+                const categorieSelect = row.querySelector('.categorie-select');
+                const subcategorieField = row.querySelector('.subcategorie-field');
+                const subcategorieSelect = row.querySelector('.subcategorie-select');
+                const pretUnitateField = row.querySelector('.pret-unitate-field');
+                const pretUnitateWrapper = row.querySelector('.pret-unitate-wrapper');
+                const sumaField = row.querySelector('.suma-field');
+                const litriField = row.querySelector('.litri-field');
+                const litriWrapper = row.querySelector('.litri-wrapper');
+
+                // Filter 'Fixe'
+                for (let i = 0; i < categorieSelect.options.length; i++) {
+                    if (categorieSelect.options[i].text === 'Fixe') {
+                        categorieSelect.remove(i);
+                        break;
+                    }
+                }
+
+                function updateSubcategories() {
+                    const categorieId = categorieSelect.value;
+                    if (!categorieId) {
+                        subcategorieSelect.innerHTML = '<option value="">Selectează o subcategorie</option>';
+                        subcategorieField.value = '';
+                        // Reset fields
+                        pretUnitateWrapper.style.display = 'none';
+                        litriWrapper.style.display = 'none';
+                        return;
+                    }
+
+                    fetch(`${subcategoriesUrl}?categorie=${categorieId}`, {
+                         headers: {'X-Requested-With': 'XMLHttpRequest'}
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        subcategorieSelect.innerHTML = '<option value="">Selectează o subcategorie</option>';
+                        data.forEach(sub => {
+                            const opt = document.createElement('option');
+                            opt.value = sub.id;
+                            opt.text = sub.nume;
+                            opt.dataset.pretStandard = sub.pret_standard || 0;
+                            opt.dataset.kmUtilizareMax = sub.km_utilizare_max || 0;
+                            opt.dataset.pretPerL = sub.pret_per_l || 0;
+                            subcategorieSelect.appendChild(opt);
+                        });
+                    });
+                }
+
+                function recalcSuma() {
+                    const pretUnitate = parseFloat(pretUnitateField.value) || 0;
+                    const litri = parseFloat(litriField.value) || 0;
+                    if (litriWrapper.style.display !== 'none') {
+                        sumaField.value = (pretUnitate * litri).toFixed(2);
+                    } else {
+                        sumaField.value = pretUnitate.toFixed(2);
+                    }
+                }
+
+                function onSubcategorieChange() {
+                    const opt = subcategorieSelect.options[subcategorieSelect.selectedIndex];
+                    if (!opt || !opt.value) return;
+
+                    subcategorieField.value = opt.value;
+                    const pretStandard = parseFloat(opt.dataset.pretStandard);
+                    const kmMax = parseFloat(opt.dataset.kmUtilizareMax);
+                    const pretPerL = parseFloat(opt.dataset.pretPerL);
+                    const name = opt.text;
+
+                    pretUnitateWrapper.style.display = '';
+
+                    if (pretPerL > 0) {
+                        pretUnitateField.value = pretPerL.toFixed(2);
+                        litriWrapper.style.display = '';
+                        if (name.toLowerCase().includes('adblue') && numarKm > 0) {
+                            litriField.value = (0.02 * numarKm).toFixed(2);
+                        }
+                    } else if (pretStandard > 0) {
+                         pretUnitateField.value = pretStandard.toFixed(2);
+                         litriWrapper.style.display = 'none';
+                         litriField.value = '';
+                    } else {
+                         pretUnitateField.value = '';
+                         litriWrapper.style.display = 'none';
+                         litriField.value = '';
+                    }
+
+                    const categorieNume = categorieSelect.options[categorieSelect.selectedIndex].text;
+                    if (categorieNume === 'Consumabile' && pretStandard > 0 && kmMax > 0) {
+                        if (numarKm > 0) {
+                            const val = (pretStandard / kmMax) * numarKm;
+                            pretUnitateField.value = pretStandard.toFixed(2);
+                            sumaField.value = val.toFixed(2);
+                        } else {
+                            pretUnitateField.value = pretStandard.toFixed(2);
+                            sumaField.value = pretStandard.toFixed(2);
+                        }
+                    } else {
+                        recalcSuma();
+                    }
+                }
+
+                categorieSelect.addEventListener('change', updateSubcategories);
+                subcategorieSelect.addEventListener('change', onSubcategorieChange);
+                pretUnitateField.addEventListener('input', recalcSuma);
+                litriField.addEventListener('input', recalcSuma);
+            }
+
+            function addRow() {
+                const prototype = listWrapper.dataset.prototype;
+                const newForm = prototype.replace(/__name__/g, index);
+                index++;
+
+                const card = document.createElement('div');
+                card.className = 'card shadow-sm rounded-3 bg-white mb-3 cheltuiala-item';
+                card.innerHTML = `
+                    <div class="card-header d-flex justify-content-between align-items-center bg-light">
+                        <h5 class="mb-0">Cheltuială Nouă</h5>
+                        <button type="button" class="btn-close remove-cheltuiala-btn" aria-label="Close"></button>
+                    </div>
+                    ${newForm}
+                `;
+                
+                listWrapper.appendChild(card);
+                
+                // Set default date
+                const dateField = card.querySelector('.datepicker');
+                if (dateField) {
+                     if (defaultDate) {
+                        dateField.value = defaultDate;
+                     }
+                     // Initialize Flatpickr
+                     flatpickr(dateField, {
+                        dateFormat: "d/m/Y",
+                        locale: "ro"
+                     });
+                }
+                
+                initRow(card);
+
+                // Default to "Per cursa"
+                const categorieSelect = card.querySelector('.categorie-select');
+                if (categorieSelect) {
+                    for (let i = 0; i < categorieSelect.options.length; i++) {
+                         if (categorieSelect.options[i].text.toLowerCase().includes('per cursa')) {
+                             categorieSelect.selectedIndex = i;
+                             categorieSelect.dispatchEvent(new Event('change'));
+                             break;
+                         }
+                    }
+                }
+            }
+
+            addBtn.addEventListener('click', addRow);
+            
+            // Allow removing rows
+            listWrapper.addEventListener('click', (e) => {
+                if (e.target.classList.contains('remove-cheltuiala-btn')) {
+                    e.target.closest('.cheltuiala-item').remove();
+                }
+            });
+
+            // Init default row
+            addRow();
+        });
+    </script>
+{% endblock %}
