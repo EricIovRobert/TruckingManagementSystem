@@ -95,6 +95,9 @@ class RetururiController extends AbstractController
 
             $facturat = filter_var($request->request->get('facturat', false), FILTER_VALIDATE_BOOLEAN);
             $retur->setFacturat($facturat);
+            
+            $retur->getComanda()->updateFacturatStatus();
+            
             $entityManager->flush();
 
             return new JsonResponse(['success' => true]);

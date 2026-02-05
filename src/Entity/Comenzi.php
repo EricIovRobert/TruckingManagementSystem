@@ -122,6 +122,36 @@ class Comenzi
     $this->profit = $totalTururi + $totalRetururi - $totalCheltuieli;
 }
 
+public function updateFacturatStatus(): void
+{
+    $allFacturat = true;
+    $hasItems = false;
+
+    if (!$this->tururis->isEmpty()) {
+        $hasItems = true;
+        foreach ($this->tururis as $tur) {
+            if (!$tur->isFacturat()) {
+                $allFacturat = false;
+                break;
+            }
+        }
+    }
+
+    if ($allFacturat && !$this->retururis->isEmpty()) {
+        $hasItems = true;
+        foreach ($this->retururis as $retur) {
+            if (!$retur->isFacturat()) {
+                $allFacturat = false;
+                break;
+            }
+        }
+    }
+    
+    if ($hasItems) {
+        $this->facturat = $allFacturat;
+    }
+}
+
     public function getId(): ?int
     {
         return $this->id;

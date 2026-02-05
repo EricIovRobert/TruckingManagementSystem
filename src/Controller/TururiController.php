@@ -95,6 +95,9 @@ class TururiController extends AbstractController
 
             $facturat = filter_var($request->request->get('facturat', false), FILTER_VALIDATE_BOOLEAN);
             $tur->setFacturat($facturat);
+            
+            $tur->getComanda()->updateFacturatStatus();
+            
             $entityManager->flush();
 
             return new JsonResponse(['success' => true]);
