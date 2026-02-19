@@ -100,25 +100,28 @@ class Comenzi
     }
 
     $totalCheltuieli = 0;
-    foreach ($this->cheltuielis as $cheltuiala) {
-        $sumaBruta = $cheltuiala->getSuma() ?? 0;
-        $tvaProcent = $cheltuiala->getTva() ?? 0;
-        $comisionTvaProcent = $cheltuiala->getComisionTva() ?? 0;
+foreach ($this->cheltuielis as $cheltuiala) {
+    $sumaBruta = $cheltuiala->getSuma() ?? 0;
+    $tvaProcent = $cheltuiala->getTva() ?? 0;
+    $comisionTvaProcent = $cheltuiala->getComisionTva() ?? 0;
+    $comisionTaxaDrumProcent = $cheltuiala->getComisionTaxaDrum() ?? 0;
 
-        if ($tvaProcent > 0) {
-            // Calculăm TVA-ul inclus în suma brută
-            $tvaValue = $sumaBruta * $tvaProcent / (100 + $tvaProcent);
-            // Calculăm comisionul aplicat pe TVA-ul recuperabil
-            $comisionTva = $tvaValue * ($comisionTvaProcent / 100);
-            // Cheltuiala netă ajustată: suma brută - TVA recuperabil + comision
-            $cheltuialaNeta = $sumaBruta - $tvaValue + $comisionTva;
-            $totalCheltuieli += $cheltuialaNeta;
-        } else {
-            // Dacă nu are TVA, folosim suma brută
-            $totalCheltuieli += $sumaBruta;
-        }
+    // Comision taxa de drum = procent din suma bruta
+    $comisionTaxaDrum = $sumaBruta * ($comisionTaxaDrumProcent / 100);
+
+    if ($tvaProcent > 0) {
+        // Calculăm TVA-ul inclus în suma brută
+        $tvaValue = $sumaBruta * $tvaProcent / (100 + $tvaProcent);
+        // Calculăm comisionul aplicat pe TVA-ul recuperabil
+        $comisionTva = $tvaValue * ($comisionTvaProcent / 100);
+        // Cheltuiala netă ajustată: suma brută - TVA recuperabil + comision + comision taxa drum
+        $cheltuialaNeta = $sumaBruta - $tvaValue + $comisionTva + $comisionTaxaDrum;
+        $totalCheltuieli += $cheltuialaNeta;
+    } else {
+        // Dacă nu are TVA, folosim suma brută + comision taxa drum
+        $totalCheltuieli += $sumaBruta + $comisionTaxaDrum;
     }
-
+}
     $this->profit = $totalTururi + $totalRetururi - $totalCheltuieli;
 }
 

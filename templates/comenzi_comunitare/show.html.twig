@@ -78,6 +78,9 @@
             </thead>
             <tbody>
                 {% for cheltuiala in comanda.cheltuielis|filter(cheltuiala => cheltuiala.tva <= 0) %}
+                    {% set comisionTaxaDrumProcent = cheltuiala.comisionTaxaDrum ?? 0 %}
+                    {% set comisionTaxaDrum = (cheltuiala.suma * comisionTaxaDrumProcent / 100)|round(2) %}
+                    {% set sumaFinala = (cheltuiala.suma + comisionTaxaDrum)|round(2) %}
                     <tr>
                         <td>{{ cheltuiala.categorie ? cheltuiala.categorie.nume : 'N/A' }}</td>
                         <td>
@@ -89,7 +92,7 @@
                                 N/A
                             {% endif %}
                         </td>
-                        <td>{{ cheltuiala.suma|number_format(2, ',', '.') }}</td>
+                        <td>{{ sumaFinala|number_format(2, ',', '.') }}</td>
                         <td>{{ cheltuiala.dataCheltuiala ? cheltuiala.dataCheltuiala|date('d/m/Y') : 'N/A' }}</td>
                         <td>{{ cheltuiala.descriere ?: 'N/A' }}</td>
                         <td class="text-end">
@@ -120,6 +123,7 @@
                     <th>Suma Brută (€)</th>
                     <th>TVA Recuperat (€)</th>
                     <th>Comision TVA (€)</th>
+                    <th>Comision Taxa Drum (€)</th>
                     <th>Cheltuială Finală (€)</th>
                     <th>Descriere</th>
                     <th class="text-end">Acțiuni</th>
@@ -129,6 +133,7 @@
                 {% set totalSumaBruta = 0 %}
                 {% set totalTvaNetRecuperat = 0 %}
                 {% set totalComisionTva = 0 %}
+                {% set totalComisionTaxaDrum = 0 %}
                 {% set totalCheltuialaNeta = 0 %}
                 {% set hasCheltuieli = false %}
 
@@ -137,14 +142,17 @@
                     {% set sumaBruta = cheltuiala.suma %}
                     {% set tvaProcent = cheltuiala.tva %}
                     {% set comisionTvaProcent = cheltuiala.comisionTva ?? 0 %}
+                    {% set comisionTaxaDrumProcent = cheltuiala.comisionTaxaDrum ?? 0 %}
                     {% set tvaValue = (sumaBruta * tvaProcent / (100 + tvaProcent))|round(2) %}
                     {% set comisionTva = (tvaValue * (comisionTvaProcent / 100))|round(2) %}
                     {% set tvaNetRecuperat = (tvaValue - comisionTva)|round(2) %}
-                    {% set cheltuialaNeta = (sumaBruta - tvaValue + comisionTva)|round(2) %}
+                    {% set comisionTaxaDrum = (sumaBruta * comisionTaxaDrumProcent / 100)|round(2) %}
+                    {% set cheltuialaNeta = (sumaBruta - tvaValue + comisionTva + comisionTaxaDrum)|round(2) %}
 
                     {% set totalSumaBruta = totalSumaBruta + sumaBruta %}
                     {% set totalTvaNetRecuperat = totalTvaNetRecuperat + tvaNetRecuperat %}
                     {% set totalComisionTva = totalComisionTva + comisionTva %}
+                    {% set totalComisionTaxaDrum = totalComisionTaxaDrum + comisionTaxaDrum %}
                     {% set totalCheltuialaNeta = totalCheltuialaNeta + cheltuialaNeta %}
 
                     <tr>
@@ -161,6 +169,7 @@
                         <td>{{ sumaBruta|number_format(2, ',', '.') }}</td>
                         <td>{{ tvaNetRecuperat|number_format(2, ',', '.') }}</td>
                         <td>{{ comisionTva|number_format(2, ',', '.') }}</td>
+                        <td>{{ comisionTaxaDrum|number_format(2, ',', '.') }}</td>
                         <td>{{ cheltuialaNeta|number_format(2, ',', '.') }}</td>
                         <td>{{ cheltuiala.descriere ?: 'N/A' }}</td>
                         <td class="text-end">
@@ -181,13 +190,14 @@
                         <td>{{ totalSumaBruta|number_format(2, ',', '.') }}</td>
                         <td>{{ totalTvaNetRecuperat|number_format(2, ',', '.') }}</td>
                         <td>{{ totalComisionTva|number_format(2, ',', '.') }}</td>
+                        <td>{{ totalComisionTaxaDrum|number_format(2, ',', '.') }}</td>
                         <td>{{ totalCheltuialaNeta|number_format(2, ',', '.') }}</td>
                         <td></td>
                         <td></td>
                     </tr>
                 {% else %}
                     <tr>
-                        <td colspan="8" class="text-center">Nicio cheltuială cu TVA asociată</td>
+                        <td colspan="9" class="text-center">Nicio cheltuială cu TVA asociată</td>
                     </tr>
                 {% endif %}
             </tbody>

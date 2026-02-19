@@ -92,11 +92,15 @@
         {% set totalAjustat = 0 %}
         {% for ch in pagination %}
             {% set sumaAjustata = ch.suma %}
+            {% set comisionTaxaDrumProcent = ch.comisionTaxaDrum ?? 0 %}
+            {% set comisionTaxaDrum = (ch.suma * comisionTaxaDrumProcent / 100)|round(2, 'common') %}
             {% if ch.tva > 0 %}
                 {# Calcul TVA scos din sumă, + comision #}
                 {% set tvaValue   = (ch.suma * ch.tva / (100 + ch.tva))|round(2, 'common') %}
                 {% set comisionTva = (tvaValue * (ch.comisionTva ?: 0) / 100)|round(2, 'common') %}
-                {% set sumaAjustata = (ch.suma - tvaValue + comisionTva)|round(2, 'common') %}
+                {% set sumaAjustata = (ch.suma - tvaValue + comisionTva + comisionTaxaDrum)|round(2, 'common') %}
+            {% else %}
+                {% set sumaAjustata = (ch.suma + comisionTaxaDrum)|round(2, 'common') %}
             {% endif %}
 
             {% set totalAjustat = totalAjustat + sumaAjustata %}

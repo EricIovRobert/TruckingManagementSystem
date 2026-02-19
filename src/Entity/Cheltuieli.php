@@ -48,6 +48,9 @@ class Cheltuieli
     #[ORM\Column(nullable: true)]
     private ?float $comision_tva = null;
 
+    #[ORM\Column(nullable: true)]
+    private ?float $comision_taxa_drum = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -181,6 +184,18 @@ class Cheltuieli
     public function setComisionTva(?float $comision_tva): static
     {
         $this->comision_tva = $comision_tva;
+
+        return $this;
+    }
+
+    public function getComisionTaxaDrum(): ?float
+    {
+        return $this->comision_taxa_drum;
+    }
+
+    public function setComisionTaxaDrum(?float $comision_taxa_drum): static
+    {
+        $this->comision_taxa_drum = $comision_taxa_drum;
 
         return $this;
     }

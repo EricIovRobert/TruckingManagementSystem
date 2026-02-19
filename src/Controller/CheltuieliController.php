@@ -118,9 +118,10 @@ class CheltuieliController extends AbstractController
             CASE
                 WHEN ch.tva > 0 THEN
                     ch.suma - (ch.suma * ch.tva / (100 + ch.tva)) + 
-                    ((ch.suma * ch.tva / (100 + ch.tva)) * (COALESCE(ch.comision_tva, 0) / 100))
+                    ((ch.suma * ch.tva / (100 + ch.tva)) * (COALESCE(ch.comision_tva, 0) / 100)) +
+                    (ch.suma * COALESCE(ch.comision_taxa_drum, 0) / 100)
                 ELSE
-                    ch.suma
+                    ch.suma + (ch.suma * COALESCE(ch.comision_taxa_drum, 0) / 100)
             END
         ) as total');
 

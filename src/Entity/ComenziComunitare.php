@@ -73,10 +73,14 @@ public function calculateAndSetProfit(): void
         $sumaBruta = $cheltuiala->getSuma();
         $tvaProcent = $cheltuiala->getTva() ?? 0;
         $comisionTvaProcent = $cheltuiala->getComisionTva() ?? 0;
+        $comisionTaxaDrumProcent = $cheltuiala->getComisionTaxaDrum() ?? 0;
+        
+        // Comision taxa de drum = procent din suma bruta
+        $comisionTaxaDrum = $sumaBruta * ($comisionTaxaDrumProcent / 100);
         
         $tvaValue = ($sumaBruta * $tvaProcent / (100 + $tvaProcent));
         $comisionTva = ($tvaValue * $comisionTvaProcent / 100);
-        $cheltuialaNeta = $sumaBruta - $tvaValue + $comisionTva;
+        $cheltuialaNeta = $sumaBruta - $tvaValue + $comisionTva + $comisionTaxaDrum;
         
         $totalCheltuieli += $cheltuialaNeta;
     }

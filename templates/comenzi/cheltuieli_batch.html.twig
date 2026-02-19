@@ -48,6 +48,10 @@
                     {{ form_label(form.cheltuielis.vars.prototype.comision_tva, null, {'label_attr': {'class': 'form-label'}}) }}
                     {{ form_widget(form.cheltuielis.vars.prototype.comision_tva, {'attr': {'class': 'form-control'}}) }}
                 </div>
+                <div class="col-md-6 comision-taxa-drum-wrapper" style="display: none;">
+                    {{ form_label(form.cheltuielis.vars.prototype.comision_taxa_drum, null, {'label_attr': {'class': 'form-label'}}) }}
+                    {{ form_widget(form.cheltuielis.vars.prototype.comision_taxa_drum, {'attr': {'class': 'form-control comision-taxa-drum-field'}}) }}
+                </div>
                 <div class="col-md-6">
                     {{ form_label(form.cheltuielis.vars.prototype.data_cheltuiala, null, {'label_attr': {'class': 'form-label'}}) }}
                     {{ form_widget(form.cheltuielis.vars.prototype.data_cheltuiala, {'attr': {'class': 'form-control datepicker'}}) }}
@@ -155,6 +159,18 @@
                     const kmMax = parseFloat(opt.dataset.kmUtilizareMax);
                     const pretPerL = parseFloat(opt.dataset.pretPerL);
                     const name = opt.text;
+
+                    // Show/hide comision taxa de drum based on subcategory name
+                    const comisionTaxaDrumWrapper = row.querySelector('.comision-taxa-drum-wrapper');
+                    if (comisionTaxaDrumWrapper) {
+                        if (name.toLowerCase().includes('taxa de drum')) {
+                            comisionTaxaDrumWrapper.style.display = '';
+                        } else {
+                            comisionTaxaDrumWrapper.style.display = 'none';
+                            const comisionTaxaDrumField = comisionTaxaDrumWrapper.querySelector('input');
+                            if (comisionTaxaDrumField) comisionTaxaDrumField.value = '';
+                        }
+                    }
 
                     pretUnitateWrapper.style.display = '';
 

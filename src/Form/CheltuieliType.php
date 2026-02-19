@@ -54,6 +54,10 @@ class CheltuieliType extends AbstractType
                 'label' => 'Comision TVA (opțional)',
                 'required' => false,
             ])
+            ->add('comision_taxa_drum', NumberType::class, [
+                'label' => 'Comision Taxa de Drum (%)',
+                'required' => false,
+            ])
             ->add('data_cheltuiala', DateType::class, [
                 'label' => 'Data cheltuielii',
                 'widget' => 'single_text',
