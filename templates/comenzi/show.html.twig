@@ -229,7 +229,6 @@
                     <th>Comision TVA (€)</th>
                     <th>Comision Taxa Drum (€)</th>
                     <th>Cheltuială Finală (€)</th>
-                    <th>Descriere</th>
                     <th class="text-end">Acțiuni</th>
                 </tr>
             </thead>
@@ -275,7 +274,6 @@
                         <td>{{ comisionTva|number_format(2, ',', '.') }}</td>
                         <td>{{ comisionTaxaDrum|number_format(2, ',', '.') }}</td>
                         <td>{{ cheltuialaNeta|number_format(2, ',', '.') }}</td>
-                        <td>{{ cheltuiala.descriere ?: 'N/A' }}</td>
                         <td class="text-end">
                             <a href="{{ path('app_comenzi_cheltuieli_edit', {'comandaId': comanda.id, 'cheltuialaId': cheltuiala.id, 'page': page|default(1)}) }}" class="btn btn-warning btn-sm me-1"> <i class="fa fa-edit"></i></a>
                             <form method="post" action="{{ path('app_comenzi_cheltuieli_delete', {'comandaId': comanda.id, 'cheltuialaId': cheltuiala.id, 'page': page|default(1)}) }}" style="display:inline;" onsubmit="return confirm('Ești sigur că vrei să ștergi această cheltuială?');">

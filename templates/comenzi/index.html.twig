@@ -246,6 +246,13 @@
             document.querySelectorAll('.decont-checkbox').forEach(function(checkbox) {
                 checkbox.addEventListener('change', function(e) {
                     if (processedDecont) return;
+
+                    const confirmMsg = this.checked ? "Ești sigur că vrei să marchezi ca DECONTAT?" : "Ești sigur că vrei să marchezi ca NEDECONTAT?";
+                    if (!confirm(confirmMsg)) {
+                        this.checked = !this.checked;
+                        return;
+                    }
+
                     processedDecont = true;
 
                     var id = this.getAttribute('data-id');
@@ -330,6 +337,13 @@
             document.querySelectorAll('.facturat-checkbox').forEach(function(checkbox) {
                 checkbox.addEventListener('change', function(e) {
                     if (processedFacturat) return;
+
+                    const confirmMsg = this.checked ? "Ești sigur că vrei să marchezi ca FACTURAT?" : "Ești sigur că vrei să marchezi ca NEFACTURAT?";
+                    if (!confirm(confirmMsg)) {
+                        this.checked = !this.checked;
+                        return;
+                    }
+
                     processedFacturat = true;
 
                     var id = this.getAttribute('data-id');
