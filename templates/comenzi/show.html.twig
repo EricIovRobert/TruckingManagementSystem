@@ -305,6 +305,7 @@
             </tbody>
         </table>
     </div>
+    {% endblock %}
 
     {% block javascripts %}
         {{ parent() }}
@@ -316,6 +317,12 @@
                 document.querySelectorAll('.facturat-checkbox').forEach(function(checkbox) {
                     checkbox.addEventListener('change', function(e) {
                         if (processed) return;
+                        
+                        const confirmMsg = this.checked ? "Ești sigur că vrei să marchezi ca FACTURAT?" : "Ești sigur că vrei să marchezi ca NEFACTURAT?";
+                        if (!confirm(confirmMsg)) {
+                            this.checked = !this.checked;
+                            return;
+                        }
                         processed = true;
 
                         var id = this.getAttribute('data-id');
@@ -434,4 +441,3 @@
             {% endfor %}
         </datalist>
     {% endblock %}
-{% endblock %}
