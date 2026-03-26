@@ -33,6 +33,7 @@ class RetururiController extends AbstractController
             $entityManager->flush();
             $comanda = $retur->getComanda();
             $comanda->calculateAndSetProfit();
+            $comanda->updateFacturatStatus();
             $entityManager->flush();
             $page = $request->query->getInt('page', 1);
             return $this->redirectToRoute('app_comenzi_show', ['id' => $comanda->getId(), 'page' => $page]);
@@ -72,10 +73,12 @@ class RetururiController extends AbstractController
     {
         if ($this->isCsrfTokenValid('delete' . $retur->getId(), $request->request->get('_token'))) {
             $comandaId = $retur->getComanda()->getId();
+            $comanda = $retur->getComanda();
             $entityManager->remove($retur);
             $entityManager->flush();
-            $comanda = $retur->getComanda();
+            $entityManager->refresh($comanda);
             $comanda->calculateAndSetProfit();
+            $comanda->updateFacturatStatus();
             $entityManager->flush();
             $page = $request->query->getInt('page', 1);
             return $this->redirectToRoute('app_comenzi_show', ['id' => $comandaId, 'page' => $page]);
@@ -95,9 +98,7 @@ class RetururiController extends AbstractController
 
             $facturat = filter_var($request->request->get('facturat', false), FILTER_VALIDATE_BOOLEAN);
             $retur->setFacturat($facturat);
-            
             $retur->getComanda()->updateFacturatStatus();
-            
             $entityManager->flush();
 
             return new JsonResponse(['success' => true]);

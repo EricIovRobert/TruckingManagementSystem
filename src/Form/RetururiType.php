@@ -20,7 +20,9 @@ class RetururiType extends AbstractType
                 'label' => 'Tone', // Schimbăm label-ul în "Tone"
             ])
             ->add('pret')
-            ->add('liber')
+            ->add('liber', null, [
+                'label' => 'Info',
+            ])
         ;
     }
 

@@ -33,6 +33,7 @@ class TururiController extends AbstractController
             $entityManager->flush();
             $comanda = $tur->getComanda();
             $comanda->calculateAndSetProfit();
+            $comanda->updateFacturatStatus();
             $entityManager->flush();
             $page = $request->query->getInt('page', 1);
             return $this->redirectToRoute('app_comenzi_show', ['id' => $comanda->getId(), 'page' => $page]);
@@ -72,10 +73,12 @@ class TururiController extends AbstractController
     {
         if ($this->isCsrfTokenValid('delete' . $tur->getId(), $request->request->get('_token'))) {
             $comandaId = $tur->getComanda()->getId();
+            $comanda = $tur->getComanda();
             $entityManager->remove($tur);
             $entityManager->flush();
-            $comanda = $tur->getComanda();
+            $entityManager->refresh($comanda);
             $comanda->calculateAndSetProfit();
+            $comanda->updateFacturatStatus();
             $entityManager->flush();
             $page = $request->query->getInt('page', 1);
             return $this->redirectToRoute('app_comenzi_show', ['id' => $comandaId, 'page' => $page]);
